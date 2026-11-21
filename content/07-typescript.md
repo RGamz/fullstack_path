@@ -1179,6 +1179,8 @@ Build a Trello-style board for your own tasks with React and TypeScript. Cards m
 - `Status`, `Priority`, `Card` and the dialog state are typed as described, and the project contains no `any`
 - A generic `List<T>` component renders the columns
 - `npm run build` passes and the app is deployed
+- At least one React Testing Library test passes (for example: moving a card to another column)
+- The README explains what the project does and how to run it locally, with a screenshot
 
 ---section
 id: ts-s3
@@ -1424,3 +1426,5 @@ Convert your Book Library API (Express + PostgreSQL, with the test suite you wro
 - `npm run build && npm start` runs the compiled API and all endpoints work
 - All tests pass, and CI runs typecheck, tests and build on every push
 - The changes were merged through a pull request with a description
+- `.env.example` lists every environment variable with placeholder values, and `.env` is git-ignored
+- The README explains what the project does and how to run it locally, with a screenshot

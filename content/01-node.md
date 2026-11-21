@@ -1637,3 +1637,4 @@ Build a small community website where visitors post short, anonymous stories (up
 - A new story appears in a second browser window without refreshing
 - Stories survive a server restart, and no secrets or `.env` are in the repo
 - The app is deployed and the link is in the README
+- `.env.example` lists every environment variable with placeholder values, and `.env` is git-ignored

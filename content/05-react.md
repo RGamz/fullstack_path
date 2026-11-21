@@ -895,6 +895,7 @@ Build a memory game: cards lie face down, the player flips two at a time and tri
 - Moves are counted, the win screen shows the player's name and score, and both buttons work
 - The best score per difficulty survives a page reload
 - The game is deployed and playable with the keyboard
+- The README explains what the project does and how to run it locally, with a screenshot
 
 ---section
 id: react-s3

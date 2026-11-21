@@ -925,3 +925,4 @@ Build your signature project: your own idea, ideally solving a real problem for 
 - The AI feature works with server-side keys, usage limits and an eval set of at least 10 cases
 - The app is deployed and at least 3 real users have used it and given feedback
 - A case-study page with an architecture diagram is live on your portfolio
+- `.env.example` lists every environment variable with placeholder values, and `.env` is git-ignored

@@ -1849,3 +1849,4 @@ Performance work is a skill you prove with numbers, not opinions. Build a produc
 - Only the visible rows (plus overscan) are in the DOM in the fast version
 - The README has a before/after timing table for at least three interactions, with Profiler screenshots
 - The README explains each fix in a few sentences, including at least one that didn't help much
+- The fast version is deployed and the live link is in the README

@@ -679,6 +679,8 @@ Build the professional portfolio website you'll show to employers. Project case 
 - The active nav link is highlighted, and dark mode works with a toggle that remembers the choice
 - Lighthouse scores 95+ in all four categories on the production build
 - The code is on GitHub with a README
+- At least one automated test runs with `npm test` (for example a Vitest test of the Markdown loader)
+- The site is deployed on Vercel and the live link is in the README
 
 ---section
 id: next-s2
@@ -1425,6 +1427,9 @@ While learning you find great articles, videos and docs every day, and browser b
 - The loading skeleton, the error page and the 404 for unknown bookmark ids all work
 - `GET /api/bookmarks` and `GET /api/bookmarks?tag=react` return the right JSON
 - `npm run build` succeeds and the README explains how to set the project up
+- Vitest tests cover the Zod bookmark schema, including URL validation and tag normalisation
+- `.env.example` lists every environment variable with placeholder values, and `.env` is git-ignored
+- The app is deployed and the live link is in the README
 
 ---section
 id: next-s3
@@ -1780,6 +1785,8 @@ Build a blog with two sides: a public side where anyone can read published posts
 - Each post page has its own title, description and Open Graph tags, and `/sitemap.xml` lists the published posts
 - The site is deployed on Vercel with a production database and working GitHub sign-in
 - The README has the live link, screenshots and setup steps
+- Vitest tests cover slug generation and post validation, and a Playwright test checks that a published post appears on the blog
+- `.env.example` lists every environment variable with placeholder values, and `.env` is git-ignored
 
 ---project
 id: next-p2
@@ -1831,3 +1838,5 @@ Build a small SaaS-style app where anyone can sign up, track daily habits ("read
 - The heatmap and the weekly chart show real check-in data
 - The app works well on a real phone
 - It's deployed on Vercel and at least one other person has used it
+- `.env.example` lists every environment variable with placeholder values, and `.env` is git-ignored
+- The README explains what the project does and how to run it locally, with a screenshot

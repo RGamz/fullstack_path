@@ -1664,3 +1664,5 @@ Build a private online diary: each person creates an account and writes journal 
 - In the browser, a user can register, log in, write, edit and delete entries, and log out
 - helmet is enabled, and the sixth failed login within 15 minutes returns 429
 - The README explains the auth flow
+- `.env.example` lists every environment variable with placeholder values, and `.env` is git-ignored
+- The app is deployed and the live link is in the README

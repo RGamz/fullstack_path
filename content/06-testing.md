@@ -850,6 +850,7 @@ Add a professional test suite to your Book Library API (Express + PostgreSQL, fr
 - `npm run coverage` shows 80% or more line coverage
 - The GitHub Actions workflow runs on every push and pull request and is green
 - The README shows the test status badge and explains how to run the tests locally
+- `.env.example` lists every environment variable with placeholder values, and `.env` is git-ignored
 
 ---section
 id: testing-s3

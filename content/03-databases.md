@@ -1869,6 +1869,7 @@ const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 - No SQL string contains user input (only placeholders or ORM calls)
 - Creating a book with tags is a transaction, and an invalid tag id leaves no half-created book behind
 - The API is deployed with a hosted database, and the README contains the ER diagram, setup steps and endpoints
+- `.env.example` lists every environment variable with placeholder values, and `.env` is git-ignored
 
 ---project
 id: db-p2
@@ -1923,3 +1924,4 @@ Build a personal finance app: people sign up, log their expenses, put them in ca
 - The dashboard shows a pie chart per category and a bar chart per month
 - Money is stored as integer cents and every query uses placeholders or an ORM
 - The app is deployed with a hosted database and a demo user, and the README has screenshots
+- `.env.example` lists every environment variable with placeholder values, and `.env` is git-ignored
