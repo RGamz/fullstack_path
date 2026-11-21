@@ -8,7 +8,7 @@ Like Scrimba, you **learn a chunk, then build**: every module is split into part
 
 **Live site:** https://rgamz.github.io/fullstack_path/ · **Full outline:** [SYLLABUS.md](SYLLABUS.md)
 
-- Every lesson has guided theory with code examples, common mistakes and a recap, plus a YouTube search link, docs links, exercises and a notes box
+- Every lesson has guided theory with code examples, common mistakes and a recap, plus a picked YouTube video (with a search link for alternatives), docs links, exercises and a notes box
 - Every project has a full brief: the task, requirements, step-by-step milestones, hints, stretch goals and a "Done when" checklist
 - Tick off lessons, exercises and project milestones. Progress is saved in your browser (localStorage)
 - "Continue" jumps to the next unfinished lesson or project

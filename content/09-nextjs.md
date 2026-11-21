@@ -17,7 +17,7 @@ intro: Create a Next.js project, learn how folders become pages and layouts, und
 id: next-1
 title: What is Next.js? App Router basics
 time: 1.5h
-video: Fireship Next.js in 100 seconds
+video: Fireship — Next.js in 100 Seconds | https://www.youtube.com/watch?v=Sklc_fQBmcs
 docs: Learn Next.js (official free course) | https://nextjs.org/learn
 docs: Next.js: installation | https://nextjs.org/docs/app/getting-started/installation
 docs: Next.js: project structure | https://nextjs.org/docs/app/getting-started/project-structure
@@ -138,7 +138,7 @@ Run `npm run build` regularly. It type-checks the whole project and prints a tab
 id: next-2
 title: Layouts, navigation and styling
 time: 1.5h
-video: Next.js layouts and navigation tutorial
+video: Codevolution — Next.js 15 Tutorial: Layouts | https://www.youtube.com/watch?v=NK-8a8EzWrU
 docs: Next.js: layouts and pages | https://nextjs.org/docs/app/getting-started/layouts-and-pages
 docs: Next.js: linking and navigating | https://nextjs.org/docs/app/getting-started/linking-and-navigating
 docs: Next.js: CSS | https://nextjs.org/docs/app/getting-started/css
@@ -308,7 +308,7 @@ The font is downloaded at **build time** and served from your own site. The user
 id: next-3
 title: Server Components vs Client Components
 time: 2h
-video: React Server Components explained Next.js
+video: ByteGrad — When & Where to Add "use client" in React / Next.js | https://www.youtube.com/watch?v=Qdkg_mrniLk
 docs: Next.js: server and client components | https://nextjs.org/docs/app/getting-started/server-and-client-components
 docs: React: 'use client' directive | https://react.dev/reference/rsc/use-client
 ---
@@ -458,7 +458,7 @@ For extra safety, install the `server-only` package and add `import "server-only
 id: next-5
 title: Dynamic routes and metadata
 time: 1.5h
-video: Next.js dynamic routes generateMetadata
+video: Codevolution — Next.js 15 Tutorial: Routing Metadata | https://www.youtube.com/watch?v=OldUurB0Wx8
 docs: Next.js: dynamic routes | https://nextjs.org/docs/app/api-reference/file-conventions/dynamic-routes
 docs: Next.js: metadata and OG images | https://nextjs.org/docs/app/getting-started/metadata-and-og-images
 docs: Next.js: MDX | https://nextjs.org/docs/app/guides/mdx
@@ -697,7 +697,7 @@ intro: Load data on the server with proper loading and error states, change data
 id: next-4
 title: Data fetching, caching and streaming
 time: 2h
-video: Next.js data fetching caching tutorial
+video: logicBase Labs — Next.js Streaming Tutorial (SSR, Suspense & Skeletons) | https://www.youtube.com/watch?v=xTT_Sd_xqh0
 docs: Next.js: fetching data | https://nextjs.org/docs/app/getting-started/fetching-data
 docs: Next.js: caching | https://nextjs.org/docs/app/getting-started/caching
 docs: Next.js: revalidating | https://nextjs.org/docs/app/getting-started/revalidating
@@ -859,7 +859,7 @@ Remember that `fetch` does **not** throw on a 404 or 500 response. Check it your
 id: next-6
 title: Server Actions and forms
 time: 2h
-video: Next.js server actions tutorial
+video: ByteGrad — Next.js Forms Are Different Now (Server Actions & useActionState) | https://www.youtube.com/watch?v=DK7WqcL9Qq4
 docs: Next.js: mutating data (Server Actions) | https://nextjs.org/docs/app/getting-started/mutating-data
 docs: Next.js: forms guide | https://nextjs.org/docs/app/guides/forms
 docs: React: useActionState | https://react.dev/reference/react/useActionState
@@ -1055,7 +1055,7 @@ export async function deleteMessage(id: number) {
 id: next-7
 title: Route Handlers (API endpoints)
 time: 1h
-video: Next.js route handlers API routes tutorial
+video: Codevolution — Next.js 15 Tutorial: Route Handlers | https://www.youtube.com/watch?v=27Uj6BeIDV0
 docs: Next.js: route handlers | https://nextjs.org/docs/app/getting-started/route-handlers
 docs: MDN: Response.json() | https://developer.mozilla.org/en-US/docs/Web/API/Response/json_static
 ---
@@ -1196,7 +1196,7 @@ When does a `GET` handler run? If it reads the request (query string, headers, c
 id: next-8
 title: Databases in Next.js
 time: 2h
-video: Next.js Drizzle Postgres tutorial
+video: Cand Dev — Learn Drizzle ORM in Next.js with Neon Postgres | https://www.youtube.com/watch?v=Tfc5LfHSGmE
 docs: Learn Next.js: setting up your database | https://nextjs.org/learn/dashboard-app/setting-up-your-database
 docs: Drizzle ORM docs | https://orm.drizzle.team/docs/overview
 docs: Prisma docs | https://www.prisma.io/docs
@@ -1449,7 +1449,7 @@ intro: Add sign-in so each user sees only their own data, protect pages and acti
 id: next-9
 title: Authentication
 time: 2.5h
-video: Next.js authentication tutorial Better Auth
+video: Cosden Solutions — Better Auth in Next.js (Complete Tutorial) | https://www.youtube.com/watch?v=x4hQ2Hmuy3k
 docs: Next.js: authentication guide | https://nextjs.org/docs/app/guides/authentication
 docs: Next.js: proxy | https://nextjs.org/docs/app/getting-started/proxy
 docs: Better Auth | https://www.better-auth.com/
@@ -1640,7 +1640,7 @@ This only checks that a session cookie *exists*, not that it's valid, so it is n
 id: next-10
 title: Deploying to Vercel
 time: 1h
-video: deploy Next.js app to Vercel
+video: PedroTech — How to Deploy a Next.js App to Vercel | https://www.youtube.com/watch?v=kXtWjQowvVw
 docs: Next.js: deploying | https://nextjs.org/docs/app/getting-started/deploying
 docs: Vercel: environment variables | https://vercel.com/docs/environment-variables
 docs: Neon docs | https://neon.tech/docs

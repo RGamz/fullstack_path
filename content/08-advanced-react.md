@@ -17,7 +17,7 @@ intro: Learn how to build components that are easy to reuse, reach into the DOM 
 id: ar-1
 title: Composition and reusable components
 time: 1.5h
-video: React composition patterns compound components
+video: Cosden Solutions — Compound Components in React (Design Patterns) | https://www.youtube.com/watch?v=N_WgBU3S9W8
 docs: Passing JSX as children | https://react.dev/learn/passing-props-to-a-component#passing-jsx-as-children
 docs: Common props of built-in components | https://react.dev/reference/react-dom/components/common
 ---
@@ -188,7 +188,7 @@ The parent now controls the layout (buttons on top, at the bottom, with icons) w
 id: ar-2
 title: Refs
 time: 1h
-video: React useRef hook tutorial
+video: Web Dev Simplified — Learn useRef in 11 Minutes | https://www.youtube.com/watch?v=t2ypzz6gJm0
 docs: Referencing values with refs | https://react.dev/learn/referencing-values-with-refs
 docs: Manipulating the DOM with refs | https://react.dev/learn/manipulating-the-dom-with-refs
 docs: useRef reference | https://react.dev/reference/react/useRef
@@ -375,7 +375,7 @@ return (
 id: ar-3
 title: Context
 time: 1.5h
-video: React context API tutorial
+video: Web Dev Simplified — Learn useContext in 13 Minutes | https://www.youtube.com/watch?v=5LrDIWkK_Bc
 docs: Passing data deeply with context | https://react.dev/learn/passing-data-deeply-with-context
 docs: createContext reference | https://react.dev/reference/react/createContext
 docs: useContext reference | https://react.dev/reference/react/useContext
@@ -524,7 +524,7 @@ Note that `ThemeProvider` receives `children` from its parent. When the theme ch
 id: ar-4
 title: useReducer
 time: 1.5h
-video: React useReducer tutorial
+video: Web Dev Simplified — Learn useReducer in 20 Minutes | https://www.youtube.com/watch?v=kK_Wqx3RnHk
 docs: Extracting state logic into a reducer | https://react.dev/learn/extracting-state-logic-into-a-reducer
 docs: Scaling up with reducer and context | https://react.dev/learn/scaling-up-with-reducer-and-context
 docs: useReducer reference | https://react.dev/reference/react/useReducer
@@ -681,7 +681,7 @@ Use `useState` for independent, simple values: an input's text, whether a menu i
 id: ar-5
 title: Custom hooks
 time: 1.5h
-video: React custom hooks tutorial
+video: Web Dev Simplified — Learn Custom Hooks in 10 Minutes | https://www.youtube.com/watch?v=6ThXsUwLWvc
 docs: Reusing logic with custom hooks | https://react.dev/learn/reusing-logic-with-custom-hooks
 docs: Rules of Hooks | https://react.dev/reference/rules/rules-of-hooks
 docs: renderHook (React Testing Library) | https://testing-library.com/docs/react-testing-library/api/#renderhook
@@ -917,7 +917,7 @@ intro: Turn a single page into a real multi-page app with React Router, load and
 id: ar-6
 title: React Router
 time: 2h
-video: React Router tutorial
+video: PedroTech — React Router v7 Tutorial (Routing, Nested Routes, Layouts) | https://www.youtube.com/watch?v=h7MTWLv3xvw
 docs: React Router docs | https://reactrouter.com/home
 docs: React Router: declarative routing | https://reactrouter.com/start/declarative/routing
 ---
@@ -1115,7 +1115,7 @@ React Router v7 can also run in **data mode** (routes defined as objects with `c
 id: ar-7
 title: Server state with TanStack Query
 time: 2h
-video: TanStack Query tutorial React Query
+video: Cosden Solutions — React Query (TanStack Query) Complete Tutorial | https://www.youtube.com/watch?v=8K1N3fE-cDs
 docs: TanStack Query docs | https://tanstack.com/query/latest/docs/framework/react/overview
 docs: Queries guide | https://tanstack.com/query/latest/docs/framework/react/guides/queries
 docs: Mutations guide | https://tanstack.com/query/latest/docs/framework/react/guides/mutations
@@ -1285,7 +1285,7 @@ Add `<ReactQueryDevtools />` (from `@tanstack/react-query-devtools`) inside the 
 id: ar-9
 title: Suspense, lazy loading and error boundaries
 time: 1.5h
-video: React Suspense lazy error boundary tutorial
+video: Web Dev Simplified — Learn React Error Boundaries in 7 Minutes | https://www.youtube.com/watch?v=_FuDMEgIy7I
 docs: Suspense | https://react.dev/reference/react/Suspense
 docs: lazy | https://react.dev/reference/react/lazy
 docs: react-error-boundary | https://github.com/bvaughn/react-error-boundary
@@ -1440,7 +1440,7 @@ A common shape: an `ErrorBoundary` outside a `Suspense`, around each area that l
 id: ar-10
 title: Styling with Tailwind CSS
 time: 1.5h
-video: Tailwind CSS v4 crash course
+video: JavaScript Mastery — Tailwind CSS v4 Full Course | https://www.youtube.com/watch?v=6biMWgD6_JY
 docs: Tailwind docs | https://tailwindcss.com/docs
 docs: Installing Tailwind with Vite | https://tailwindcss.com/docs/installation/using-vite
 docs: Responsive design | https://tailwindcss.com/docs/responsive-design
@@ -1651,7 +1651,7 @@ intro: Learn why React re-renders, how to measure it with the React DevTools Pro
 id: ar-8
 title: Performance: re-renders, memo, deferred values and virtualisation
 time: 2h
-video: React memo useMemo useCallback explained
+video: Justin Kim — React.memo, useMemo & useCallback: Optimize React Performance | https://www.youtube.com/watch?v=3cYtqrNUiVw
 docs: memo | https://react.dev/reference/react/memo
 docs: useMemo | https://react.dev/reference/react/useMemo
 docs: useCallback | https://react.dev/reference/react/useCallback

@@ -17,7 +17,7 @@ intro: Make your work easy to find and easy to judge: three polished projects, a
 id: car-1
 title: Choose and polish 3 portfolio projects
 time: 4h
-video: developer portfolio projects that get you hired
+video: Phillip Choi — How to Get Hired as a Software Engineer (The One Project Rule) | https://www.youtube.com/watch?v=tr4saJGic4o
 docs: roadmap.sh: Full Stack | https://roadmap.sh/full-stack
 docs: Make a README | https://www.makeareadme.com/
 ---
@@ -117,7 +117,7 @@ Go through each project with this list:
 id: car-2
 title: Portfolio website and GitHub profile
 time: 3h
-video: GitHub profile README tutorial
+video: Miraya — How to Make Your GitHub Stand Out | https://www.youtube.com/watch?v=z8UPAVTh2aE
 docs: GitHub profile README | https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-github-profile/customizing-your-profile/managing-your-profile-readme
 docs: GitHub Pages | https://docs.github.com/en/pages
 ---
@@ -212,7 +212,7 @@ The green squares show *when* you commit. Regular activity looks good, but don't
 id: car-3
 title: CV / résumé
 time: 2h
-video: software developer resume tips no experience
+video: Anthony Sistilli — How to Make a Dev Resume That Actually Gets You Hired | https://www.youtube.com/watch?v=fD0E57QYSPk
 docs: Tech Interview Handbook: résumé | https://www.techinterviewhandbook.org/resume/
 ---
 Your CV (called a résumé in the US) has one job: get you an interview. It's read in seconds, often first by software (an Applicant Tracking System, or ATS) and then by a recruiter who may not be technical. Without developer job experience, you need to make your projects and transferable skills do the work. This lesson gives you a structure, a formula for strong bullet points, and a way to tailor your CV to each job quickly.
@@ -313,7 +313,7 @@ Never list skills you don't have: interviews will find out.
 id: car-4
 title: LinkedIn, networking and building in public
 time: 2h
-video: LinkedIn tips for software developers
+video: Kevin Stratvert — How to Set Up Your LinkedIn Profile (Ultimate Guide) | https://www.youtube.com/watch?v=hNzpEeU3a4I
 docs: LinkedIn Help: edit your profile | https://www.linkedin.com/help/linkedin/answer/a546603
 docs: LinkedIn Help: the About section | https://www.linkedin.com/help/linkedin/answer/a553140
 ---
@@ -466,7 +466,7 @@ intro: Run your job search like a project, then prepare for the three kinds of i
 id: car-5
 title: Job search strategy
 time: 2h
-video: how to get a junior developer job strategy
+video: Maddy Zhang — How to (Actually) Get a Software Engineering Job | https://www.youtube.com/watch?v=Egr6BiXpHQc
 docs: Tech Interview Handbook | https://www.techinterviewhandbook.org/
 ---
 Finding your first developer job is often the hardest part of the whole journey, and it's rarely quick: for self-taught juniors, three to six months of steady searching is normal. The people who succeed aren't always the most skilled; they're the ones who treat the search like a project, with a plan, a tracker, a weekly routine and regular reviews. This lesson gives you that system.
@@ -569,7 +569,7 @@ Your tracker shows a funnel: applications → replies → interviews → offers.
 id: car-6
 title: Technical interviews: coding challenges
 time: ongoing
-video: freeCodeCamp data structures and algorithms JavaScript
+video: NeetCode — Top 6 Coding Interview Concepts (Data Structures & Algorithms) | https://www.youtube.com/watch?v=ft0owvS5tQA
 docs: NeetCode roadmap | https://neetcode.io/roadmap
 docs: Tech Interview Handbook | https://www.techinterviewhandbook.org/
 docs: LeetCode | https://leetcode.com/
@@ -731,7 +731,7 @@ If you're stuck, say what you're thinking ("I'm wondering whether a hash map cou
 id: car-7
 title: Behavioural interviews and take-home tasks
 time: 2h
-video: STAR method behavioral interview examples developer
+video: Aced (Exponent) — Top 10 Behavioral Software Engineering Interview Questions | https://www.youtube.com/watch?v=T25I2FQ9Mok
 docs: Tech Interview Handbook: behavioural | https://www.techinterviewhandbook.org/behavioral-interview/
 ---
 Technical skill gets you considered; people skills get you hired. Most interview processes include a **behavioural interview** ("Tell me about a time when…") to see how you work with others, handle problems and learn. Many also include a **take-home task**: a small project to build in a few hours or days. Both are very learnable with preparation, and as a career changer you have more good stories than you think.
