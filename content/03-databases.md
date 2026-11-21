@@ -1523,6 +1523,150 @@ Postgres errors have a `code` property. Three are worth handling in your error m
 - Deploy the API with `DATABASE_URL` set as an environment variable on your hosting platform.
 
 ---lesson
+id: db-12
+title: Running Postgres locally with Docker
+time: 1.5h
+video: Docker for beginners Postgres docker compose tutorial
+docs: Docker: get started | https://docs.docker.com/get-started/
+docs: Official postgres image | https://hub.docker.com/_/postgres
+docs: Docker Compose docs | https://docs.docker.com/compose/
+---
+A hosted database is perfect for production, but for day-to-day development it has downsides: it needs internet, everyone on a team shares the same data, and you can't quickly wipe it and start fresh. Tests are worse: they need a database they can empty before every test, which you definitely don't want to do to your real one. **Docker** solves this by running a real PostgreSQL server on your own machine with one command, in the exact version you choose, and throwing it away just as easily.
+
+## Images, containers and Docker Desktop
+
+Docker runs programs in **containers**: isolated mini-environments that contain the program and everything it needs. A container is started from an **image**, a ready-made package published by someone else. The official `postgres` image contains a complete Postgres server, so you don't install Postgres on Windows at all.
+
+Install **Docker Desktop** from docker.com (on Windows it uses WSL 2; the installer sets it up). Start Docker Desktop, then check in a terminal:
+
+```bash
+docker --version
+docker run hello-world
+```
+
+The second command downloads a tiny test image and runs it. If it prints "Hello from Docker!", everything works. Docker Desktop must be running whenever you use `docker` commands.
+
+## Starting Postgres with one command
+
+```bash
+docker run --name books-db -e POSTGRES_PASSWORD=devpass -e POSTGRES_DB=books -p 5432:5432 -d postgres:17
+```
+
+Piece by piece:
+
+- `--name books-db` gives the container a name, so you can refer to it later.
+- `-e POSTGRES_PASSWORD=devpass` and `-e POSTGRES_DB=books` are environment variables the image reads on first start: the password for the `postgres` user and a database to create.
+- `-p 5432:5432` connects **your** port 5432 to the container's port 5432 (`yourPort:containerPort`), so programs on your computer can reach it at `localhost:5432`.
+- `-d` runs it in the background ("detached").
+- `postgres:17` is the image and its **tag** (version). Always pin a version, so the database doesn't change under you when a new major version comes out.
+
+Your connection string is now:
+
+```bash
+# .env
+DATABASE_URL=postgresql://postgres:devpass@localhost:5432/books
+```
+
+There's no `?sslmode=require` here: a local container doesn't use SSL. Your `pg.Pool` code from the previous lesson works unchanged.
+
+## Everyday commands
+
+| Command | What it does |
+|---|---|
+| `docker ps` | list running containers |
+| `docker logs books-db` | show the server's log (useful when something fails) |
+| `docker stop books-db` / `docker start books-db` | stop / start it again later |
+| `docker exec -it books-db psql -U postgres -d books` | open a SQL prompt inside the container (`\dt` lists tables, `\q` quits) |
+| `docker rm -f books-db` | delete the container |
+
+## Keeping your data: volumes
+
+A container's files disappear when the container is deleted. To keep the database's data, store it in a **volume**, a storage area Docker manages outside the container:
+
+```bash
+docker run --name books-db -e POSTGRES_PASSWORD=devpass -e POSTGRES_DB=books -p 5432:5432 -v books-data:/var/lib/postgresql/data -d postgres:17
+```
+
+`-v books-data:/var/lib/postgresql/data` means "keep the folder where Postgres 17 stores its data in a volume named `books-data`". Now you can delete and recreate the container and your tables are still there. (Newer major versions of the image may store data in a different folder; check the image's page on Docker Hub when you upgrade.)
+
+## Docker Compose: the whole setup in one file
+
+Typing long commands gets old. **Docker Compose** describes your containers in a file you commit with your project, so anyone can start the same setup with one command. Create `compose.yaml` in the project root:
+
+```yaml
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_DB: books
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d books"]
+      interval: 2s
+      retries: 15
+
+  db-test:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: testpass
+      POSTGRES_DB: books_test
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    tmpfs:
+      - /var/lib/postgresql/data
+
+volumes:
+  db-data:
+```
+
+What's new here:
+
+- **Two databases.** `db` is for development (port 5432, data kept in the `db-data` volume). `db-test` is for automated tests (port 5433). Its data lives in `tmpfs`, which is memory: fast, and wiped every time the container stops. That's exactly what tests want.
+- **`docker-entrypoint-initdb.d`.** Any `.sql` file mounted into this folder runs automatically the **first time** the database starts with an empty data folder. Mounting your `schema.sql` there means both databases get your tables without any manual step. `:ro` mounts it read-only.
+- **`healthcheck`.** `pg_isready` asks Postgres whether it accepts connections yet. Compose uses it to know when the database is really ready, not just started.
+
+Use it with:
+
+```bash
+docker compose up -d --wait   # start everything and wait until healthy
+docker compose ps             # see the status
+docker compose down           # stop and remove the containers (volume kept)
+docker compose down -v        # also delete the volumes: a completely fresh start
+```
+
+Your `.env` points at the development database, and your tests use `postgresql://postgres:testpass@localhost:5433/books_test`. You'll use that second database in the Testing module.
+
+## Common mistakes
+
+- **"Port is already allocated"**: something else (often a Postgres you installed earlier) already uses 5432. Change the left side of the mapping, `"5434:5432"`, and use port 5434 in your connection string.
+- **"Connection refused" right after starting**: Postgres needs a few seconds to boot. Use `--wait` with a healthcheck, or check `docker logs`.
+- **Your `schema.sql` changes don't apply**: init scripts only run on an *empty* database. Run `docker compose down -v` and `up` again to recreate it (this deletes the dev data, so keep a seed script).
+- **`sslmode=require` copied from the hosted URL**: the local server rejects SSL connections. Remove it.
+- **Docker Desktop isn't running**: every command then fails with an error about the Docker daemon or engine.
+
+## In short
+
+- Docker runs a real Postgres in a container: `docker run ... postgres:17`, reachable at `localhost:5432`.
+- Pin the image version, and store data in a volume so it survives the container.
+- Put the setup in `compose.yaml`: `docker compose up -d --wait`, `down`, and `down -v` for a fresh start.
+- Keep a separate, disposable test database (another port, `tmpfs`), and let `docker-entrypoint-initdb.d` create the tables.
+
+### Exercises
+- Install Docker Desktop and run `docker run hello-world`.
+- Start Postgres 17 with `docker run` (with a volume), connect with `docker exec -it books-db psql -U postgres -d books`, create a table and insert a row. Delete the container with `docker rm -f books-db`, start a new one with the same volume, and check the row is still there.
+- Create `compose.yaml` with the `db` and `db-test` services and your `schema.sql`. Run `docker compose up -d --wait` and confirm both databases have your tables.
+- Point your Book Library API's `.env` at the local database and check every endpoint works without internet. Then run `docker compose down -v` and `up` again, and run your seed script to restore the data.
+
+---lesson
 id: db-9
 title: ORMs, query builders and migrations
 time: 2h
