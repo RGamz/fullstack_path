@@ -17,7 +17,7 @@ intro: Set up TypeScript and learn the type system step by step, from basic type
 id: ts-1
 title: Why TypeScript and setup
 time: 1h
-video: Fireship TypeScript in 100 seconds
+video: Fireship — TypeScript in 100 Seconds | https://www.youtube.com/watch?v=zQnBQ4tB3ZA
 docs: TypeScript handbook | https://www.typescriptlang.org/docs/handbook/intro.html
 docs: TS Playground | https://www.typescriptlang.org/play
 docs: TSConfig reference | https://www.typescriptlang.org/tsconfig/
@@ -133,7 +133,7 @@ VS Code has TypeScript built in. Hover over any variable to see its type, press 
 id: ts-2
 title: Basic types and inference
 time: 1h
-video: TypeScript basic types tutorial
+video: Dave Gray — TypeScript Basic Types (Beginners Lesson) | https://www.youtube.com/watch?v=bDCPYSanB7A
 docs: Everyday types | https://www.typescriptlang.org/docs/handbook/2/everyday-types.html
 docs: Type inference | https://www.typescriptlang.org/docs/handbook/type-inference.html
 ---
@@ -277,7 +277,7 @@ Use it only when you really know more than the compiler (like here, where you wr
 id: ts-3
 title: Object types: type aliases and interfaces
 time: 1h
-video: TypeScript type vs interface
+video: Matt Pocock — Types vs Interfaces | https://www.youtube.com/watch?v=e0AIkYrXAYE
 docs: Object types | https://www.typescriptlang.org/docs/handbook/2/objects.html
 docs: Everyday types: aliases and interfaces | https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-aliases
 ---
@@ -430,7 +430,7 @@ The second call fails because of **excess property checking**: when you write an
 id: ts-4
 title: Unions, literal types and narrowing
 time: 1.5h
-video: TypeScript narrowing discriminated unions
+video: Andrew Burgess — TypeScript Exhaustive Switch & Discriminated Unions | https://www.youtube.com/watch?v=CG3_Y9T03J4
 docs: Narrowing | https://www.typescriptlang.org/docs/handbook/2/narrowing.html
 docs: Discriminated unions | https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
 ---
@@ -587,7 +587,7 @@ const books = items.filter(isBook); // type: Book[]
 id: ts-5
 title: Functions and generics
 time: 1.5h
-video: TypeScript generics explained
+video: Web Dev Simplified — Learn TypeScript Generics in 13 Minutes | https://www.youtube.com/watch?v=EcCTIExsqmI
 docs: More on functions | https://www.typescriptlang.org/docs/handbook/2/functions.html
 docs: Generics | https://www.typescriptlang.org/docs/handbook/2/generics.html
 ---
@@ -744,7 +744,7 @@ Remember that `fetchJSON<T>` only *tells* TypeScript what the data is; it doesn'
 id: ts-6
 title: Utility types, keyof and typeof
 time: 1h
-video: TypeScript utility types tutorial
+video: Dave Gray — TypeScript Utility Types | https://www.youtube.com/watch?v=YN4RoihmVKM
 docs: Utility types | https://www.typescriptlang.org/docs/handbook/utility-types.html
 docs: keyof type operator | https://www.typescriptlang.org/docs/handbook/2/keyof-types.html
 docs: typeof type operator | https://www.typescriptlang.org/docs/handbook/2/typeof-types.html
@@ -961,7 +961,7 @@ intro: Use TypeScript in a React project: typed props, state, events and generic
 id: ts-8
 title: TypeScript with React
 time: 1.5h
-video: React TypeScript tutorial for beginners
+video: ByteGrad — TypeScript in React (Complete Tutorial) | https://www.youtube.com/watch?v=TPACABQTHvM
 docs: React TypeScript Cheatsheet | https://react-typescript-cheatsheet.netlify.app/
 docs: react.dev: Using TypeScript | https://react.dev/learn/typescript
 docs: Vite guide | https://vite.dev/guide/
@@ -1196,7 +1196,7 @@ intro: Add types to a Node and Express backend, with Zod schemas as the single s
 id: ts-7
 title: TypeScript with Node and Express
 time: 2h
-video: TypeScript Express API tutorial
+video: freeCodeCamp — TypeScript in Express Tutorial | https://www.youtube.com/watch?v=bYgphDEWwvs
 docs: Node.js: TypeScript | https://nodejs.org/en/learn/typescript/introduction
 docs: Zod basics and type inference | https://zod.dev/basics
 docs: tsx | https://tsx.is/

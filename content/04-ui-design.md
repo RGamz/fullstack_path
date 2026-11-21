@@ -17,7 +17,7 @@ intro: The four tools designers use on every screen: hierarchy, typography, colo
 id: ui-1
 title: Visual hierarchy
 time: 1h
-video: Kevin Powell visual hierarchy web design
+video: Flux Academy — Why Hierarchy Is So Important in Web Design | https://www.youtube.com/watch?v=kOJ4c5THLQk
 docs: Laws of UX | https://lawsofux.com/
 docs: web.dev – Learn Design | https://web.dev/learn/design
 ---
@@ -119,7 +119,7 @@ Primary is filled, secondary is outlined, tertiary looks like a link. Destructiv
 id: ui-2
 title: Typography
 time: 1h
-video: typography for web developers
+video: Kevin Powell — Simple Solutions to Responsive Typography | https://www.youtube.com/watch?v=wARbgs5Fmuw
 docs: Google Fonts Knowledge | https://fonts.google.com/knowledge
 docs: Type scale tool | https://typescale.com/
 ---
@@ -231,7 +231,7 @@ The h1 is never smaller than 2rem or larger than 3.5rem, and in between it grows
 id: ui-3
 title: Colour and accessibility
 time: 1.5h
-video: color theory for web design developers
+video: Flux Academy — How to Choose Colors (Easy 3-Step Process) | https://www.youtube.com/watch?v=KMS3VwGh3HY
 docs: WebAIM contrast checker | https://webaim.org/resources/contrastchecker/
 docs: W3C: accessibility intro | https://www.w3.org/WAI/fundamentals/accessibility-intro/
 docs: Lighthouse overview | https://developer.chrome.com/docs/lighthouse/overview
@@ -380,7 +380,7 @@ The lighter `#60a5fa` blue is easy to see on a dark background, but white text o
 id: ui-4
 title: Spacing and layout
 time: 1.5h
-video: Kevin Powell CSS spacing layout tips
+video: Kevin Powell — Breakpoint-Free CSS Grid Layouts | https://www.youtube.com/watch?v=bj0Z_GncIwY
 docs: MDN: CSS Grid | https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_grid_layout
 docs: web.dev – Learn CSS | https://web.dev/learn/css
 ---
@@ -558,7 +558,7 @@ intro: Learn the design tool developers meet at work, and the UX side of interfa
 id: ui-5
 title: Figma basics
 time: 1.5h
-video: Figma tutorial for beginners
+video: Aliena Cai — Figma Tutorial for Beginners (Auto Layout & Components) | https://www.youtube.com/watch?v=HwiHqfax7Uk
 docs: Figma help center | https://help.figma.com/
 ---
 In most teams, designers work in **Figma** and developers turn those designs into code. Even if nobody gives you designs, sketching a screen in Figma before writing CSS saves time: moving a box in Figma takes a second, rewriting a layout in CSS takes much longer. This lesson covers the parts of Figma a developer actually uses. Figma runs in the browser and has a free plan, which is enough for everything here.
@@ -653,7 +653,7 @@ Don't aim for pixel-perfect art. For a developer, Figma is a thinking tool.
 id: ui-6
 title: UX: states, forms and feedback
 time: 1.5h
-video: UX design principles for developers
+video: Kole Jain — Every UI/UX Concept Explained in Under 10 Minutes | https://www.youtube.com/watch?v=EcbgbKtOELY
 docs: Nielsen's 10 usability heuristics | https://www.nngroup.com/articles/ten-usability-heuristics/
 docs: web.dev – Learn Forms | https://web.dev/learn/forms
 ---

@@ -17,7 +17,7 @@ intro: What tests are for, how to write them with Vitest, how to work test-first
 id: test-1
 title: Why test? Types of tests
 time: 45m
-video: Fireship testing JavaScript explained
+video: Fireship — Software Testing Explained in 100 Seconds | https://www.youtube.com/watch?v=u6QfIXgjwGQ
 docs: Kent C. Dodds: the testing trophy | https://kentcdodds.com/blog/the-testing-trophy-and-testing-classifications
 docs: Martin Fowler: the test pyramid | https://martinfowler.com/bliki/TestPyramid.html
 ---
@@ -108,7 +108,7 @@ Tests also act as **documentation**: a list of test names like "returns 404 when
 id: test-2
 title: Vitest basics
 time: 1.5h
-video: Vitest crash course
+video: Net Ninja — Unit Testing (Vitest) Tutorial #1: What is Unit Testing? | https://www.youtube.com/watch?v=XdDZKeM5_pQ
 docs: Vitest guide | https://vitest.dev/guide/
 docs: expect API | https://vitest.dev/api/expect.html
 docs: Vitest coverage | https://vitest.dev/guide/coverage.html
@@ -265,7 +265,7 @@ This prints a table showing what percentage of lines and branches your tests exe
 id: test-3
 title: Test-driven development (TDD)
 time: 1.5h
-video: TDD test driven development JavaScript tutorial
+video: Fireship — Test-Driven Development (Fun TDD Introduction with JavaScript) | https://www.youtube.com/watch?v=Jv2uxzhPFl4
 docs: Kata: String Calculator | https://osherove.com/tdd-kata-1
 docs: Martin Fowler: test-driven development | https://martinfowler.com/bliki/TestDrivenDevelopment.html
 ---
@@ -391,7 +391,7 @@ TDD shines for logic with clear inputs and outputs: formatting, calculations, va
 id: test-4
 title: Mocks, spies and fake timers
 time: 1h
-video: Vitest mocking tutorial vi.fn vi.mock
+video: Net Ninja — Unit Testing (Vitest) Tutorial #11: Mock Functions | https://www.youtube.com/watch?v=uX5SF94RBNI
 docs: Vitest mocking | https://vitest.dev/guide/mocking.html
 docs: Vitest vi API | https://vitest.dev/api/vi.html
 ---
@@ -605,7 +605,7 @@ intro: Test your Express routes from the outside with Supertest, against a real 
 id: test-5
 title: Testing APIs with Supertest
 time: 2h
-video: Supertest Express API testing tutorial
+video: Sam Meech-Ward — Testing Node Server with Jest and Supertest | https://www.youtube.com/watch?v=FKnzS_icp20
 docs: Supertest | https://github.com/ladjs/supertest
 docs: Vitest config reference | https://vitest.dev/config/
 docs: GitHub Actions documentation | https://docs.github.com/en/actions
@@ -872,7 +872,7 @@ intro: Test React components the way a user sees them with React Testing Library
 id: test-6
 title: Testing React components
 time: 2h
-video: React Testing Library tutorial Vitest
+video: RoadsideCoder — React Testing Full Course (Vitest & React Testing Library) | https://www.youtube.com/watch?v=6dOpQIwyV6g
 docs: React Testing Library | https://testing-library.com/docs/react-testing-library/intro/
 docs: Which query should I use? | https://testing-library.com/docs/queries/about/#priority
 docs: user-event | https://testing-library.com/docs/user-event/intro
@@ -1034,7 +1034,7 @@ Add `vi` to the import from `"vitest"` and restore mocks in `afterEach`. Test th
 id: test-7
 title: End-to-end tests with Playwright
 time: 1.5h
-video: Playwright tutorial for beginners
+video: Cosden Solutions — React Testing with Playwright (Complete Tutorial) | https://www.youtube.com/watch?v=3NW0Mz943_E
 docs: Playwright docs | https://playwright.dev/docs/intro
 docs: Playwright locators | https://playwright.dev/docs/locators
 docs: Playwright: web server | https://playwright.dev/docs/test-webserver

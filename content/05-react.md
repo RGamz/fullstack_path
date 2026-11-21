@@ -17,7 +17,7 @@ intro: Set up a React project with Vite, split a page into components, pass data
 id: react-1
 title: JSX and components
 time: 1.5h
-video: Fireship React in 100 seconds
+video: Fireship — React in 100 Seconds | https://www.youtube.com/watch?v=Tn6-PIqc4UM
 docs: react.dev: Describing the UI | https://react.dev/learn/describing-the-ui
 docs: react.dev: Writing markup with JSX | https://react.dev/learn/writing-markup-with-jsx
 docs: Vite guide | https://vite.dev/guide/
@@ -162,7 +162,7 @@ This is the same ES Modules `import`/`export` you used in Node. CSS works by imp
 id: react-2
 title: Props
 time: 1.5h
-video: React props tutorial
+video: Codevolution — ReactJS Tutorial: Destructuring Props and State | https://www.youtube.com/watch?v=5_PdMS9CLLI
 docs: Passing props | https://react.dev/learn/passing-props-to-a-component
 docs: react.dev: Your first component | https://react.dev/learn/your-first-component
 ---
@@ -309,7 +309,7 @@ When you look at a design, draw boxes around repeated or self-contained pieces: 
 id: react-4
 title: Conditional rendering and lists
 time: 1.5h
-video: React conditional rendering lists keys
+video: Codevolution — React 19 Tutorial: Rendering Lists | https://www.youtube.com/watch?v=lRB-RAZeaHg
 docs: Conditional rendering | https://react.dev/learn/conditional-rendering
 docs: Rendering lists | https://react.dev/learn/rendering-lists
 ---
@@ -511,7 +511,7 @@ intro: Make components interactive. You'll learn how state makes React re-render
 id: react-3
 title: State and events
 time: 2h
-video: React useState hook tutorial
+video: Web Dev Simplified — Learn useState in 15 Minutes | https://www.youtube.com/watch?v=O6P86uwfdR0
 docs: State: a component's memory | https://react.dev/learn/state-a-components-memory
 docs: Updating arrays in state | https://react.dev/learn/updating-arrays-in-state
 docs: Responding to events | https://react.dev/learn/responding-to-events
@@ -692,7 +692,7 @@ function handleWin(moves) {
 id: react-5
 title: Forms
 time: 2h
-video: React forms tutorial controlled inputs
+video: Web Dev Simplified — Learn useActionState in 8 Minutes | https://www.youtube.com/watch?v=-aBKrvK5Vn8
 docs: Reacting to input with state | https://react.dev/learn/reacting-to-input-with-state
 docs: <form> reference | https://react.dev/reference/react-dom/components/form
 docs: useActionState reference | https://react.dev/reference/react/useActionState
@@ -908,7 +908,7 @@ intro: Connect React to the world outside it: fetch data, run timers, debounce s
 id: react-6
 title: Effects and data fetching
 time: 2h
-video: React useEffect explained
+video: Web Dev Simplified — Learn useEffect in 13 Minutes | https://www.youtube.com/watch?v=0ZJgIjIuY7U
 docs: Synchronizing with effects | https://react.dev/learn/synchronizing-with-effects
 docs: You might not need an effect | https://react.dev/learn/you-might-not-need-an-effect
 docs: useEffect reference | https://react.dev/reference/react/useEffect
@@ -1074,7 +1074,7 @@ Too many effects make components hard to follow and cause extra renders. Later, 
 id: react-7
 title: Build and deploy a React app
 time: 1.5h
-video: deploy Vite React app to Netlify
+video: PedroTech — How to Deploy a React App to Vercel | https://www.youtube.com/watch?v=hAuyNf0Uk-w
 docs: Vite: deploying a static site | https://vite.dev/guide/static-deploy.html
 docs: Vite: env variables and modes | https://vite.dev/guide/env-and-mode
 ---
