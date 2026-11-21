@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Full-Stack Study Tracker</title>
+  <meta name="description" content="Self-study plan and progress tracker: Node.js, Express, databases, testing, TypeScript, React, Next.js, AI engineering and career.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✅</text></svg>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <h1>Full-Stack Study Tracker</h1>
+        <p class="muted">Node · Express · SQL · Testing · TypeScript · React · Next.js · AI</p>
+      </div>
+      <div class="overall">
+        <div class="overall-label"><span id="overall-pct">0%</span> complete</div>
+        <div class="bar"><div class="bar-fill" id="overall-bar"></div></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap layout">
+    <nav class="sidebar" aria-label="Modules">
+      <ol id="module-nav"></ol>
+    </nav>
+
+    <main>
+      <section class="stats" id="stats" aria-label="Your stats"></section>
+
+      <div class="toolbar">
+        <button class="btn primary" id="continue-btn" type="button">▶ Continue where I left off</button>
+        <label class="toggle"><input type="checkbox" id="hide-done"> Hide completed lessons</label>
+        <span class="spacer"></span>
+        <button class="btn" id="expand-all" type="button">Expand all</button>
+        <button class="btn" id="collapse-all" type="button">Collapse all</button>
+        <button class="btn" id="export-btn" type="button" title="Download your progress as a JSON file">Export</button>
+        <label class="btn" title="Load a previously exported progress file">Import<input type="file" id="import-input" accept="application/json" hidden></label>
+        <button class="btn danger" id="reset-btn" type="button">Reset</button>
+      </div>
+
+      <details class="howto">
+        <summary>How to use this plan</summary>
+        <div class="howto-body">
+          <p><strong>Learn a chunk, then build.</strong> Every module is split into parts. Each part has a few lessons and ends with a project that uses exactly what those lessons taught. Do the project before moving on: that's where the learning sticks.</p>
+          <p><strong>Each lesson:</strong> read the theory and type out the code examples yourself → if something is unclear, watch a video (the link opens a YouTube search; pick a recent, well-rated result) and check the docs → do the exercises. Tick off exercises as you go, then tick the lesson.</p>
+          <p><strong>Each project:</strong> open "Read the full brief", follow the steps in order and commit to git after each one. The project is finished when every "Done when" box is ticked. Push it to GitHub and paste the link into the card.</p>
+          <p><strong>"Continue"</strong> at the top always jumps to the next lesson or project you haven't finished.</p>
+          <p><strong>Suggested pace:</strong> 6–8 hours a week ≈ 7–9 months for everything. Example week: 3 weekday evenings × 1 h (theory + exercises), and a 3–4 h weekend block for project work.</p>
+          <p><strong>Free companions:</strong> <a href="https://fullstackopen.com/en/" target="_blank" rel="noopener">Full Stack Open</a> (University of Helsinki: React, Node, Express, MongoDB, testing, TypeScript), <a href="https://www.theodinproject.com/paths/full-stack-javascript" target="_blank" rel="noopener">The Odin Project – Full Stack JavaScript</a>, <a href="https://nextjs.org/learn" target="_blank" rel="noopener">Learn Next.js</a> and <a href="https://roadmap.sh/full-stack" target="_blank" rel="noopener">roadmap.sh</a>.</p>
+          <p><strong>Your progress</strong> is saved in this browser (localStorage). Use <em>Export</em> now and then as a backup, or to move progress to another device with <em>Import</em>.</p>
+        </div>
+      </details>
+
+      <div id="modules">
+        <div class="no-js">
+          <strong>The lessons haven't loaded.</strong>
+          This page needs JavaScript. If you're seeing it in a preview panel (for example inside an editor or the Claude app), open <code>index.html</code> in Chrome, Edge or Firefox instead: double-click it in File Explorer, or drag it into a browser window.
+        </div>
+      </div>
+
+      <footer class="foot muted">Built for self-study. Progress lives only in your browser.</footer>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="data/curriculum.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

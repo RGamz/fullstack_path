@@ -1,0 +1,82 @@
+# Content format
+
+Every module lives in one file: `content/NN-name.md` (NN = order on the page).
+After editing, run `node build.mjs` in the `learning-tracker` folder. It validates the files and regenerates `data/curriculum.js`, which the website loads.
+`node build.mjs --check` only validates and prints stats.
+
+## Structure
+
+A module is split into **sections**. Each section is a chunk of related lessons that ends with **one project** that uses exactly what those lessons taught (like Scrimba's "Build a Node API" sections). Learn a chunk, build something, move on.
+
+```
+---module
+id: node
+title: Node.js
+scrimba: Node.js
+weeks: 3–4 weeks
+fullCourse: freeCodeCamp Node.js full course for beginners
+intro: One or two sentences shown at the top of the module.
+---
+
+---section
+id: node-s1
+title: Getting started with Node
+intro: What this section covers and what you'll build at the end.
+---
+
+---lesson
+id: node-1
+title: What is Node.js?
+time: 1h
+video: Fireship Node.js in 100 seconds
+docs: Node.js – Learn | https://nodejs.org/en/learn
+docs: Another link | https://example.com
+---
+Theory in Markdown…
+
+### Exercises
+- First exercise
+- Second exercise
+
+---project
+id: node-p3
+title: CLI Task Manager
+summary: One line shown on the card.
+---
+### The task
+### What it must do
+### Steps
+### Hints
+### Stretch goals
+### Done when
+- each item here becomes a checkbox
+```
+
+Rules:
+- Headers start with `---module`, `---section`, `---lesson` or `---project` on their own line and end with `---`.
+- `video:` is a YouTube **search query** (the site turns it into a search link), not a URL.
+- `docs:` can repeat; format `Label | URL`.
+- **IDs must never change** once you've started ticking things off: progress is saved by ID.
+- In the theory, use `##` for subheadings (they become small headings on the page). `###` is reserved for `### Exercises` in lessons and the named parts of projects.
+- Supported Markdown: paragraphs, `##` headings, `- lists`, `1. numbered lists`, fenced code blocks with a language (```` ```js ````), `> quotes` (shown as tip boxes), tables, `inline code`, **bold**, *italic*, [links](https://…).
+
+## What a good lesson looks like
+
+The theory should teach, not just summarise. Aim for 500–900 words:
+
+1. **Why it matters**: one short paragraph connecting the topic to what you're building.
+2. **The concept, step by step**: `##` subheadings, plain language, one idea at a time.
+3. **Code examples**: small, complete and runnable, each followed by an explanation of what the important lines do.
+4. **Common mistakes**: the 2–4 errors beginners actually hit, and how to recognise and fix them.
+5. **In short**: a 3–5 bullet recap.
+
+Exercises are small, concrete tasks that practise exactly this lesson (2–4 per lesson), ordered easy → harder.
+
+## What a good project brief looks like
+
+- **The task**: the scenario in 2–4 sentences: what you build and for whom.
+- **What it must do**: precise requirements (endpoints, data shape, screens, error cases).
+- **Steps**: an ordered list of milestones; each one small enough for one sitting and ending in something you can run. Commit after each.
+- **Hints**: where people get stuck.
+- **Stretch goals**: optional extras.
+- **Done when**: 4–7 checkable outcomes (these become checkboxes).

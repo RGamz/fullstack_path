@@ -1,0 +1,55 @@
+# Full-Stack Study Tracker
+
+A free, self-paced plan for the rest of a full-stack path: **Node.js → Express → Databases → UI Design → React → Testing → TypeScript → Advanced React → Next.js → AI Engineering → Career**.
+
+Like Scrimba, you **learn a chunk, then build**: every module is split into parts, and each part ends with a project that uses exactly what you just learned.
+
+- Every lesson has guided theory with code examples, common mistakes and a recap, plus a YouTube search link, docs links, exercises and a notes box
+- Every project has a full brief: the task, requirements, step-by-step milestones, hints, stretch goals and a "Done when" checklist
+- Tick off lessons, exercises and project milestones. Progress is saved in your browser (localStorage)
+- "Continue" jumps to the next unfinished lesson or project
+- Export/Import progress as JSON to back it up or move it to another device
+
+## Run it locally
+
+Double-click `index.html` (it opens in your browser). No install needed.
+
+> Don't use an editor's built-in preview panel: many of them don't run JavaScript, and the page will stay empty.
+
+## Publish on GitHub Pages
+
+```powershell
+cd learning-tracker
+git init
+git add .
+git commit -m "Add study tracker"
+git branch -M main
+git remote add origin https://github.com/<your-username>/study-tracker.git
+git push -u origin main
+```
+
+Then on GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: `main` / `(root)` → Save**.
+After a minute your site is live at `https://<your-username>.github.io/study-tracker/`.
+
+> Progress is stored per browser. If you study on two devices, use **Export** on one and **Import** on the other.
+
+## Editing the curriculum
+
+The lessons live in readable Markdown files in `content/` (one per module). The format is explained in [`content/FORMAT.md`](content/FORMAT.md).
+
+After editing, regenerate the data file the website loads:
+
+```powershell
+node build.mjs
+```
+
+`node build.mjs --check` validates without writing anything. Never change an existing `id:`, because your saved progress is keyed by it.
+
+## Files
+
+| Path | What it is |
+|---|---|
+| `index.html`, `styles.css`, `app.js` | the website |
+| `content/*.md` | the curriculum (edit these) |
+| `data/curriculum.js` | generated from `content/` by `build.mjs` (don't edit) |
+| `build.mjs` | the converter/validator |
