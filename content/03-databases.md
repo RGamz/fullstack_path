@@ -1176,7 +1176,7 @@ A small online shop is about to build its website and needs a database first. Yo
 ---section
 id: db-s3
 title: Databases in your Node apps
-intro: Connect your Express apps to real databases: SQLite with Node's built-in module, then hosted PostgreSQL with the pg package, safely protected against SQL injection. You'll also try an ORM with migrations and (optionally) MongoDB. You'll finish by upgrading your Book Library API and building a full-stack Expense Tracker.
+intro: Connect your Express apps to real databases: SQLite with Node's built-in module, then PostgreSQL with the pg package (hosted, and locally in Docker), safely protected against SQL injection. You'll also try an ORM with migrations and (optionally) MongoDB. You'll finish by upgrading your Book Library API and building a full-stack Expense Tracker.
 ---
 
 ---lesson
@@ -1561,14 +1561,14 @@ The second command downloads a tiny test image and runs it. If it prints "Hello 
 ## Starting Postgres with one command
 
 ```bash
-docker run --name books-db -e POSTGRES_PASSWORD=devpass -e POSTGRES_DB=books -p 5432:5432 -d postgres:17
+docker run --name books-db -e POSTGRES_PASSWORD=devpass -e POSTGRES_DB=books -p 127.0.0.1:5432:5432 -d postgres:17
 ```
 
 Piece by piece:
 
 - `--name books-db` gives the container a name, so you can refer to it later.
 - `-e POSTGRES_PASSWORD=devpass` and `-e POSTGRES_DB=books` are environment variables the image reads on first start: the password for the `postgres` user and a database to create.
-- `-p 5432:5432` connects **your** port 5432 to the container's port 5432 (`yourPort:containerPort`), so programs on your computer can reach it at `localhost:5432`.
+- `-p 127.0.0.1:5432:5432` connects **your** port 5432 to the container's port 5432 (`yourPort:containerPort`), so programs on your computer can reach it at `localhost:5432`. The `127.0.0.1:` part means "only from this computer": without it, anyone on the same Wi-Fi could try to connect to a database whose password is `devpass`.
 - `-d` runs it in the background ("detached").
 - `postgres:17` is the image and its **tag** (version). Always pin a version, so the database doesn't change under you when a new major version comes out.
 
@@ -1593,17 +1593,19 @@ There's no `?sslmode=require` here: a local container doesn't use SSL. Your `pg.
 
 ## Keeping your data: volumes
 
-A container's files disappear when the container is deleted. To keep the database's data, store it in a **volume**, a storage area Docker manages outside the container:
+A container's files disappear when the container is deleted. To keep the database's data, store it in a **volume**, a storage area Docker manages outside the container. Container names must be unique, so first delete the container from the previous step with `docker rm -f books-db`, then start a new one:
 
 ```bash
-docker run --name books-db -e POSTGRES_PASSWORD=devpass -e POSTGRES_DB=books -p 5432:5432 -v books-data:/var/lib/postgresql/data -d postgres:17
+docker run --name books-db -e POSTGRES_PASSWORD=devpass -e POSTGRES_DB=books -p 127.0.0.1:5432:5432 -v books-data:/var/lib/postgresql/data -d postgres:17
 ```
 
 `-v books-data:/var/lib/postgresql/data` means "keep the folder where Postgres 17 stores its data in a volume named `books-data`". Now you can delete and recreate the container and your tables are still there. (Newer major versions of the image may store data in a different folder; check the image's page on Docker Hub when you upgrade.)
 
 ## Docker Compose: the whole setup in one file
 
-Typing long commands gets old. **Docker Compose** describes your containers in a file you commit with your project, so anyone can start the same setup with one command. Create `compose.yaml` in the project root:
+Typing long commands gets old. **Docker Compose** describes your containers in a file you commit with your project, so anyone can start the same setup with one command.
+
+Two things first. Remove the container from the `docker run` steps (`docker rm -f books-db`), or Compose can't use port 5432. And make sure your schema file `db/migrations/001_init.sql` **exists** (it can start with just your `CREATE TABLE books …`), because Compose mounts it into the containers. Then create `compose.yaml` in the project root:
 
 ```yaml
 services:
@@ -1614,7 +1616,7 @@ services:
       POSTGRES_PASSWORD: devpass
       POSTGRES_DB: books
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
       - ./db/migrations/001_init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
@@ -1630,11 +1632,15 @@ services:
       POSTGRES_PASSWORD: testpass
       POSTGRES_DB: books_test
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - ./db/migrations/001_init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     tmpfs:
       - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d books_test"]
+      interval: 2s
+      retries: 15
 
 volumes:
   db-data:
@@ -1644,7 +1650,7 @@ What's new here:
 
 - **Two databases.** `db` is for development (port 5432, data kept in the `db-data` volume). `db-test` is for automated tests (port 5433). Its data lives in `tmpfs`, which is memory: fast, and wiped every time the container stops. That's exactly what tests want.
 - **`docker-entrypoint-initdb.d`.** Any `.sql` file mounted into this folder runs automatically the **first time** the database starts with an empty data folder. Mounting your schema file (`db/migrations/001_init.sql`, the SQL file that creates your tables; the Books API project uses this name) there means both databases get your tables without any manual step. `:ro` mounts it read-only.
-- **`healthcheck`.** `pg_isready` asks Postgres whether it accepts connections yet. Compose uses it to know when the database is really ready, not just started.
+- **`healthcheck`.** `pg_isready` asks Postgres whether it accepts connections yet. Compose uses it to know when the database is really ready, not just started. `--wait` only waits for services that *have* a healthcheck, which is why both databases get one.
 
 Use it with:
 
@@ -1659,9 +1665,11 @@ Your `.env` points at the development database, and your tests use `postgresql:/
 
 ## Common mistakes
 
-- **"Port is already allocated"**: something else (often a Postgres you installed earlier) already uses 5432. Change the left side of the mapping, `"5434:5432"`, and use port 5434 in your connection string.
+- **"Port is already allocated"**: something else (often a Postgres you installed earlier) already uses 5432. Change your side of the mapping, `"127.0.0.1:5434:5432"`, and use port 5434 in your connection string. If the culprit is your own `books-db` container from the `docker run` steps, remove it with `docker rm -f books-db`.
 - **"Connection refused" right after starting**: Postgres needs a few seconds to boot. Use `--wait` with a healthcheck, or check `docker logs`.
 - **Changes to `001_init.sql` don't apply**: init scripts only run on an *empty* database. Run `docker compose down -v` and `up` again to recreate it (this deletes the dev data, so keep a seed script).
+- **The schema file didn't exist when you ran `docker compose up`**: Docker then silently creates an empty *folder* named `001_init.sql`, and your tables never appear. Delete that folder, create the real file, then `docker compose down -v` and `up` again.
+- **"The container name is already in use"**: you ran `docker run --name books-db` twice. Remove the old one with `docker rm -f books-db` (its volume and data are kept).
 - **`sslmode=require` copied from the hosted URL**: the local server rejects SSL connections. Remove it.
 - **Docker Desktop isn't running**: every command then fails with an error about the Docker daemon or engine.
 
@@ -1987,13 +1995,13 @@ Your Book Library API from the Express module keeps its books in an array, so ev
 
 ### Steps
 1. Draw the ER diagram on dbdiagram.io and add the image to the README. Create a Neon or Supabase project (for development you can use your local Docker database from "Running Postgres locally with Docker" instead), put `DATABASE_URL` in `.env`, add `db/pool.js` (or your ORM setup), and check the connection with a `SELECT now()` script.
-2. Write the schema: either `db/migrations/001_init.sql`, run in the SQL editor, or ORM schema + first migration. Include the constraints and the two indexes. Check the tables exist.
+2. Write the schema: either `db/migrations/001_init.sql`, run in the SQL editor (on Docker: run `docker compose down -v` and `up -d --wait` so the init script creates the tables), or ORM schema + first migration. Include the constraints and the two indexes. Check the tables exist.
 3. Write `db/seed.js` and add `"db:seed": "node --env-file=.env db/seed.js"` to `package.json`. Empty the tables first so the script can run again, then insert authors, tags, books and links. Run it twice and check the counts.
 4. Rewrite the read functions in `data/books.js`: `findById` (with author and tags), then `findAll` with search, filters and pagination, still returning `{ data, total }`. Test with your saved Thunder Client/Postman requests.
 5. Rewrite `create`, `update` and `remove`. Use a transaction for "insert book + insert its tags" (and for "replace the tags" on update). Map Postgres error codes to 400/409 in your error middleware.
 6. Add the authors and tags endpoints. Test each, including a 404 for an unknown author or tag.
 7. Run `EXPLAIN ANALYZE` on `GET /api/authors/:id/books`'s query with and without the `author_id` index, and note the result in the README.
-8. Deploy: set `DATABASE_URL` on your hosting platform, run the seed against the hosted database, and test the live URL. Update the README with setup steps and the new endpoint table.
+8. Deploy: set `DATABASE_URL` on your hosting platform to your Neon/Supabase connection string (your local `.env` can keep pointing at Docker), run the schema and seed against the hosted database, and test the live URL. Update the README with setup steps and the new endpoint table.
 
 ### Hints
 - Your controllers already `await` the functions in `data/books.js` (`findAll`, `findById`, `create`, `update`, `remove`), so only the inside of that file changes. The new endpoints get their own `data/authors.js` and `data/tags.js`.

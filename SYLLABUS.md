@@ -112,7 +112,7 @@ Real data is spread over many related tables. Learn to combine them with JOINs, 
 
 ### Part 3: Databases in your Node apps
 
-Connect your Express apps to real databases: SQLite with Node's built-in module, then hosted PostgreSQL with the pg package, safely protected against SQL injection. You'll also try an ORM with migrations and (optionally) MongoDB. You'll finish by upgrading your Book Library API and building a full-stack Expense Tracker.
+Connect your Express apps to real databases: SQLite with Node's built-in module, then PostgreSQL with the pg package (hosted, and locally in Docker), safely protected against SQL injection. You'll also try an ORM with migrations and (optionally) MongoDB. You'll finish by upgrading your Book Library API and building a full-stack Expense Tracker.
 
 - 3.8 Using SQLite from Node (and SQL injection) *(2h)*
 - 3.9 PostgreSQL and hosted databases *(2h)*
