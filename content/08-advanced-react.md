@@ -273,7 +273,7 @@ Older code wraps components in `forwardRef(...)` to do this. You'll still see it
 Refs also store values that must survive between renders but don't affect the output, like the id of a running interval:
 
 ```tsx
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function Stopwatch() {
   const [startedAt, setStartedAt] = useState<number | null>(null);
@@ -292,6 +292,11 @@ export function Stopwatch() {
     intervalRef.current = null;
   }
 
+  // Cleanup only: stop the interval if the component disappears while running
+  useEffect(() => () => {
+    if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
+  }, []);
+
   const seconds = startedAt ? (now - startedAt) / 1000 : 0;
 
   return (
@@ -304,17 +309,47 @@ export function Stopwatch() {
 }
 ```
 
-The interval id is never shown, but `stop()` needs it later. A normal variable (`let id`) would be reset on every render; state would cause pointless re-renders. A ref is exactly right. We use `window.setInterval` so TypeScript knows it returns a `number`.
+The interval id is never shown, but `stop()` needs it later. A normal variable (`let id`) would be reset on every render; state would cause pointless re-renders. A ref is exactly right. We use `window.setInterval` so TypeScript knows it returns a `number`. The effect has no setup, only a cleanup: without it, leaving the page while the stopwatch runs would keep the interval calling `setNow` forever.
 
 ## Ref callbacks
 
-Instead of a ref object you can pass a function. React calls it with the DOM node when the element appears. In React 19 it can return a cleanup function that runs when the element is removed:
+Instead of a ref object you can pass a function. React calls it with the DOM node when the element appears. In React 19 it can return a cleanup function that runs when the element is removed. This is handy for lists, where you can't create one `useRef` per item:
 
 ```tsx
-<li ref={(node) => { node?.scrollIntoView({ behavior: "smooth" }); }}>Newest message</li>
+const itemRefs = useRef(new Map<number, HTMLLIElement>());
+
+{items.map((item) => (
+  <li
+    key={item.id}
+    ref={(node) => {
+      if (node) itemRefs.current.set(item.id, node);
+      return () => { itemRefs.current.delete(item.id); };
+    }}
+  >
+    {item.text}
+  </li>
+))}
+
+// later, in an event handler:
+itemRefs.current.get(id)?.scrollIntoView({ behavior: "smooth" });
 ```
 
-This is handy for lists, where you can't create one `useRef` per item.
+Careful: an inline ref callback is a **new function on every render**, so React runs the cleanup and calls it again after every re-render. That's harmless for storing nodes, but bad for side effects: `ref={(node) => { node?.scrollIntoView(); }}` would scroll on *every* render, not only when a new message arrives. For "scroll to the newest message", put a normal ref on an element after the list and scroll in an effect:
+
+```tsx
+const endRef = useRef<HTMLDivElement>(null);
+
+useEffect(() => {
+  endRef.current?.scrollIntoView({ behavior: "smooth" });
+}, [messages.length]);
+
+return (
+  <>
+    <ul>{messages.map((m) => <li key={m.id}>{m.text}</li>)}</ul>
+    <div ref={endRef} />
+  </>
+);
+```
 
 ## Common mistakes
 
@@ -334,7 +369,7 @@ This is handy for lists, where you can't create one `useRef` per item.
 - Build a search box that is focused automatically when the page loads (use an effect plus a ref) and when the user presses a "Focus" button.
 - Build the stopwatch above, then add a "Lap" button that stores lap times in state.
 - Build a form with three inputs. On submit, if a field is empty, focus the first empty field and show an error message.
-- Build a chat-style list where adding a message scrolls the newest one into view, using a ref callback.
+- Build a chat-style list where adding a message scrolls the newest one into view, using a ref on an element after the list and an effect.
 
 ---lesson
 id: ar-3
@@ -726,10 +761,11 @@ import { useEffect, useState } from "react";
 
 type Result<T> = { url: string; data: T | null; error: Error | null };
 
-export function useFetch<T>(url: string) {
+export function useFetch<T>(url: string | null) {
   const [result, setResult] = useState<Result<T> | null>(null);
 
   useEffect(() => {
+    if (url === null) return; // nothing to fetch yet
     const controller = new AbortController();
 
     fetch(url, { signal: controller.signal })
@@ -746,6 +782,7 @@ export function useFetch<T>(url: string) {
     return () => controller.abort();
   }, [url]);
 
+  if (url === null) return { data: null, error: null, isLoading: false };
   if (!result || result.url !== url) return { data: null, error: null, isLoading: true };
   return { data: result.data, error: result.error, isLoading: false };
 }
@@ -754,6 +791,7 @@ export function useFetch<T>(url: string) {
 - `fetch` doesn't reject on a 404 or 500, so we check `res.ok` and throw ourselves.
 - When `url` changes, the cleanup aborts the old request, so an old, slow response can never overwrite a newer one.
 - We store which URL the result belongs to. "Loading" is simply "the result we have isn't for the current URL", so we never need to set a loading flag by hand.
+- `url` may be `null`: then the hook fetches nothing. That's how a component "skips" a hook without calling it inside an `if`, for example while it waits for a username or coordinates.
 
 Using it reads almost like English:
 
@@ -802,6 +840,7 @@ test("updates only after the delay", () => {
 - **Calling a hook conditionally**, like `if (loggedIn) useFetch(...)`. Instead, pass an argument that tells the hook to do nothing, or move the condition into a child component.
 - **Expecting shared state.** Two calls to the same hook are independent.
 - **Returning JSX.** Hooks return data and functions; components return UI.
+- **Changing the `key` of `useLocalStorage`.** The `useState` initialiser runs only on the first render, so with a new key the effect saves the *old* value under the new key. If the key can change, render the component with `key={storageKey}`: React then remounts it and reads storage again.
 
 ## In short
 
@@ -839,7 +878,7 @@ Build a personal start page with widgets you'd actually use every day: a clock, 
 ### Steps
 1. **Scaffold and layout.** Create the project with `npm create vite@latest dashboard -- --template react-ts`, add Vitest and React Testing Library as in the Testing module. Build the `Widget` component and a CSS grid with five placeholder widgets. Run it and check the grid at phone and desktop width.
 2. **Clock and todos.** Build the Clock (an interval in an effect, cleaned up). Write `todosReducer` with typed actions and test every action *before* building the Todo widget's UI. Focus the new-todo input when the widget loads, using a ref.
-3. **Persistence.** Write `useLocalStorage` with tests (`renderHook`), and use it to save the todos so they survive a reload.
+3. **Persistence.** Write `useLocalStorage` with tests (`renderHook`) and use it for simple values like the theme and the fallback city. Make the todos survive a reload too (a reducer needs a slightly different approach, see the hints).
 4. **GitHub widget.** Write `useFetch<T>`, then `useGitHubUser(username)` on top of it. Show the avatar and stats, a loading state, and a clear message for an unknown username (the API answers 404).
 5. **Weather widget.** Write a `useGeolocation()` hook that wraps `navigator.geolocation.getCurrentPosition` and returns coordinates or an error. Build `useWeather(coords)` with Open-Meteo and turn the weather code into a readable label.
 6. **Quote widget.** Build `useQuote()` and the quote widget. Add a "New quote" button in the widget's `actions` slot.
@@ -849,7 +888,8 @@ Build a personal start page with widgets you'd actually use every day: a clock, 
 ### Hints
 - Open-Meteo example: `https://api.open-meteo.com/v1/forecast?latitude=52.37&longitude=4.89&current=temperature_2m,weather_code`. Weather codes are documented on open-meteo.com; a small lookup object (`0: "Clear"`, `61: "Rain"`, …) is enough.
 - The GitHub API allows 60 requests per hour without a key. Don't fetch on every keystroke in the settings: save the username on submit, or use `useDebounce`.
-- A hook can't be called conditionally. If there are no coordinates yet, let `useWeather` accept `null` and simply not fetch, instead of wrapping it in an `if`.
+- A hook can't be called conditionally. If there are no coordinates yet, let `useWeather` accept `null` and simply not fetch (like `useFetch` with a `null` URL), instead of wrapping it in an `if`.
+- `useLocalStorage` wraps `useState`, so it can't hold reducer state. For the todos (and the settings), give `useReducer` an init function as third argument, which runs once: `useReducer(todosReducer, [], loadTodos)`, where `loadTodos` reads and parses `localStorage.getItem("todos")` inside `try/catch` and falls back to `[]`. Then save in an effect: `useEffect(() => { localStorage.setItem("todos", JSON.stringify(todos)); }, [todos])`.
 - For the theme, set a `data-theme` attribute on `document.documentElement` in an effect and define your colours as CSS variables for each theme.
 - Generate todo ids with `crypto.randomUUID()` in the event handler, not in the reducer.
 
@@ -1006,9 +1046,10 @@ function Books() {
 
   function changeGenre(next: string) {
     setSearchParams((prev) => {
-      if (next === "all") prev.delete("genre");
-      else prev.set("genre", next);
-      return prev;
+      const params = new URLSearchParams(prev); // a copy: don't change prev itself
+      if (next === "all") params.delete("genre");
+      else params.set("genre", next);
+      return params;
     });
   }
 
@@ -1740,7 +1781,7 @@ function SearchPage({ products }: { products: Product[] }) {
 }
 ```
 
-React first re-renders with the new `query` but the old `deferredQuery`, which is fast. Then it renders the table with the new value **in the background**, and if the user types again, it throws that work away and starts over. Important: this only helps if `ProductTable` is wrapped in `memo` (or compiled by the React Compiler); otherwise it re-renders in the fast pass too.
+React first re-renders with the new `query` but the old `deferredQuery`, which is fast. Then it renders the table with the new value **in the background**, and if the user types again, it throws that work away and starts over. Important: this only helps if `ProductTable` is wrapped in `memo` (or compiled by the React Compiler); otherwise it re-renders in the fast pass too. The `ProductTable` from Fix 2 isn't yet, so wrap it the same way as `ProductRow`: `const ProductTable = memo(function ProductTable(...) { ... })`.
 
 `useTransition` is the related tool for updates *you* trigger, like clicking a sort button: `startTransition(() => setSort("price"))` marks the update as non-urgent, and `isPending` tells you to show a small spinner. You can't use it for the input's own value, which must update immediately.
 
@@ -1832,6 +1873,7 @@ Performance work is a skill you prove with numbers, not opinions. Build a produc
 ### Hints
 - `<table>` elements are awkward to virtualise. The simplest approach is rows made of `div`s laid out with CSS grid (`grid-template-columns`) and `role="table"`, `role="row"` and `role="cell"` for accessibility, with the header row outside the scrolling area.
 - `useDeferredValue` only helps if the slow child is a `memo` component. If typing is still slow after step 6, check that first.
+- Generate the 10,000 products once: at module level (`const products = generateProducts(10_000, 42);` outside any component) or in a lazy initialiser (`useState(() => generateProducts(10_000, 42))`). If you call it in the component body, every render creates a new array, so `useMemo` and `memo` always see "new" products and never skip.
 - Sort a copy (`[...list].sort(...)`), never the original array, and use `product.id` as the key, never the index.
 - Make the "expensive work" big enough to feel but not so big the page freezes: aim for typing that clearly lags in the baseline.
 - Profile the same way every time (same browser, same window size, same text typed), otherwise the numbers can't be compared.

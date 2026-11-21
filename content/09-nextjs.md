@@ -227,7 +227,8 @@ import { usePathname } from "next/navigation";
 
 export function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   const pathname = usePathname();
-  const isActive = pathname === href;
+  const isActive =
+    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
   return (
     <Link href={href} className={isActive ? "font-bold underline" : "text-gray-600"}>
       {children}
@@ -235,6 +236,8 @@ export function NavLink({ href, children }: { href: string; children: React.Reac
   );
 }
 ```
+
+The check also marks "Projects" as active on a page inside it, like `/projects/my-app`, but not on `/projects-old`; the home link `/` is only active on the home page itself.
 
 Use `<NavLink href="/about">About</NavLink>` in your layout. The layout itself stays a normal (server) component; only this small piece runs in the browser.
 
@@ -656,7 +659,8 @@ Build the professional portfolio website you'll show to employers. Project case 
 6. **Case study pages.** Create `app/projects/[slug]/page.tsx`: await `params`, load the project, call `notFound()` if missing, render the Markdown with `react-markdown` and the typography plugin. Add `generateStaticParams`, `generateMetadata` and `app/not-found.tsx`.
 7. **Dark mode.** Add `dark:` variants to your colours and check the site with your system set to dark. Then add a toggle button (a client component) using the `next-themes` package.
 8. **Production check.** Run `npm run build && npm start`, then Lighthouse in an incognito window. Fix what it reports (missing `alt` text, colour contrast, heading order, oversized images). Add an `opengraph-image.png` to `app/`.
-9. **Publish the code.** Write a README (what it is, the tech used, how to add a project) and push to GitHub. You'll deploy it in the last section of this module.
+9. **Test the loader.** Set up Vitest (as in the Testing module) and write a test for `lib/projects.ts`: `getAllProjects()` returns the projects sorted by `order`, and `getProject()` returns `null` for an unknown or invalid slug. Make it run with `npm test`.
+10. **Publish the code.** Write a README (what it is, the tech used, how to add a project) and push to GitHub. You'll deploy it after the "Deploying to Vercel" lesson in the last section of this module, then add the live link to the README.
 
 ### Hints
 - `gray-matter` returns `data` with type `any`. Validate it with a small Zod schema (you know Zod from the Express module) so a typo in the frontmatter gives a clear error instead of a broken page.
@@ -664,6 +668,7 @@ Build the professional portfolio website you'll show to employers. Project case 
 - By default, Tailwind's `dark:` follows the system setting. For a toggle, make it follow a class instead: add `@custom-variant dark (&:where(.dark, .dark *));` to `globals.css` and use `<ThemeProvider attribute="class">` from `next-themes`.
 - `next-themes` changes the `<html>` element before React loads, so add `suppressHydrationWarning` to `<html>`. The theme isn't known on the server, so render the toggle's icon only after the component has mounted, or you'll get a hydration mismatch.
 - Always measure Lighthouse on the production build. The dev server is much slower and gives misleading scores.
+- If your loader has `import "server-only"`, that import throws when Vitest loads the file. Add `vi.mock("server-only", () => ({}));` at the top of the test file.
 
 ### Stretch goals
 - After the next section: replace the `mailto:` link with a contact form that sends you an email through a Server Action (Resend's free tier), with a hidden honeypot field against spam bots.
@@ -680,7 +685,7 @@ Build the professional portfolio website you'll show to employers. Project case 
 - Lighthouse scores 95+ in all four categories on the production build
 - The code is on GitHub with a README
 - At least one automated test runs with `npm test` (for example a Vitest test of the Markdown loader)
-- The site is deployed on Vercel and the live link is in the README
+- Deployed on Vercel with the live link in the README (after the "Deploying to Vercel" lesson in the last section)
 
 ---section
 id: next-s2
@@ -869,17 +874,20 @@ Reading data is half of an app; the other half is changing it: creating, editing
 export type Message = { id: number; name: string; text: string; createdAt: Date };
 
 const messages: Message[] = []; // lives in server memory: lost on restart
+let nextId = 1;
 
 export function getMessages() {
   return [...messages].reverse(); // newest first
 }
 
 export function addMessage(data: { name: string; text: string }) {
-  const message = { id: messages.length + 1, ...data, createdAt: new Date() };
+  const message = { id: nextId++, ...data, createdAt: new Date() };
   messages.push(message);
   return message;
 }
 ```
+
+The id comes from a counter, not from `messages.length + 1`: later you'll delete messages, and after a delete the length goes down, so two messages could get the same id.
 
 ## Your first Server Action
 
@@ -1396,9 +1404,10 @@ While learning you find great articles, videos and docs every day, and browser b
 3. **List page.** Build `app/bookmarks/page.tsx`: await `searchParams`, read `tag`, call `listBookmarks`, and render cards. Tag chips are links to `"/bookmarks?tag=" + encodeURIComponent(tag)`. Add the filter header with a "Clear filter" link, and an empty state ("No bookmarks yet. Add your first one!").
 4. **Loading and error states.** Add `loading.tsx` with a skeleton and `error.tsx` with a retry button. Test them with a temporary 2-second delay and a temporary `throw` in the page, then remove both.
 5. **Create.** Put the Zod schema in `lib/schemas.ts`. Write `createBookmarkAction` in `app/bookmarks/actions.ts` (validate, insert, `revalidatePath("/bookmarks")`, then `redirect("/bookmarks")`). Build a `BookmarkForm` client component with `useActionState` that shows field errors and a pending button, and keeps values on error.
-6. **Edit and delete.** Create `app/bookmarks/[id]/edit/page.tsx`: await `params`, check the id is a whole number, load the bookmark or call `notFound()`. Reuse `BookmarkForm` with default values and an update action bound to the id. Add a delete button in a small client component that asks `confirm()` before submitting a form with the bound delete action.
-7. **JSON API.** Create `app/api/bookmarks/route.ts` with a `GET` handler that reuses `listBookmarks` and supports `?tag=`. Test it in the browser and with curl.
-8. **Polish and document.** Make the layout responsive, add a header with a "New bookmark" button, run `npm run build` and fix any type errors. Write a README with a screenshot and setup instructions (environment variables, migrate, seed).
+6. **Test the schema.** Set up Vitest and write tests for the schema in `lib/schemas.ts`: valid and invalid URLs (including a `javascript:` link), title length, and tag normalisation (spaces, upper case, duplicates, empty tags). Make them run with `npm test`.
+7. **Edit and delete.** Create `app/bookmarks/[id]/edit/page.tsx`: await `params`, check the id is a whole number, load the bookmark or call `notFound()`. Reuse `BookmarkForm` with default values and an update action bound to the id. Add a delete button in a small client component that asks `confirm()` before submitting a form with the bound delete action.
+8. **JSON API.** Create `app/api/bookmarks/route.ts` with a `GET` handler that reuses `listBookmarks` and supports `?tag=`. Test it in the browser and with curl.
+9. **Polish and document.** Make the layout responsive, add a header with a "New bookmark" button, run `npm run build` and fix any type errors. Add a `.env.example`. Write a README with a screenshot and setup instructions (environment variables, migrate, seed). You'll deploy the app after the "Deploying to Vercel" lesson in the next section, then add the live link to the README.
 
 ### Hints
 - A text array column in Drizzle is `text("tags").array().notNull()` with an empty-array default written with Drizzle's `sql` helper (`'{}'::text[]`). Filter by one tag with `arrayContains(bookmarks.tags, [tag])`. In Prisma: `tags String[]` and `where: { tags: { has: tag } }`.
@@ -1416,7 +1425,6 @@ While learning you find great articles, videos and docs every day, and browser b
 - A sidebar listing every tag with its number of bookmarks.
 - Fill in the title automatically: when the title field is left empty, fetch the URL in the action and read its `<title>` (with a timeout).
 - Pagination with `?page=`.
-- Vitest tests for your Zod schema, especially the tag normalisation.
 - Store tags in their own table with a many-to-many join table instead of an array.
 
 ### Done when
@@ -1429,7 +1437,7 @@ While learning you find great articles, videos and docs every day, and browser b
 - `npm run build` succeeds and the README explains how to set the project up
 - Vitest tests cover the Zod bookmark schema, including URL validation and tag normalisation
 - `.env.example` lists every environment variable with placeholder values, and `.env` is git-ignored
-- The app is deployed and the live link is in the README
+- Deployed on Vercel with the live link in the README (after the "Deploying to Vercel" lesson in the next section)
 
 ---section
 id: next-s3
@@ -1485,9 +1493,10 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "@/db";
+import * as schema from "@/db/schema";
 
 export const auth = betterAuth({
-  database: drizzleAdapter(db, { provider: "pg" }),
+  database: drizzleAdapter(db, { provider: "pg", schema }),
   emailAndPassword: { enabled: true },
   socialProviders: {
     github: {
@@ -1499,7 +1508,7 @@ export const auth = betterAuth({
 });
 ```
 
-Better Auth needs its own tables (`user`, `session`, `account`, `verification`). Its CLI generates them for your ORM (at the time of writing `npx auth@latest generate`; check the installation page), and then you run your normal migration. Finally, two small files connect it to Next.js:
+Better Auth needs its own tables (`user`, `session`, `account`, `verification`). Its CLI generates them for your ORM (at the time of writing `npx auth@latest generate`; check the installation page), and then you run your normal migration. The generated tables must be part of the Drizzle schema the adapter receives: put them in `db/schema.ts` (or export them from it) next to your own tables, and pass `schema` to `drizzleAdapter` as above. Otherwise the adapter can't find them, and sign-in fails at runtime with an error that a model (like `user`) wasn't found. Finally, two small files connect it to Next.js:
 
 ```ts
 // app/api/auth/[...all]/route.ts
@@ -1759,7 +1768,7 @@ Build a blog with two sides: a public side where anyone can read published posts
 4. **Admin list.** Build `/admin` with a table of all posts (drafts too), their status and dates, and "Edit" links. Call `requireAdmin()` at the top.
 5. **Create and edit.** Build a `PostForm` client component with `useActionState`: title, slug (optional, generated when empty), excerpt, tags (comma-separated) and content with a live preview next to it. Write `createPost` and `updatePost` actions: `requireAdmin()`, Zod validation, unique slug, save the post and its tags in one transaction, `revalidatePath`, then `redirect` to the admin list.
 6. **Publish and delete.** Add publish/unpublish and delete actions (bound to the post id), each starting with `requireAdmin()`. Set `published_at` on first publish. Ask for confirmation before deleting.
-7. **Polish.** Add `error.tsx`, a custom `not-found.tsx` and `app/sitemap.ts`. Style long text with the typography plugin. Write a Vitest test for your `slugify` function (spaces, accents, punctuation, repeated dashes).
+7. **Polish.** Add `error.tsx`, a custom `not-found.tsx` and `app/sitemap.ts`. Style long text with the typography plugin. Write Vitest tests for your `slugify` function (spaces, accents, punctuation, repeated dashes) and your post Zod schema. Then add one Playwright test against the seeded data: the home page shows a published post, opening it shows its title, and the draft's URL returns a 404.
 8. **Deploy.** Create the production database and run the migrations, create a production GitHub OAuth app, set all environment variables on Vercel and deploy. Test the full flow on the live URL: sign in, write, publish, read as a signed-out visitor. Write a README with the live link, screenshots and setup steps.
 
 ### Hints
@@ -1823,6 +1832,7 @@ Build a small SaaS-style app where anyone can sign up, track daily habits ("read
 - The unique constraint on (`habit_id`, `date`) makes double taps harmless: in Drizzle, `onConflictDoNothing()` on insert.
 - Chart libraries need `"use client"`; pass them plain arrays of numbers and strings, not database rows with `Date` objects.
 - To prove the per-user checks work, sign in as a second user (a second browser or a private window) and try to open the first user's habit URLs.
+- Employers who review your app may not want to sign in with their own Google or GitHub account. Enable Better Auth's email and password sign-in too, create a demo account (for example `demo@example.com`) with a few habits and check-ins, and put its email and password in the README. Create it through Better Auth's sign-up (in the app, or with `auth.api.signUpEmail` in a seed script) so the password is hashed correctly. Use a new password made only for this demo, never one you use anywhere else.
 
 ### Stretch goals
 - Instant toggles with React's `useOptimistic`, so the check appears before the server responds.

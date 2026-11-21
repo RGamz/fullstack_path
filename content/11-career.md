@@ -67,7 +67,7 @@ I kept forgetting my daily Spanish practice and wanted streaks that motivate me.
 - Streaks calculated server-side (unit-tested)
 
 ## Tech stack
-Next.js, TypeScript, PostgreSQL (Neon) with Drizzle, Auth.js, Vitest, Playwright
+Next.js, TypeScript, PostgreSQL (Neon) with Drizzle, Better Auth, Vitest, Playwright
 
 ## Run it locally
 1. `git clone ...` and `npm install`
@@ -78,7 +78,7 @@ Next.js, TypeScript, PostgreSQL (Neon) with Drizzle, Auth.js, Vitest, Playwright
 Calculating streaks across time zones was harder than expected...
 ```
 
-The **demo login** matters: reviewers won't sign up for an account. Create a seeded demo user with sample data so the app looks alive. The "What I learned" section gives interviewers something to ask you about.
+The **demo login** matters: reviewers won't sign up for an account. Create a seeded demo user with sample data so the app looks alive. If the app only has Google or GitHub sign-in (like the Habit tracker), also enable email/password sign-in in Better Auth and seed the demo account with it, so reviewers can try the app without using their own Google or GitHub account. The "What I learned" section gives interviewers something to ask you about.
 
 ## The polish checklist
 
@@ -141,7 +141,7 @@ A good project card answers "what, for whom, with what" in seconds:
 ```
 Habit Hero
 Track habits and streaks with charts. Built for people learning a language daily.
-Next.js · TypeScript · PostgreSQL · Auth.js
+Next.js · TypeScript · PostgreSQL · Better Auth
 [Live demo]  [Code]  [Case study]
 ```
 
@@ -237,8 +237,8 @@ Group skills and list only what you could discuss in an interview:
 ```
 Languages: JavaScript, TypeScript, SQL, HTML, CSS
 Frontend: React, Next.js, Tailwind CSS
-Backend: Node.js, Express, PostgreSQL, REST APIs, Auth.js
-Tools & practices: Git, GitHub Actions, Vitest, Playwright, Vercel, LLM APIs & RAG
+Backend: Node.js, Express, PostgreSQL, REST APIs, Better Auth
+Tools & practices: Git, GitHub Actions, Docker, Vitest, Playwright, Vercel, LLM APIs & RAG
 ```
 
 ## Writing bullet points that work
@@ -314,6 +314,8 @@ id: car-4
 title: LinkedIn, networking and building in public
 time: 2h
 video: LinkedIn tips for software developers
+docs: LinkedIn Help: edit your profile | https://www.linkedin.com/help/linkedin/answer/a546603
+docs: LinkedIn Help: the About section | https://www.linkedin.com/help/linkedin/answer/a553140
 ---
 Many developer jobs, especially junior ones, are filled through people: a referral, a recruiter who saw your post, someone you met at a meetup. Applying cold through job boards works, but a warm introduction is many times more likely to get you an interview. Networking for developers isn't about selling yourself; it's about being visible, helpful and genuinely curious. This lesson covers LinkedIn, building in public, and reaching out without being awkward.
 
@@ -486,10 +488,10 @@ Cast a wide net. Good entry points include:
 Job ads are wish lists. If you match about **60% of the requirements** and the core technologies, apply. Read the ad in three parts:
 
 - **Must-haves**: the main stack (for example React and TypeScript). You need most of these.
-- **Nice-to-haves**: "experience with AWS, GraphQL, Docker". Not required, despite how they sound.
+- **Nice-to-haves**: "experience with AWS, GraphQL, Kubernetes". Not required, despite how they sound.
 - **Signals**: "3+ years" in a junior ad is often flexible; "senior" or "lead" in the title usually isn't.
 
-Look for patterns. If 8 out of 10 ads in your area ask for something you don't have (for example Docker), that's a sign to learn it next.
+Look for patterns. If 8 out of 10 ads in your area ask for something you don't have (for example GraphQL), that's a sign to learn it next.
 
 ## The application tracker
 
@@ -683,6 +685,8 @@ function levelOrder(root) {
 }
 ```
 
+Interview bonus: `queue.shift()` is O(n), because every remaining element moves one place forward. For big inputs, keep a head index instead and never remove items: `let head = 0;` and `const node = queue[head++];`, with `while (head < queue.length)` as the loop condition (count `levelSize` as `queue.length - head`). Mentioning this shows you know the cost of the methods you use.
+
 ## A process for every problem
 
 Use the same steps every time, out loud, in practice and in interviews:
@@ -767,7 +771,7 @@ For **"Tell me about yourself"**, prepare a 60–90 second answer: present (what
 
 ## Honesty and "I don't know"
 
-You will be asked things you don't know. Say so, then show how you'd find out: "I haven't used Docker in a project yet. I understand it packages an app with its dependencies, and I'd start with the official getting-started guide and containerise my Books API to learn it." This is a good answer: honest, shows basic understanding and a plan.
+You will be asked things you don't know. Say so, then show how you'd find out: "I haven't used Redis in a project yet. I understand it's a fast in-memory data store that's often used for caching, and I'd start with the official getting-started guide and add caching to my Books API to learn it." This is a good answer: honest, shows basic understanding and a plan.
 
 ## Questions to ask them
 
@@ -836,7 +840,7 @@ summary: A six-week plan: 30 coding problems with explanations, 6 STAR stories, 
 Interview skills improve with structured practice, not with last-minute cramming. In this project you follow a six-week plan that prepares you for all three interview types from this section: coding challenges, behavioural questions and take-home tasks. Everything goes into a public GitHub repository, which becomes evidence of your problem-solving and a revision guide you can reread before every real interview.
 
 ### What it must do
-- A repo `interview-practice` with one folder per problem, for example `problems/01-two-sum/`, containing `solution.js`, a `solution.test.js` (Vitest) and a `README.md` with the problem link, your approach, the pattern used, time and space complexity, and the mistake you made
+- A repo `interview-practice` with one folder per problem, for example `problems/01-two-sum/`, containing `solution.js` and a `solution.test.js` (Vitest), or `solution.ts` and `solution.test.ts` if you prefer TypeScript, and a `README.md` with the problem link, your approach, the pattern used, time and space complexity, and the mistake you made
 - 30 easy/medium problems in this order: arrays and hash maps → two pointers and sliding window → stacks and queues → trees and BFS/DFS
 - A root `README.md` with a progress table: number, problem, pattern, difficulty, date, solved alone (yes / with hints)
 - 6 written STAR stories in `stories.md`, one per story-bank category from Lesson car-7

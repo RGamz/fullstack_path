@@ -1161,13 +1161,15 @@ Build a Trello-style board for your own tasks with React and TypeScript. Cards m
 5. **State and moving.** Move the cards into `useState<Card[]>` in `App`. Write typed functions `moveCard(id: string, direction: "left" | "right")` and `deleteCard(id: string)`, pass them down as props and add the ← / → / delete buttons.
 6. **Add and edit.** Add the dialog state union and a `CardForm` component with typed `onChange`/`onSubmit` handlers. Validate that the title isn't empty. New cards get `crypto.randomUUID()` as id and `new Date().toISOString()` as `createdAt`.
 7. **Filter and search.** Add `priorityFilter` state typed as `Priority | "all"` and a search string. Compute the visible cards from state while rendering (no extra state needed).
-8. **Persist and deploy.** Load cards from `localStorage` in the `useState` initializer function and save them in a `useEffect` whenever they change. Treat the stored JSON as `unknown` and validate it before using it. Deploy to Netlify or Vercel.
+8. **Test.** Set up Vitest, jsdom and React Testing Library as in the Testing module (`vite.config.ts` with `environment: "jsdom"`, a `src/setupTests.ts` file, and a `test` script). Write `src/App.test.tsx`: render `<App />`, add a card, click its → button with `user-event`, and check that the card now appears in the "Doing" column (`within(...)` helps you search inside one column). Run `npm test` and `npm run build`. Commit.
+9. **Persist and deploy.** Load cards from `localStorage` in the `useState` initializer function and save them in a `useEffect` whenever they change. Treat the stored JSON as `unknown` and validate it before using it. Deploy to Netlify or Vercel.
 
 ### Hints
 - Write the dialog `switch (dialog.mode)` with a `never` check in `default`. If you add a mode later, TypeScript shows you everything to update.
 - `JSON.parse` returns `any`: assign it to `unknown` straight away. A Zod schema (`z.array(CardSchema).safeParse(data)`) is the easiest way to validate stored cards; fall back to an empty board when it fails.
 - `<select>` values are plain strings. To turn one into a `Priority`, check it with `PRIORITIES.includes(...)` in a small type predicate instead of using `as`.
 - Moving a card: find the index of its status in `STATUSES`, add or subtract 1, and create a new array with `map` (never mutate the card).
+- Once cards are saved in `localStorage`, call `localStorage.clear()` in a `beforeEach` in your tests, so every test starts with an empty board.
 
 ### Stretch goals
 - Drag and drop between columns with the native HTML drag events (`onDragStart`, `onDragOver`, `onDrop`, typed as `React.DragEvent<HTMLElement>`).
@@ -1208,7 +1210,7 @@ npm install express zod
 npm install -D typescript tsx @types/node @types/express
 ```
 
-Packages that are written in JavaScript publish their types separately as `@types/...` packages (Express does; Zod is written in TypeScript and includes its types). A `tsconfig.json` for a Node API:
+Packages that are written in JavaScript publish their types separately as `@types/...` packages (Express does; Zod is written in TypeScript and includes its types). A `tsconfig.json` for a Node API whose tests live in `test/`:
 
 ```json
 {
@@ -1217,26 +1219,35 @@ Packages that are written in JavaScript publish their types separately as `@type
     "module": "NodeNext",
     "strict": true,
     "outDir": "dist",
-    "rootDir": "src",
     "skipLibCheck": true,
     "verbatimModuleSyntax": true
   },
+  "include": ["src", "test"]
+}
+```
+
+`verbatimModuleSyntax` requires `import type` for imports that are only types, so it's always clear what disappears when compiling. This config includes `test/`, so `tsc --noEmit` checks your tests too. The build should compile only `src/`, so add a second file, `tsconfig.build.json`, that extends the first:
+
+```json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "rootDir": "src" },
   "include": ["src"]
 }
 ```
 
-`verbatimModuleSyntax` requires `import type` for imports that are only types, so it's always clear what disappears when compiling. Scripts:
+`rootDir: "src"` makes `src/server.ts` compile to `dist/server.js` (not `dist/src/server.js`). Scripts:
 
 ```json
 "scripts": {
-  "dev": "tsx watch src/server.ts",
+  "dev": "tsx watch --env-file=.env src/server.ts",
   "typecheck": "tsc --noEmit",
-  "build": "tsc",
+  "build": "tsc -p tsconfig.build.json",
   "start": "node dist/server.js"
 }
 ```
 
-In development tsx runs the `.ts` files directly; for production you build once and run the plain JavaScript in `dist/`.
+In development tsx runs the `.ts` files directly and loads `.env` with Node's `--env-file` flag; for production you build once and run the plain JavaScript in `dist/`. `start` has no `--env-file`, because in production the hosting platform sets the environment variables (like `DATABASE_URL`).
 
 ## Typed route handlers
 
@@ -1246,25 +1257,20 @@ Express's types describe `req` and `res`. When you write a handler inline, they'
 // src/controllers/books.ts
 import type { Request, Response } from "express";
 import * as books from "../data/books.js";
+import { AppError } from "../utils/AppError.js";
 
 export async function getBook(req: Request<{ id: string }>, res: Response) {
   const id = Number(req.params.id);
-  if (!Number.isInteger(id)) {
-    res.status(400).json({ error: "id must be a number" });
-    return;
-  }
+  if (!Number.isInteger(id)) throw new AppError("id must be a number", 400);
   const book = await books.findById(id);
-  if (!book) {
-    res.status(404).json({ error: "Book not found" });
-    return;
-  }
+  if (!book) throw new AppError("Book not found", 404);
   res.json(book);
 }
 ```
 
 `Request<{ id: string }>` says this route has an `:id` parameter. URL parameters are **always strings**, and now TypeScript reminds you to convert them. `Request` has more type parameters, in this order: params, response body, request body, query: `Request<Params, ResBody, ReqBody, Query>`.
 
-Express 5 sends errors thrown in `async` handlers to your error middleware automatically, so you don't need `try/catch` in every handler.
+Express 5 sends errors thrown in `async` handlers to your error middleware automatically, so you don't need `try/catch` in every handler. (`AppError` is the class from the Express module; its typed version is at the end of this lesson.)
 
 ## Zod: one schema, two jobs
 
@@ -1369,15 +1375,34 @@ The query is the kind you wrote in the Databases module, and `Book` is exactly t
 ## The error handler
 
 ```ts
-import type { ErrorRequestHandler } from "express";
-
+// src/utils/AppError.ts
 export class AppError extends Error {
-  constructor(public status: number, message: string) {
+  status: number;
+
+  constructor(message: string, status = 500) {
     super(message);
+    this.name = "AppError";
+    this.status = status;
   }
 }
+```
+
+The arguments are in the same order as in the Express module: `throw new AppError("Book not found", 404)`.
+
+```ts
+// src/middleware/errorHandler.ts
+import type { ErrorRequestHandler } from "express";
+import { z } from "zod";
+import { AppError } from "../utils/AppError.js";
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+  if (err instanceof z.ZodError) {
+    res.status(400).json({
+      error: "Invalid request",
+      details: err.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
+    });
+    return;
+  }
   if (err instanceof AppError) {
     res.status(err.status).json({ error: err.message });
     return;
@@ -1398,7 +1423,7 @@ Thrown values aren't guaranteed to be `Error`s, so narrow with `instanceof` befo
 
 ## In short
 
-- Install `@types/node` and `@types/express`; develop with `tsx watch`, check with `tsc --noEmit`, build with `tsc`.
+- Install `@types/node` and `@types/express`; develop with `tsx watch --env-file=.env`, check `src` and `test` with `tsc --noEmit`, build only `src` with `tsc -p tsconfig.build.json`.
 - Type handlers with `Request<Params, ResBody, ReqBody, Query>`; URL params are always strings.
 - Zod schemas validate at runtime and give you types with `z.infer`, one source of truth.
 - Give database rows explicit types, and narrow errors in the error handler.
@@ -1424,14 +1449,14 @@ Convert your Book Library API (Express + PostgreSQL, with the test suite you wro
 - Database functions have explicit row types and return types (`Promise<Book | undefined>`, `Promise<{ data: Book[]; total: number }>`, etc.), and books keep the same JSON shape as before: `author: { id, name }` and `tags: string[]`.
 - Controllers type their params, bodies and queries; URL params are converted and checked.
 - The error handler and `AppError` are typed; thrown values are narrowed before use.
-- Scripts: `dev` (`tsx watch`), `typecheck` (`tsc --noEmit`), `build` (`tsc`), `start` (`node dist/server.js`), `test`.
+- Scripts: `dev` (`tsx watch --env-file=.env src/server.ts`), `typecheck` (`tsc --noEmit`, checks `src` and `test`), `build` (`tsc -p tsconfig.build.json`, compiles only `src`), `start` (`node dist/server.js`), `test`.
 - All existing tests pass, and CI runs typecheck, tests and build.
 
 ### Steps
-1. **Branch and tooling.** Create a `typescript` branch. Install `typescript`, `tsx`, `@types/node`, `@types/express`, `@types/pg` and `@types/supertest`. Create `tsconfig.json` (strict, NodeNext, `outDir: "dist"`, `rootDir: "src"`) with `"allowJs": true` so `.js` and `.ts` files can live together during the migration. Move the code into `src/` if needed and check the API still runs with `tsx`. Commit.
+1. **Branch and tooling.** Create a `typescript` branch. Install `typescript`, `tsx`, `@types/node`, `@types/express`, `@types/pg` and `@types/supertest`. Create `tsconfig.json` (strict, NodeNext, `outDir: "dist"`, `"include": ["src", "test"]`, no `rootDir`) with `"allowJs": true` so `.js` and `.ts` files can live together during the migration, and `tsconfig.build.json` that extends it with `"rootDir": "src"` and `"include": ["src"]`, as in the lesson. Move the code into `src/` if needed (tests stay in `test/`), set the `dev` script to `tsx watch --env-file=.env src/server.ts`, and check the API still runs. Commit.
 2. **Utilities first.** Rename the files with the fewest imports (helpers, pagination parsing, `AppError`) to `.ts` and fix the errors. Run `npm run typecheck` and `npm test` after each file. Commit.
 3. **Schemas and types.** Convert the Zod schema files and export `z.infer` types (`NewBook`, `BookPatch`, query types). Delete any hand-written interfaces that duplicate them.
-4. **Database layer.** Convert `db/pool.js` and the data-access files (`data/books.js`, `data/authors.js`, `data/tags.js` become `.ts`). Define the row types (`Book` with `author: { id: number; name: string }` and `tags: string[]`, and `Author` with `id`, `name` and `born`) and use `pool.query<RowType>(...)`. Give every function an explicit return type, for example `findAll(...): Promise<{ data: Book[]; total: number }>`.
+4. **Database layer.** Convert `db/pool.js` and the data-access files (`data/books.js`, `data/authors.js`, `data/tags.js` become `.ts`). Define the row types (`Book` with `author: { id: number; name: string }` and `tags: string[]`, and `Author` with `id`, `name` and `born`) and use `pool.query<RowType>(...)`. Give every function an explicit return type, for example `findAll(...): Promise<{ data: Book[]; total: number }>`. If you convert `db/seed.js` too, run it with tsx in its script: `tsx --env-file=.env src/db/seed.ts`.
 5. **Middleware and controllers.** Type the `validate` middleware, the error handler and every controller with `Request<Params, ResBody, ReqBody>`. Convert ids from strings with checks, not with `as`.
 6. **App, server and tests.** Convert `app.ts` (still `export default app`), `server.ts`, the test helpers and test files. Remove `"allowJs"` and confirm there are no `.js` files left in `src/`. Search for `any` and remove every one.
 7. **Build and run.** Add the `build` and `start` scripts, run `npm run build && npm start`, and check a few endpoints against the compiled version. Update your hosting's build command (for example `npm ci && npm run build`) and start command.

@@ -1,12 +1,16 @@
 # Content format
 
 Every module lives in one file: `content/NN-name.md` (NN = order on the page).
-After editing, run `node build.mjs` in the `learning-tracker` folder. It validates the files and regenerates `data/curriculum.js`, which the website loads.
-`node build.mjs --check` only validates and prints stats.
+After editing, run `node build.mjs` in the project's root folder (the folder with `index.html`; it's `fullstack_path` on GitHub). It validates the files and regenerates:
+
+- `data/curriculum.js`, which the website loads (and it updates the version code in `index.html`, so browsers fetch the new file right away)
+- `SYLLABUS.md`, the plain-Markdown outline shown on GitHub
+
+`node build.mjs --check` only validates and prints stats; add file names to check just those, e.g. `node build.mjs --check content/02-express.md`.
 
 ## Structure
 
-A module is split into **sections**. Each section is a chunk of related lessons that ends with **one project** that uses exactly what those lessons taught (like Scrimba's "Build a Node API" sections). Learn a chunk, build something, move on.
+A module is split into **sections**. Each section is a chunk of related lessons that ends with **one or two projects** that use exactly what those lessons taught (like Scrimba's "Build a Node API" sections). Learn a chunk, build something, move on. A section may also contain only a project (like the career capstone).
 
 ```
 ---module
@@ -57,6 +61,7 @@ Rules:
 - `video:` is a YouTube **search query** (the site turns it into a search link), not a URL.
 - `docs:` can repeat; format `Label | URL`.
 - **IDs must never change** once you've started ticking things off: progress is saved by ID.
+- Exercises and "Done when" items are saved by their **position** in the list. Add new ones at the end and don't reorder or delete existing ones, or ticks move to the wrong item. Rewording an item in place is fine.
 - In the theory, use `##` for subheadings (they become small headings on the page). `###` is reserved for `### Exercises` in lessons and the named parts of projects.
 - Supported Markdown: paragraphs, `##` headings, `- lists`, `1. numbered lists`, fenced code blocks with a language (```` ```js ````), `> quotes` (shown as tip boxes), tables, `inline code`, **bold**, *italic*, [links](https://…).
 
