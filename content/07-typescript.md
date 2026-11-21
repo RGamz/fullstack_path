@@ -759,18 +759,20 @@ These built-in **utility types** transform an object type:
 type Book = {
   id: number;
   title: string;
-  author: string;
   year: number;
   read: boolean;
+  author: { id: number; name: string };
+  tags: string[];
 };
 
-type NewBook = Omit<Book, "id">;          // everything except id
+// what POST /api/books accepts: no id, and the author and tags as ids
+type NewBook = Omit<Book, "id" | "author" | "tags"> & { authorId: number; tagIds?: number[] };
 type BookPatch = Partial<NewBook>;        // every property optional
 type BookSummary = Pick<Book, "id" | "title">; // only id and title
 type CompleteBook = Required<BookPatch>;  // every property required again
 ```
 
-Now `createBook(data: NewBook)` and `updateBook(id: number, patch: BookPatch)` stay correct automatically: add a `pages` field to `Book`, and both follow.
+`Omit` removes the properties the server creates (`id`) or returns in a different form (`author`, `tags`), and `&` adds what the client sends instead. Now `createBook(data: NewBook)` and `updateBook(id: number, patch: BookPatch)` stay correct automatically: add a `pages` field to `Book`, and both follow.
 
 ## Record and readonly helpers
 
@@ -791,7 +793,7 @@ const columnTitles: Record<Status, string> = {
 `keyof` produces a union of an object type's property names:
 
 ```ts
-type BookKey = keyof Book; // "id" | "title" | "author" | "year" | "read"
+type BookKey = keyof Book; // "id" | "title" | "year" | "read" | "author" | "tags"
 
 function sortBy<T>(items: T[], key: keyof T): T[] {
   return [...items].sort((a, b) => (a[key] > b[key] ? 1 : a[key] < b[key] ? -1 : 0));
@@ -1243,7 +1245,7 @@ Express's types describe `req` and `res`. When you write a handler inline, they'
 ```ts
 // src/controllers/books.ts
 import type { Request, Response } from "express";
-import * as db from "../db/books.js";
+import * as books from "../data/books.js";
 
 export async function getBook(req: Request<{ id: string }>, res: Response) {
   const id = Number(req.params.id);
@@ -1251,7 +1253,7 @@ export async function getBook(req: Request<{ id: string }>, res: Response) {
     res.status(400).json({ error: "id must be a number" });
     return;
   }
-  const book = await db.findById(id);
+  const book = await books.findById(id);
   if (!book) {
     res.status(404).json({ error: "Book not found" });
     return;
@@ -1272,7 +1274,8 @@ import { z } from "zod";
 
 export const NewBookSchema = z.object({
   title: z.string().min(1),
-  author: z.string().min(1),
+  authorId: z.number().int().positive(),
+  tagIds: z.array(z.number().int().positive()).optional(),
   year: z.number().int().max(new Date().getFullYear()),
   genre: z.string().optional(),
   read: z.boolean().default(false),
@@ -1284,7 +1287,7 @@ export type NewBook = z.infer<typeof NewBookSchema>;
 export type BookPatch = z.infer<typeof BookPatchSchema>;
 ```
 
-`z.infer<typeof NewBookSchema>` produces `{ title: string; author: string; year: number; genre?: string; read: boolean }`. Add a field to the schema and the type updates by itself. There's no separate interface to forget.
+`z.infer<typeof NewBookSchema>` produces `{ title: string; authorId: number; tagIds?: number[]; year: number; genre?: string; read: boolean }`. Add a field to the schema and the type updates by itself. There's no separate interface to forget.
 
 ## A typed validation middleware
 
@@ -1293,11 +1296,17 @@ export type BookPatch = z.infer<typeof BookPatchSchema>;
 import type { RequestHandler } from "express";
 import type { z } from "zod";
 
-export function validateBody(schema: z.ZodType): RequestHandler {
+export function validate(schema: z.ZodType): RequestHandler {
   return (req, res, next) => {
     const result = schema.safeParse(req.body);
     if (!result.success) {
-      res.status(400).json({ error: "Invalid request body", issues: result.error.issues });
+      res.status(400).json({
+        error: "Invalid request body",
+        details: result.error.issues.map((issue) => ({
+          field: issue.path.join("."),
+          message: issue.message,
+        })),
+      });
       return;
     }
     req.body = result.data; // the cleaned data, with defaults applied
@@ -1309,10 +1318,10 @@ export function validateBody(schema: z.ZodType): RequestHandler {
 And in the router and controller:
 
 ```ts
-router.post("/", validateBody(NewBookSchema), createBook);
+router.post("/", validate(NewBookSchema), createBook);
 
 export async function createBook(req: Request<{}, unknown, NewBook>, res: Response) {
-  const book = await db.create(req.body); // req.body is typed as NewBook
+  const book = await books.create(req.body); // req.body is typed as NewBook
   res.status(201).json(book);
 }
 ```
@@ -1324,18 +1333,38 @@ The `Request<{}, unknown, NewBook>` annotation is a promise that the middleware 
 With the `pg` library (and `@types/pg`), `query` accepts a row type:
 
 ```ts
-import type { NewBook } from "../schemas/book.js";
-import { pool } from "./pool.js";
+// src/data/books.ts
+import { pool } from "../db/pool.js";
 
-export type BookRow = { id: number; title: string; author: string; year: number; read: boolean };
+export type Book = {
+  id: number;
+  title: string;
+  year: number;
+  genre: string | null;
+  pages: number | null;
+  read: boolean;
+  author: { id: number; name: string };
+  tags: string[];
+};
 
-export async function findById(id: number): Promise<BookRow | undefined> {
-  const { rows } = await pool.query<BookRow>("SELECT * FROM books WHERE id = $1", [id]);
+export async function findById(id: number): Promise<Book | undefined> {
+  const { rows } = await pool.query<Book>(
+    `SELECT b.id, b.title, b.year, b.genre, b.pages, b.read,
+            json_build_object('id', a.id, 'name', a.name) AS author,
+            COALESCE(json_agg(t.name) FILTER (WHERE t.id IS NOT NULL), '[]') AS tags
+     FROM books b
+     JOIN authors a ON a.id = b.author_id
+     LEFT JOIN book_tags bt ON bt.book_id = b.id
+     LEFT JOIN tags t ON t.id = bt.tag_id
+     WHERE b.id = $1
+     GROUP BY b.id, a.id`,
+    [id]
+  );
   return rows[0];
 }
 ```
 
-TypeScript can't check that the SQL really returns those columns; the row type is your promise. Keep all queries in one folder so these promises live in one place, and let your integration tests verify them. (If you used an ORM such as Drizzle or Prisma, it generates these types for you.)
+The query is the kind you wrote in the Databases module, and `Book` is exactly the JSON your API returns; only the types are new. Columns that can be `NULL` in the database are `string | null` or `number | null` in the type. TypeScript can't check that the SQL really returns those columns; the row type is your promise. Keep all queries in one folder so these promises live in one place, and let your integration tests verify them. (If you used an ORM such as Drizzle or Prisma, it generates these types for you.)
 
 ## The error handler
 
@@ -1363,7 +1392,7 @@ Thrown values aren't guaranteed to be `Error`s, so narrow with `instanceof` befo
 ## Common mistakes
 
 - **Missing `@types/express`**: "Could not find a declaration file for module 'express'". Install the types package.
-- **Forgetting `.js` in relative imports** (`"../db/books"`). With `module: "NodeNext"`, write `"../db/books.js"` even though the file is `.ts`.
+- **Forgetting `.js` in relative imports** (`"../data/books"`). With `module: "NodeNext"`, write `"../data/books.js"` even though the file is `.ts`.
 - **Trusting `req.query` types.** A query value can be a string, an array of strings (`?genre=a&genre=b`) or missing. Parse it with a Zod schema or check it with `typeof` before using it.
 - **Running `npm start` without building.** `dist/` is stale or missing; run `npm run build` first (and in your deploy's build command).
 
@@ -1377,7 +1406,7 @@ Thrown values aren't guaranteed to be `Error`s, so narrow with `instanceof` befo
 ### Exercises
 - Create a small Express + TypeScript project with `dev`, `typecheck`, `build` and `start` scripts and one `GET /health` route. Check that `npm run build && npm start` works.
 - Write a Zod schema for a `NewBook`, derive the type with `z.infer`, and hover over the type to see what Zod produced.
-- Write the typed `validateBody` middleware and a `POST /api/books` route that uses it. Send valid and invalid bodies with Thunder Client or Postman.
+- Write the typed `validate` middleware and a `POST /api/books` route that uses it. Send valid and invalid bodies with Thunder Client or Postman.
 - Add `npm run typecheck` to a GitHub Actions workflow next to your tests.
 
 ---project
@@ -1392,7 +1421,7 @@ Convert your Book Library API (Express + PostgreSQL, with the test suite you wro
 - All source and test files are `.ts`, with `"strict": true`.
 - Zero uses of `any` (search the project for it).
 - Request body types come from Zod schemas with `z.infer`; no hand-written duplicates of the schemas.
-- Database functions have explicit row types and return types (`Promise<BookRow | undefined>`, etc.).
+- Database functions have explicit row types and return types (`Promise<Book | undefined>`, `Promise<{ data: Book[]; total: number }>`, etc.), and books keep the same JSON shape as before: `author: { id, name }` and `tags: string[]`.
 - Controllers type their params, bodies and queries; URL params are converted and checked.
 - The error handler and `AppError` are typed; thrown values are narrowed before use.
 - Scripts: `dev` (`tsx watch`), `typecheck` (`tsc --noEmit`), `build` (`tsc`), `start` (`node dist/server.js`), `test`.
@@ -1402,9 +1431,9 @@ Convert your Book Library API (Express + PostgreSQL, with the test suite you wro
 1. **Branch and tooling.** Create a `typescript` branch. Install `typescript`, `tsx`, `@types/node`, `@types/express`, `@types/pg` and `@types/supertest`. Create `tsconfig.json` (strict, NodeNext, `outDir: "dist"`, `rootDir: "src"`) with `"allowJs": true` so `.js` and `.ts` files can live together during the migration. Move the code into `src/` if needed and check the API still runs with `tsx`. Commit.
 2. **Utilities first.** Rename the files with the fewest imports (helpers, pagination parsing, `AppError`) to `.ts` and fix the errors. Run `npm run typecheck` and `npm test` after each file. Commit.
 3. **Schemas and types.** Convert the Zod schema files and export `z.infer` types (`NewBook`, `BookPatch`, query types). Delete any hand-written interfaces that duplicate them.
-4. **Database layer.** Convert the data-access files. Define row types (`BookRow`, `AuthorRow`, `BookWithAuthorRow`) and use `pool.query<RowType>(...)`. Give every function an explicit return type.
+4. **Database layer.** Convert `db/pool.js` and the data-access files (`data/books.js`, `data/authors.js`, `data/tags.js` become `.ts`). Define the row types (`Book` with `author: { id: number; name: string }` and `tags: string[]`, and `Author` with `id`, `name` and `born`) and use `pool.query<RowType>(...)`. Give every function an explicit return type, for example `findAll(...): Promise<{ data: Book[]; total: number }>`.
 5. **Middleware and controllers.** Type the `validate` middleware, the error handler and every controller with `Request<Params, ResBody, ReqBody>`. Convert ids from strings with checks, not with `as`.
-6. **App, server and tests.** Convert `app.ts`, `server.ts`, the test helpers and test files. Remove `"allowJs"` and confirm there are no `.js` files left in `src/`. Search for `any` and remove every one.
+6. **App, server and tests.** Convert `app.ts` (still `export default app`), `server.ts`, the test helpers and test files. Remove `"allowJs"` and confirm there are no `.js` files left in `src/`. Search for `any` and remove every one.
 7. **Build and run.** Add the `build` and `start` scripts, run `npm run build && npm start`, and check a few endpoints against the compiled version. Update your hosting's build command (for example `npm ci && npm run build`) and start command.
 8. **CI and merge.** Add `npm run typecheck` and `npm run build` steps to your GitHub Actions workflow. Push the branch, open a pull request on GitHub describing what changed and what you learned, wait for green, and merge.
 

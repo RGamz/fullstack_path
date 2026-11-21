@@ -108,7 +108,7 @@ app.get("/api/books/:id", (req, res) => {
 });
 ```
 
-For `/api/books/2`, `req.params` is `{ id: "2" }`. Notice the quotes: params are **always strings**, so convert them with `Number()` before comparing.
+For `/api/books/2`, `req.params` is `{ id: "2" }`. Notice the quotes: params are **always strings**, so convert them with `Number()` before comparing. For `/api/books/abc`, `id` becomes `NaN` and the client gets "No book with id NaN". That's fine for now; in the validation lesson you'll reject such ids with a 400 instead.
 
 The query string (everything after `?`) is already parsed into `req.query`. No more `new URL(req.url, ...)`:
 
@@ -573,7 +573,7 @@ Lists grow. Let clients ask for a slice with query parameters like `GET /api/boo
 export async function listBooks(req, res) {
   const search = String(req.query.search ?? "").toLowerCase();
   const page = Math.max(1, Number(req.query.page) || 1);
-  const limit = Math.min(50, Number(req.query.limit) || 10);
+  const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 10));
 
   const { data, total } = await Books.findAll({ search, page, limit });
   res.json({ data, page, limit, total });
@@ -589,7 +589,7 @@ export async function findAll({ search = "", page = 1, limit = 10 } = {}) {
 }
 ```
 
-`Number("abc")` is `NaN`, and `NaN || 1` gives the default. `Math.min(50, ...)` stops someone from requesting a million rows. Returning `total` lets the frontend show "page 2 of 5".
+`Number("abc")` is `NaN`, and `NaN || 1` gives the default. `Math.max(1, ...)` stops `?limit=-5` or `?page=0`, and `Math.min(50, ...)` stops someone from requesting a million rows. Returning `total` lets the frontend show "page 2 of 5".
 
 ## Testing every endpoint
 
@@ -916,6 +916,27 @@ export function errorHandler(err, req, res, next) {
 }
 ```
 
+## Validating route params
+
+`/api/books/abc` still turns into `Number("abc")`, which is `NaN`. Validate `:id` with a small schema too:
+
+```js
+// schemas/book.js
+export const IdParamSchema = z.coerce.number().int().positive();
+```
+
+```js
+// controllers/booksController.js
+export async function getBook(req, res) {
+  const id = IdParamSchema.parse(req.params.id);
+  const book = await Books.findById(id);
+  if (!book) throw new AppError("Book not found", 404);
+  res.json(book);
+}
+```
+
+Use it the same way in every `:id` route (get, update, delete). `abc`, `1.5`, `0` and `-3` now give a 400 through your error handler, and only real ids reach the data layer. This matters later: PostgreSQL rejects `NaN` for an integer column with error `22P02`, which would otherwise become a 500.
+
 ## Common mistakes
 
 - **Using the original input after validating.** If you call `safeParse` in a controller, continue with `result.data`, otherwise trimming and stripping unknown keys are lost.
@@ -928,7 +949,7 @@ export function errorHandler(err, req, res, next) {
 - Describe the expected shape once with a Zod schema; `.partial()` makes a version for `PATCH`.
 - `safeParse` returns `{ success, data | error }`; `error.issues` lists each problem.
 - A `validate(schema)` middleware returns 400 with field-level details and replaces `req.body` with clean data.
-- Use `z.coerce` for query strings, and turn `ZodError` into a 400 in the error handler.
+- Use `z.coerce` for query strings and `:id` params, and turn `ZodError` into a 400 in the error handler.
 
 ### Exercises
 - Define `BookSchema` (title: non-empty string, author, year: integer from 0 to the current year, tags: optional string array). In a scratch file, run `safeParse` on three valid and three invalid objects and print the issues.
@@ -1183,7 +1204,7 @@ An app on `localhost` is something only you can see. Deployed, it's a link you c
 {
   "name": "url-shortener",
   "type": "module",
-  "engines": { "node": "24.x" },
+  "engines": { "node": ">=22" },
   "scripts": {
     "dev": "node --watch --env-file=.env server.js",
     "start": "node server.js"
@@ -1425,11 +1446,18 @@ Now finish `login`:
 export function logout(req, res, next) {
   req.session.destroy((err) => {
     if (err) return next(err);
-    res.clearCookie("connect.sid"); // the default cookie name
+    res.clearCookie("connect.sid", { // the default cookie name
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
     res.status(204).end();
   });
 }
 ```
+
+`clearCookie` only works when its options match the ones the cookie was set with, so repeat the `cookie` options from `session()` (without `maxAge`). `path: "/"` is express-session's default.
 
 By default, express-session keeps sessions in memory: they disappear when the server restarts, and this store isn't meant for production. In the Databases module you'll store them in the database.
 
@@ -1633,7 +1661,7 @@ Build a private online diary: each person creates an account and writes journal 
 
 ### Steps
 1. **Set up.** Reuse the structure from the Book Library (`app.js`, `server.js`, `AppError`, `validate`, `notFound`, `errorHandler`). Create `.env` with `SESSION_SECRET`, add it to `.gitignore`, use `--env-file=.env` in the `dev` script, and configure express-session.
-2. **Register.** Create `data/users.js` and `POST /auth/register` with Zod and bcrypt. Test it in `requests.http` and log the stored user on the server to see the hash.
+2. **Register.** Create `data/users.js` and `POST /auth/register` with Zod and bcrypt. Unlike the lesson version, register must also log the user in: call `req.session.regenerate`, set `req.session.userId`, then send the 201. Test it in `requests.http` and log the stored user on the server to see the hash.
 3. **Login, logout, me.** Add the three routes, with `regenerate` on login and `destroy` on logout. Check that `/auth/me` works after login and returns 401 after logout.
 4. **Entries.** Write `requireAuth` and `data/entries.js` with functions that always take the user id, for example `findAllByUser(userId)` and `findOwned(id, userId)`. Build the CRUD routes behind `requireAuth`, taking `userId` from the session.
 5. **Prove authorization.** Register two users. As user A, create entries; as user B, try to read, update and delete them by id. Every attempt must return 404. Save these requests in `requests.http`.
@@ -1665,4 +1693,3 @@ Build a private online diary: each person creates an account and writes journal 
 - helmet is enabled, and the sixth failed login within 15 minutes returns 429
 - The README explains the auth flow
 - `.env.example` lists every environment variable with placeholder values, and `.env` is git-ignored
-- The app is deployed and the live link is in the README

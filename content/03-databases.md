@@ -812,6 +812,13 @@ WHERE id NOT IN (SELECT author_id FROM books);
 
 This also returns Ursula K. Le Guin. Both this and the `LEFT JOIN … IS NULL` version are fine; use whichever you find easier to read.
 
+One trap: if the subquery returns even one `NULL` (for example a book without an `author_id`), `NOT IN` returns **no rows at all**. `NOT EXISTS` and the `LEFT JOIN … IS NULL` version don't have this problem:
+
+```sql
+SELECT a.name FROM authors AS a
+WHERE NOT EXISTS (SELECT 1 FROM books AS b WHERE b.author_id = a.id);
+```
+
 ## Common mistakes
 
 - **`ambiguous column name: id`.** Both tables have an `id`, so the database doesn't know which you mean. Always prefix columns with the table alias in joins.
@@ -1180,7 +1187,7 @@ video: Node.js built-in SQLite node:sqlite tutorial
 docs: node:sqlite | https://nodejs.org/api/sqlite.html
 docs: OWASP: SQL injection prevention | https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
 ---
-You can write SQL; now your code needs to run it. Node 24 includes SQLite as a built-in module, `node:sqlite`, so there's nothing to install: your Express app can store its data in a real database file with a few lines of code. This lesson also covers the most famous security hole in web development, **SQL injection**, and the simple habit that prevents it completely.
+You can write SQL; now your code needs to run it. Node includes SQLite as a built-in module, `node:sqlite`, which works without any flag on Node 22.13+ and Node 24 (the version this course recommends), so there's nothing to install: your Express app can store its data in a real database file with a few lines of code. This lesson also covers the most famous security hole in web development, **SQL injection**, and the simple habit that prevents it completely.
 
 ## Opening a database
 
@@ -1287,32 +1294,34 @@ This is safe because only strings *you* wrote can end up in the SQL text. Anythi
 
 ## A data-access module
 
-Keep all SQL in one module, so your routes don't care how the data is stored. If your Book Library API already has a `db/books.js` module, only that file changes:
+Keep all SQL in one module, so your routes don't care how the data is stored. Your Book Library API already has one: `data/books.js`. Only the inside of that file changes:
 
 ```js
-// db/books.js
-import db from "./db.js";
+// data/books.js  (SQLite version)
+import db from "../db.js";
 
-const findAll = db.prepare("SELECT * FROM books ORDER BY id LIMIT ? OFFSET ?");
-const findOne = db.prepare("SELECT * FROM books WHERE id = ?");
+const selectPage = db.prepare("SELECT * FROM books ORDER BY id LIMIT ? OFFSET ?");
+const countAll = db.prepare("SELECT COUNT(*) AS total FROM books");
+const selectOne = db.prepare("SELECT * FROM books WHERE id = ?");
 const insertOne = db.prepare("INSERT INTO books (title, year) VALUES (?, ?) RETURNING *");
 const deleteOne = db.prepare("DELETE FROM books WHERE id = ?");
 
-export const listBooks = (limit = 10, offset = 0) => findAll.all(limit, offset);
-export const getBook = (id) => findOne.get(id);
-export const createBook = ({ title, year }) => insertOne.get(title, year ?? null);
-export const deleteBook = (id) => deleteOne.run(id).changes > 0;
+export async function findAll({ page = 1, limit = 10 } = {}) {
+  const data = selectPage.all(limit, (page - 1) * limit);
+  return { data, total: countAll.get().total };
+}
+export async function findById(id) {
+  return selectOne.get(id);
+}
+export async function create({ title, year }) {
+  return insertOne.get(title, year ?? null);
+}
+export async function remove(id) {
+  return deleteOne.run(id).changes > 0;
+}
 ```
 
-And a route uses it:
-
-```js
-app.get("/api/books/:id", (req, res) => {
-  const book = getBook(Number(req.params.id));
-  if (!book) return res.status(404).json({ error: "Book not found" });
-  res.json(book);
-});
-```
+The functions keep the same names and stay `async`, even though SQLite answers synchronously. So your controllers, which already `await Books.findById(id)`, don't change at all. `update(id, data)` and the `search` filter follow the same pattern (see the exercises).
 
 `RETURNING *` with `.get()` gives you the newly created row, ready to send back with status 201.
 
@@ -1355,7 +1364,7 @@ If any tag id is invalid, the foreign key error jumps to `catch`, the book inser
 
 ### Exercises
 - Write `db/init.js` that creates your tables and inserts sample data. Make it safe to run twice (use `IF NOT EXISTS`, and delete the old rows before seeding).
-- Replace the in-memory array in your Book Library API with SQLite: list, get by id, create, update and delete. Return 404 when `changes` is 0.
+- Replace the in-memory array in your Book Library API's `data/books.js` with SQLite: `findAll` (with `search`), `findById`, `create`, `update` and `remove`. When no row was found (`changes` is 0), return `undefined` or `false` as before, so the controllers still answer 404.
 - In a scratch file, write a deliberately vulnerable search query, exploit it with `' OR '1'='1`, then fix it with placeholders and show that the attack no longer works.
 - Add `?sort=` and `?order=` to your list endpoint using a whitelist. Try `?sort=year;DROP TABLE books` and confirm it's simply ignored.
 
@@ -1378,7 +1387,7 @@ The quickest way is a free hosted database:
 - **Neon**: "serverless" Postgres. The database goes to sleep when unused, so the first query after a break can take a moment.
 - **Supabase**: Postgres plus extras like a table editor, authentication and file storage. Free projects are paused after a period of inactivity; you can restore them from the dashboard.
 
-For either one: create a project, open its **SQL editor** in the dashboard to create tables, and copy the **connection string** it shows you. You can also install Postgres locally, but a hosted database is closer to what you'll use in production.
+For either one: create a project, open its **SQL editor** in the dashboard to create tables, and copy the **connection string** it shows you. For development you can also run Postgres on your own machine; the next lesson, "Running Postgres locally with Docker", shows how. A hosted database stays the choice for production.
 
 ## What's different from SQLite
 
@@ -1444,15 +1453,15 @@ await pool.end(); // close the pool so the script can exit
 `pool.query(sql, values)` is **asynchronous**: it returns a promise of a result with `rows` (an array of objects) and `rowCount` (the number of rows affected). Placeholders are numbered:
 
 ```js
-// db/books.js
-import { pool } from "./pool.js";
+// data/books.js  (PostgreSQL version)
+import { pool } from "../db/pool.js";
 
-export async function getBook(id) {
+export async function findById(id) {
   const { rows } = await pool.query("SELECT * FROM books WHERE id = $1", [id]);
   return rows[0]; // undefined if not found
 }
 
-export async function createBook({ title, year }) {
+export async function create({ title, year }) {
   const { rows } = await pool.query(
     "INSERT INTO books (title, year) VALUES ($1, $2) RETURNING *",
     [title, year ?? null]
@@ -1460,13 +1469,13 @@ export async function createBook({ title, year }) {
   return rows[0];
 }
 
-export async function deleteBook(id) {
+export async function remove(id) {
   const { rowCount } = await pool.query("DELETE FROM books WHERE id = $1", [id]);
   return rowCount > 0;
 }
 ```
 
-The SQL injection rule is exactly the same as before: values only through placeholders. Because these functions are now `async`, your route handlers need `await`. In Express 5, a rejected promise in an `async` handler goes straight to your error middleware, so you don't need `try`/`catch` in every route.
+The SQL injection rule is exactly the same as before: values only through placeholders. The function names and signatures are the same as in the Express module, and your controllers already `await` them, so only `data/books.js` changes. In Express 5, a rejected promise in an `async` handler goes straight to your error middleware, so you don't need `try`/`catch` in every route.
 
 ## Transactions need one client
 
@@ -1493,13 +1502,16 @@ try {
 
 ## Turning database errors into HTTP responses
 
-Postgres errors have a `code` property. Three are worth handling in your error middleware:
+Postgres errors have a `code` property. Four are worth handling in your error middleware:
 
 | `err.code` | Meaning | Response |
 |---|---|---|
 | `23505` | unique violation (e.g. email taken) | 409 Conflict |
 | `23503` | foreign key violation (e.g. unknown `author_id`) | 400 Bad Request |
 | `23514` | check violation | 400 Bad Request |
+| `22P02` | invalid input syntax (e.g. `abc` or `NaN` as an integer id) | 400 Bad Request |
+
+If you validate `:id` with `IdParamSchema` as in the Express module, `22P02` should not happen, but the mapping is a good safety net.
 
 ## Common mistakes
 
@@ -1518,7 +1530,7 @@ Postgres errors have a `code` property. Three are worth handling in your error m
 ### Exercises
 - Create a free Neon or Supabase project. In its SQL editor, create the `books` table above and insert 3 rows.
 - Write `test-db.js` that connects with a pool, prints `SELECT now()` and then all books.
-- Switch your Book Library API's data-access module from SQLite to Postgres. Add `await` in the controllers and check every endpoint still works.
+- Switch your Book Library API's `data/books.js` from SQLite to Postgres (with `db/pool.js`). Your controllers already `await` the data layer, so don't touch them: check that every endpoint still works.
 - Add a `UNIQUE` constraint on book titles and make a duplicate `POST` return 409 by checking `err.code` in your error middleware.
 - Deploy the API with `DATABASE_URL` set as an environment variable on your hosting platform.
 
@@ -1605,7 +1617,7 @@ services:
       - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
-      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/migrations/001_init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d books"]
       interval: 2s
@@ -1620,7 +1632,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/migrations/001_init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     tmpfs:
       - /var/lib/postgresql/data
 
@@ -1631,7 +1643,7 @@ volumes:
 What's new here:
 
 - **Two databases.** `db` is for development (port 5432, data kept in the `db-data` volume). `db-test` is for automated tests (port 5433). Its data lives in `tmpfs`, which is memory: fast, and wiped every time the container stops. That's exactly what tests want.
-- **`docker-entrypoint-initdb.d`.** Any `.sql` file mounted into this folder runs automatically the **first time** the database starts with an empty data folder. Mounting your `schema.sql` there means both databases get your tables without any manual step. `:ro` mounts it read-only.
+- **`docker-entrypoint-initdb.d`.** Any `.sql` file mounted into this folder runs automatically the **first time** the database starts with an empty data folder. Mounting your schema file (`db/migrations/001_init.sql`, the SQL file that creates your tables; the Books API project uses this name) there means both databases get your tables without any manual step. `:ro` mounts it read-only.
 - **`healthcheck`.** `pg_isready` asks Postgres whether it accepts connections yet. Compose uses it to know when the database is really ready, not just started.
 
 Use it with:
@@ -1649,7 +1661,7 @@ Your `.env` points at the development database, and your tests use `postgresql:/
 
 - **"Port is already allocated"**: something else (often a Postgres you installed earlier) already uses 5432. Change the left side of the mapping, `"5434:5432"`, and use port 5434 in your connection string.
 - **"Connection refused" right after starting**: Postgres needs a few seconds to boot. Use `--wait` with a healthcheck, or check `docker logs`.
-- **Your `schema.sql` changes don't apply**: init scripts only run on an *empty* database. Run `docker compose down -v` and `up` again to recreate it (this deletes the dev data, so keep a seed script).
+- **Changes to `001_init.sql` don't apply**: init scripts only run on an *empty* database. Run `docker compose down -v` and `up` again to recreate it (this deletes the dev data, so keep a seed script).
 - **`sslmode=require` copied from the hosted URL**: the local server rejects SSL connections. Remove it.
 - **Docker Desktop isn't running**: every command then fails with an error about the Docker daemon or engine.
 
@@ -1663,7 +1675,7 @@ Your `.env` points at the development database, and your tests use `postgresql:/
 ### Exercises
 - Install Docker Desktop and run `docker run hello-world`.
 - Start Postgres 17 with `docker run` (with a volume), connect with `docker exec -it books-db psql -U postgres -d books`, create a table and insert a row. Delete the container with `docker rm -f books-db`, start a new one with the same volume, and check the row is still there.
-- Create `compose.yaml` with the `db` and `db-test` services and your `schema.sql`. Run `docker compose up -d --wait` and confirm both databases have your tables.
+- Create `compose.yaml` with the `db` and `db-test` services and your `db/migrations/001_init.sql`. Run `docker compose up -d --wait` and confirm both databases have your tables.
 - Point your Book Library API's `.env` at the local database and check every endpoint works without internet. Then run `docker compose down -v` and `up` again, and run your seed script to restore the data.
 
 ---lesson
@@ -1726,6 +1738,8 @@ The first argument of each column (`"author_id"`) is the real column name in the
 // drizzle.config.js
 import { defineConfig } from "drizzle-kit";
 
+process.loadEnvFile(); // reads .env into process.env (built into Node 22+)
+
 export default defineConfig({
   dialect: "postgresql",
   schema: "./db/schema.js",
@@ -1734,7 +1748,7 @@ export default defineConfig({
 });
 ```
 
-`npx drizzle-kit generate` compares your schema with the previous migrations and writes a new SQL migration file into `drizzle/`. Open it: it's plain SQL you already understand. `npx drizzle-kit migrate` applies the pending migrations to the database. (`drizzle-kit` needs `DATABASE_URL` in its environment; the Drizzle docs show how to load your `.env` file for it.)
+`npx drizzle-kit generate` compares your schema with the previous migrations and writes a new SQL migration file into `drizzle/`. Open it: it's plain SQL you already understand. `npx drizzle-kit migrate` applies the pending migrations to the database. `drizzle-kit` isn't started with `--env-file`, so `process.loadEnvFile()` at the top of the config loads `DATABASE_URL` from your `.env` file. It throws an error if there is no `.env` file.
 
 ## Drizzle: queries
 
@@ -1818,7 +1832,7 @@ Both are popular and either is a good choice. Drizzle stays close to SQL, so you
 ### Exercises
 - On a new git branch of your Book Library API, set up Drizzle (or Prisma). Model `Author` and `Book`, generate the first migration, read the generated SQL, then apply it.
 - Add a `Tag` model and a book–tag join table, and create a second migration. Check that both migration files are committed.
-- Rewrite `listBooks` and `getBook` (including the author's name) with the ORM. Compare them with your raw SQL versions and write 3 sentences about which you prefer and why.
+- Rewrite `findAll` and `findById` in `data/books.js` (including the author's name) with the ORM. Compare them with your raw SQL versions and write 3 sentences about which you prefer and why.
 - Turn on query logging, load the books list, and find the exact SQL the ORM ran.
 
 ---lesson
@@ -1972,17 +1986,17 @@ Your Book Library API from the Express module keeps its books in an array, so ev
 - Hosted on Neon or Supabase, with `DATABASE_URL` in `.env` locally and as an environment variable in production
 
 ### Steps
-1. Draw the ER diagram on dbdiagram.io and add the image to the README. Create a Neon or Supabase project, put `DATABASE_URL` in `.env`, add `db/pool.js` (or your ORM setup), and check the connection with a `SELECT now()` script.
+1. Draw the ER diagram on dbdiagram.io and add the image to the README. Create a Neon or Supabase project (for development you can use your local Docker database from "Running Postgres locally with Docker" instead), put `DATABASE_URL` in `.env`, add `db/pool.js` (or your ORM setup), and check the connection with a `SELECT now()` script.
 2. Write the schema: either `db/migrations/001_init.sql`, run in the SQL editor, or ORM schema + first migration. Include the constraints and the two indexes. Check the tables exist.
 3. Write `db/seed.js` and add `"db:seed": "node --env-file=.env db/seed.js"` to `package.json`. Empty the tables first so the script can run again, then insert authors, tags, books and links. Run it twice and check the counts.
-4. Rewrite the read functions in your data-access module: get one book (with author and tags), then the list with search, filters and pagination. Test with your saved Thunder Client/Postman requests.
-5. Rewrite create, update and delete. Use a transaction for "insert book + insert its tags" (and for "replace the tags" on update). Map Postgres error codes to 400/409 in your error middleware.
+4. Rewrite the read functions in `data/books.js`: `findById` (with author and tags), then `findAll` with search, filters and pagination, still returning `{ data, total }`. Test with your saved Thunder Client/Postman requests.
+5. Rewrite `create`, `update` and `remove`. Use a transaction for "insert book + insert its tags" (and for "replace the tags" on update). Map Postgres error codes to 400/409 in your error middleware.
 6. Add the authors and tags endpoints. Test each, including a 404 for an unknown author or tag.
 7. Run `EXPLAIN ANALYZE` on `GET /api/authors/:id/books`'s query with and without the `author_id` index, and note the result in the README.
 8. Deploy: set `DATABASE_URL` on your hosting platform, run the seed against the hosted database, and test the live URL. Update the README with setup steps and the new endpoint table.
 
 ### Hints
-- If your Express project already kept data access in one module (like `db/books.js`), your routes and controllers barely change: only that module and the `await`s do.
+- Your controllers already `await` the functions in `data/books.js` (`findAll`, `findById`, `create`, `update`, `remove`), so only the inside of that file changes. The new endpoints get their own `data/authors.js` and `data/tags.js`.
 - To empty tables in Postgres in one statement and restart the ids: `TRUNCATE book_tags, books, tags, authors RESTART IDENTITY CASCADE;`
 - Optional filters: build the `WHERE` from two arrays. Push each value, and a condition that uses the array length as the placeholder number. Only your own fixed strings go into the SQL text:
 
@@ -2036,10 +2050,10 @@ Build a personal finance app: people sign up, log their expenses, put them in ca
 - Input validated with Zod; all SQL uses placeholders (or an ORM)
 
 ### Steps
-1. Create the project and copy over the auth parts of your Private Journal (session setup, `requireAuth`, register/login/logout/me routes). Create a Postgres database (Neon or Supabase), put `DATABASE_URL` and `SESSION_SECRET` in `.env`, and test the connection.
+1. Create the project and copy over the auth parts of your Private Journal (session setup, `requireAuth`, register/login/logout/me routes). Create a Postgres database (Neon or Supabase, or your local Docker one for development), put `DATABASE_URL` and `SESSION_SECRET` in `.env`, and test the connection.
 2. Write the schema (SQL migration or ORM): `users`, `categories` and `expenses` with all constraints, foreign keys with deliberate `ON DELETE` rules, and an index on `expenses(user_id, spent_on)`. Insert a test row by hand in the SQL editor.
 3. Move auth to the database: register inserts a user (duplicate email gives 409 via error code `23505`), login looks the user up by email. In the same transaction as the new user, insert the default categories. Test with Thunder Client/Postman.
-4. Build categories CRUD, always with `WHERE user_id = $…`. Decide what happens when a category that still has expenses is deleted (refuse with 409, or move them to "Other") and implement it.
+4. Build categories CRUD, always with `WHERE user_id = $…`. Decide what happens when a category that still has expenses is deleted (refuse with 409, or move them to "Other") and implement it. If you refuse with `ON DELETE RESTRICT`, Postgres throws `23503`, which your global error handler turns into 400: catch `23503` in this route and answer 409 yourself.
 5. Build expenses CRUD with Zod validation and the list filters. Check that the `category_id` belongs to the logged-in user before inserting or updating.
 6. Write the two report queries in the SQL editor first, check the numbers by hand on a few rows, then expose them as endpoints.
 7. Build the frontend: a login/register page and a dashboard page with the form, the filters and the expense list. Format money only in the browser.
@@ -2052,7 +2066,7 @@ Build a personal finance app: people sign up, log their expenses, put them in ca
 - `SUM()` comes back from `pg` as a string. Write `SUM(amount_cents)::int` in SQL, or convert with `Number()`.
 - `pg` turns `DATE` columns into JavaScript `Date` objects, which can shift by a day in JSON. Select `to_char(e.spent_on, 'YYYY-MM-DD') AS spent_on` to get plain text back.
 - Accept amounts from the form as text like `12.50` and convert with `Math.round(Number(value) * 100)` on the server; show them with `(cents / 100).toFixed(2)`.
-- Chart.js can be loaded from a CDN with a `<script>` tag; a chart needs a `<canvas>` element, `labels` and one dataset of numbers.
+- A chart needs a `<canvas>` element, `labels` and one dataset of numbers. helmet's default Content Security Policy blocks scripts from other sites, so a Chart.js `<script>` from a CDN won't load. Serve it yourself instead: `npm install chart.js` and `app.use("/vendor", express.static("node_modules/chart.js/dist"))`, then load `/vendor/chart.umd.js` (or download that file into `public/`). The other option is to allow the CDN in helmet's `contentSecurityPolicy` settings.
 
 ### Stretch goals
 - A monthly budget per category, with a warning when you've spent more than 80% of it.

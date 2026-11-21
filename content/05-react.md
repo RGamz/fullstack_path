@@ -873,13 +873,14 @@ Build a memory game: cards lie face down, the player flips two at a time and tri
 4. Implement flipping: clicking a card sets its `isFlipped` to `true` using `map` (never mutate). Keep track of the flipped-but-unmatched cards (derive them with `filter` or store their ids).
 5. Implement the comparison: when the second card is flipped, add a move. If the values match, mark both as `isMatched`. If not, use `setTimeout` (inside the click handler) to flip them back after 1 second, and ignore clicks while two cards are showing.
 6. Detect the win (every card `isMatched`), switch `status` to `"won"`, and build the win screen with "Play again" and "Change settings".
-7. Add the best score: read it with a lazy `useState(() => …)` initialiser, compare when the player wins, and save it to `localStorage` under a key that includes the difficulty.
+7. Add the best scores: keep one state object with a score per difficulty, like `{ easy: 12, hard: null }`, read from `localStorage` with a lazy `useState(() => …)` initialiser (one key per difficulty, like `"best-easy"`). Show `best[difficulty]`, so switching difficulty shows the right score. When the player wins, compare, update only that difficulty's entry (`{ ...best, [difficulty]: moves }`) and save it under its key.
 8. Polish: a flip animation with CSS `transform: rotateY(180deg)` and `transition`, a responsive grid that fits a phone screen, focus styles, and `aria-label`s like "Card, face down". Deploy and add a README with a GIF or screenshot.
 
 ### Hints
 - Fisher–Yates: loop `i` from the end down to 1, pick `j = Math.floor(Math.random() * (i + 1))`, swap items `i` and `j`. Shuffle a copy, not the original array.
 - Keep game logic (`createDeck`, `isWin`, comparing two cards) in a separate `game.js` file of pure functions. You'll write unit tests for them in the Testing module.
 - Inside the `setTimeout` callback, use the updater form `setCards(prev => …)`: the `cards` variable in the handler is a snapshot from when the click happened.
+- A new game can start while a flip-back timer is still waiting (for example if you add a "Restart" button during the game). The old timer then fires on the new deck and flips its cards. Keep the timer id in a variable outside the component (`let flipTimer;` at the top of the file, then `flipTimer = setTimeout(…)`) and call `clearTimeout(flipTimer)` in the function that starts a new game. In Advanced React you'll learn `useRef`, the usual place for values like this.
 - Use the card's `id` (not its emoji) as the `key`: each emoji appears twice.
 
 ### Stretch goals
@@ -994,6 +995,7 @@ export default function MealSearch({ query }) {
     return () => controller.abort();
   }, [query]);
 
+  if (!query) return null; // empty search: show nothing, not old results
   if (status === "loading") return <p>Loading…</p>;
   if (status === "error") return <p>Couldn't load recipes. Try again.</p>;
   if (status === "success" && meals.length === 0) return <p>No recipes found.</p>;
@@ -1007,6 +1009,7 @@ The important parts:
 - `fetch` doesn't throw on 404 or 500, so check `res.ok` yourself.
 - The cleanup **aborts** the request. If `query` changes from "chi" to "chicken" quickly, the old request is cancelled, so a slow, outdated response can't overwrite the newer one. Aborting makes `fetch` throw an `AbortError`, which we ignore.
 - `encodeURIComponent` makes user input safe to put in a URL.
+- When the search box is cleared, the effect does nothing, so `meals` still holds the old results. Instead of resetting state inside the effect, the render simply checks `if (!query) return null;` first. Deciding what to show from props during render is simpler than another state update.
 
 ## Debouncing a search
 
@@ -1107,7 +1110,11 @@ And read it in your code:
 const API_URL = import.meta.env.VITE_API_URL;
 
 export async function getBooks(params = {}) {
-  const query = new URLSearchParams(params).toString();
+  // Drop empty values, otherwise { genre: undefined } becomes "genre=undefined"
+  const filled = Object.entries(params).filter(
+    ([, value]) => value !== undefined && value !== null && value !== ""
+  );
+  const query = new URLSearchParams(filled).toString();
   const res = await fetch(`${API_URL}/api/books?${query}`);
   if (!res.ok) throw new Error(`Request failed: ${res.status}`);
   return res.json();
@@ -1239,26 +1246,27 @@ Build the frontend for the Book Library API you built in the Express module and 
 
 ### What it must do
 - A list of books with search, genre filter and pagination, all done **by your API** using query parameters (`?search=`, `?genre=`, `?page=`, `?limit=`)
-- Each book shows title, author, year, genre and a "read" toggle that updates the API directly (`PATCH`)
+- Each book shows title, author name (`book.author.name`), year, genre, its tags as small "chips", and a "read" toggle that updates the API directly (`PATCH`)
 - A details view for one book (`GET /api/books/:id`)
-- An add/edit form: the same form component for both, pre-filled when editing; validation errors returned by your API are shown next to the right fields
+- An add/edit form: the same form component for both, pre-filled when editing; the author is chosen from a `<select>` filled from `GET /api/authors`, and the form sends `authorId` as a number; validation errors returned by your API are shown next to the right fields
 - Delete with a confirmation step (a `<dialog>` or `confirm()`), then the list updates
 - The API base URL comes from `VITE_API_URL`; CORS on your API allows `localhost:5173` and the deployed frontend
 - Loading, empty and error states everywhere, and buttons disabled while their request is running
 
 ### Steps
-1. Check your API first: is it deployed and working? Test the list, create and validation-error responses in Thunder Client or Postman and write down their exact JSON shape (for example `{ data, page, limit, total }` and your error format). Make sure CORS allows `http://localhost:5173`.
-2. Create the Vite app, `.env.development` with `VITE_API_URL`, and `src/api.js` with one function per endpoint: `getBooks(params)`, `getBook(id)`, `createBook(data)`, `updateBook(id, data)`, `deleteBook(id)`. Each checks `res.ok` and throws an error that includes the API's error body.
-3. Build the list: keep `search`, `genre` and `page` in state, fetch with an effect that depends on them (debounce the search, abort old requests), and render the books with loading, empty and error states.
+1. Check your API first: is it deployed and working? Test the list, create and validation-error responses in Thunder Client or Postman and write down their exact JSON shape: the list is `{ data, page, limit, total }`, each book looks like `{ id, title, year, genre, pages, read, author: { id, name }, tags: [...] }`, and errors are `{ error, details }`. Make sure CORS allows `http://localhost:5173`.
+2. Create the Vite app, `.env.development` with `VITE_API_URL`, and `src/api.js` with one function per endpoint: `getBooks(params)`, `getBook(id)`, `createBook(data)`, `updateBook(id, data)`, `deleteBook(id)` and `getAuthors()`. Each checks `res.ok` and throws an error that includes the API's error body (`deleteBook` gets a 204 with no body, so don't call `res.json()` there).
+3. Build the list: keep `search`, `genre` and `page` in state, fetch with an effect that depends on them (debounce the search, abort old requests), and render the books with loading, empty and error states. Show the author with `{book.author.name}` and map `book.tags` to small chips.
 4. Add pagination controls ("Previous", "Page 2 of 5", "Next") using `total` and `limit` from the response. Reset to page 1 when the search or genre changes.
-5. Build the `BookForm` component with a form action (or controlled inputs). Use it for adding; on a validation error, show each message next to its field and keep the user's input. On success, return to the list and refresh it.
-6. Reuse `BookForm` for editing: pass the existing book as `initialValues` and use them as `defaultValue`s. Give the form `key={book.id}` so it resets when you edit a different book.
+5. Build the `BookForm` component with a form action (or controlled inputs): title, year, genre, pages, read, and an author `<select>`. Load the authors once with `getAuthors()` and render one `<option value={author.id}>` per author. Form values are strings, so send `authorId: Number(formData.get("authorId"))` (convert `year` and `pages` too, and a checkbox gives `"on"` or `null`, so use `formData.get("read") === "on"`). Use the form for adding; on a validation error, show each message next to its field and keep the user's input. On success, return to the list and refresh it.
+6. Reuse `BookForm` for editing: pass the existing book as `initialValues` and use them as `defaultValue`s; for the author `<select>`, that is `defaultValue={book.author.id}`. Give the form `key={book.id}` so it resets when you edit a different book.
 7. Add the read toggle (`PATCH` with `{ read: !book.read }`) and delete with confirmation. Disable each button while its request runs and show an error message if it fails.
 8. Deploy the frontend with `VITE_API_URL` pointing to your live API, add the frontend's URL to your API's CORS origins, and redeploy the API.
 9. Write a README with a screenshot, both live links, and a link to the API repository (and add a link back from the API's README).
 
 ### Hints
-- Build the query string with `new URLSearchParams({ search, genre, page })` and leave out empty values, so you don't send `?genre=`.
+- Build the query string with `URLSearchParams` and leave out empty values, so you don't send `?genre=` (the `getBooks` helper from the deployment lesson already does this).
+- Seeing "Objects are not valid as a React child"? You rendered `{book.author}`, which is an object. Render `{book.author.name}` instead. Getting a 400 when saving? Check that you send `authorId` (a number), not `author`.
 - After a create, update or delete, the simplest way to stay correct is to fetch the list again. A `refreshKey` number in state, added to the effect's dependencies and incremented after each change, does this neatly.
 - If your API's errors look like `{ error: "Validation failed", details: [...] }`, write one small function that turns them into `{ title: "…", year: "…" }` for the form.
 - Seeing a CORS error? The fix is in the API's `cors()` origins, not in React. Check the exact origin including `https://` and with no trailing slash.
@@ -1266,7 +1274,6 @@ Build the frontend for the Book Library API you built in the Express module and 
 ### Stretch goals
 - Optimistic update for the read toggle: change the UI immediately and roll back if the request fails.
 - Sort options (`?sort=year&order=desc`) if your API supports them, or add them to the API.
-- Show authors and tags from your Databases-module version of the API, with a "books by this author" view.
 - Add login using the authentication you built in the Express module, and only allow editing when logged in.
 
 ### Done when
@@ -1276,3 +1283,4 @@ Build the frontend for the Book Library API you built in the Express module and 
 - Validation errors from the API appear next to the right form fields
 - Loading, empty and error states exist, and buttons are disabled during requests
 - The frontend is deployed, talks to the deployed API, and the README links both repositories
+- Each book shows its author's name and tags, and the form picks the author from a list loaded from `GET /api/authors`

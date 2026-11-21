@@ -577,9 +577,9 @@ Build a small, genuinely useful JavaScript library entirely test-first: no line 
 
 ### Hints
 - **Money**: never store `12.5`; store `1250` cents. `0.1 + 0.2 !== 0.3` in JavaScript, and that bug is exactly what this library prevents. For `split(1000, 3)`, decide where the leftover cent goes (`[334, 333, 333]`) and test it.
-- **Money**: `Intl.NumberFormat` is great for `format`, but some locales put a special non-breaking space (` `) in the output. If a test fails with two strings that *look* identical, that's the reason.
+- **Money**: `Intl.NumberFormat` is great for `format`, but some locales put a special non-breaking space (`\u00a0` or `\u202f`) in the output. If a test fails with two strings that *look* identical, that's the reason.
 - **Dates**: months are 0-based in `new Date(2026, 0, 15)` (that's January). Create test dates with explicit times so time zones don't surprise you.
-- **Strings**: to remove accents, `text.normalize("NFD").replace(/[̀-ͯ]/g, "")` turns `"Café"` into `"Cafe"`.
+- **Strings**: to remove accents, `text.normalize("NFD").replace(/[\u0300-\u036f]/g, "")` turns `"Café"` into `"Cafe"`. (`NFD` splits "é" into "e" plus an accent mark, and the range `\u0300-\u036f` matches those marks. `/\p{Diacritic}/gu` is a more readable alternative.)
 - Commit after every green step with a message like `truncate: adds ellipsis`. Your history then tells the TDD story.
 
 ### Stretch goals
@@ -612,32 +612,35 @@ docs: GitHub Actions documentation | https://docs.github.com/en/actions
 ---
 Your Books API is the kind of code that benefits most from tests: it has many routes, many error cases, and it talks to a database. Clicking through every request in Postman after each change takes ages. With **Supertest** you send real HTTP requests to your Express app from a test file, check the status code and JSON, and run the whole set in a few seconds. Add a CI workflow and GitHub runs it for you on every push.
 
-## Step 1: separate the app from the server
+## Step 1: the app and the server are already separate
 
-Supertest needs your Express `app` *without* it listening on a port. Split your entry file in two:
+Supertest needs your Express `app` *without* it listening on a port. You already split your entry file in two in the Express module, and this is where it pays off:
 
 ```js
 // app.js: builds and exports the app, doesn't start it
 import express from "express";
-import { booksRouter } from "./routes/books.js";
-import { errorHandler, notFound } from "./middleware/errors.js";
+import booksRouter from "./routes/books.js";
+import { notFound } from "./middleware/notFound.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
-export const app = express();
+const app = express();
 app.use(express.json());
 app.use("/api/books", booksRouter);
 app.use(notFound);
 app.use(errorHandler);
+
+export default app;
 ```
 
 ```js
 // server.js: the only file that calls listen()
-import { app } from "./app.js";
+import app from "./app.js";
 
-const port = process.env.PORT ?? 3000;
-app.listen(port, () => console.log(`Listening on ${port}`));
+const PORT = process.env.PORT ?? 3000;
+app.listen(PORT, () => console.log(`Listening on http://localhost:${PORT}`));
 ```
 
-Your `start` script now runs `server.js`. Tests import `app.js`.
+Your `start` script runs `server.js`. Tests import `app.js`. If your project still has `listen()` in the same file as the routes, split it like this now.
 
 ## Step 2: your first Supertest test
 
@@ -649,7 +652,7 @@ npm install -D vitest supertest
 // test/books.test.js
 import { describe, it, expect } from "vitest";
 import request from "supertest";
-import { app } from "../app.js";
+import app from "../app.js";
 
 describe("GET /api/books", () => {
   it("returns a list of books", async () => {
@@ -667,23 +670,29 @@ describe("GET /api/books", () => {
 ```js
 const res = await request(app)
   .post("/api/books")
-  .send({ title: "Dune", author: "Frank Herbert", year: 1965 });
+  .send({ title: "The Left Hand of Darkness", authorId: 1, year: 1969 });
 
 expect(res.status).toBe(201);
-expect(res.body).toMatchObject({ title: "Dune", year: 1965 });
+expect(res.body).toMatchObject({
+  title: "The Left Hand of Darkness",
+  year: 1969,
+  author: { id: 1, name: "Ursula K. Le Guin" },
+});
 expect(res.body.id).toEqual(expect.any(Number));
 ```
 
-`toMatchObject` checks only the properties you list and ignores the rest, which is handy when the response also contains `id` or timestamps.
+Your API takes `authorId` and returns the nested `author` object, so the test sends one and checks the other. Author `1` is the one the test data creates before each test (Step 4). `toMatchObject` checks only the properties you list and ignores the rest (also inside nested objects like `author`), which is handy when the response also contains `id`, `tags` or timestamps.
 
 ## Step 3: a separate test database
 
-Tests create and delete data, so they must **never** touch your development or production database. Create a second database (for example `books_test`) with the same tables, and point the tests at it with a test env file:
+Tests create and delete data, so they must **never** touch your development or production database. You already have a test database: the `db-test` service in the `compose.yaml` from the Databases module (lesson "Running Postgres locally with Docker"). It runs on port 5433, gets your tables automatically, and is wiped every time it stops. Start it with `docker compose up -d --wait`, and point the tests at it with a test env file:
 
 ```bash
 # .env.test
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/books_test
+DATABASE_URL=postgresql://postgres:testpass@localhost:5433/books_test
 ```
+
+No Docker? Use Neon instead: create a separate database called `books_test` just for tests (on its own branch if you like), run your schema file in it once, and put its connection string in `.env.test`. Keep "test" in the database name, because the safety check below looks for it.
 
 Load it before any test code runs, using a Vitest setup file:
 
@@ -721,7 +730,7 @@ Every test should start from the same known state. Write a helper that empties t
 import { pool } from "../db/pool.js";
 
 export async function resetDb() {
-  await pool.query("TRUNCATE books, authors RESTART IDENTITY CASCADE");
+  await pool.query("TRUNCATE book_tags, books, tags, authors RESTART IDENTITY CASCADE");
   const { rows } = await pool.query(
     "INSERT INTO authors (name) VALUES ('Ursula K. Le Guin') RETURNING id"
   );
@@ -763,13 +772,13 @@ jobs:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: testpass
           POSTGRES_DB: books_test
         ports:
-          - 5432:5432
+          - 5433:5432
         options: --health-cmd pg_isready --health-interval 5s --health-retries 10
     env:
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/books_test
+      DATABASE_URL: postgresql://postgres:testpass@localhost:5433/books_test
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -781,7 +790,7 @@ jobs:
       - run: npm test
 ```
 
-The `services` block starts a temporary Postgres for the job; `db:migrate` should create your tables. Push, open the **Actions** tab on GitHub and watch it run. A red cross on a commit means a test failed.
+The `services` block starts a temporary Postgres for the job, with the same URL as your local Docker test database. Locally, Docker creates the tables for you; in CI nobody does, so `db:migrate` must do it: a small script that runs your schema file (`db/migrations/001_init.sql`) against `DATABASE_URL`. Push, open the **Actions** tab on GitHub and watch it run. A red cross on a commit means a test failed.
 
 ## Common mistakes
 
@@ -792,14 +801,14 @@ The `services` block starts a temporary Postgres for the job; `db:migrate` shoul
 
 ## In short
 
-- Export `app` from `app.js`; only `server.js` calls `listen()`.
+- `app.js` exports the app (`export default app`); only `server.js` calls `listen()`.
 - `await request(app).get(url)` / `.post(url).send(body)`, then check `res.status` and `res.body`.
 - Use a separate test database, reset it in `beforeEach`, close the pool in `afterAll`, run files one at a time.
 - A GitHub Actions workflow with a Postgres service runs everything on every push.
 
 ### Exercises
-- Split your Books API into `app.js` and `server.js` and check `npm start` still works.
-- Create the test database, the setup file and a single Supertest test for `GET /api/books`. Make it pass.
+- Check that your Books API is split into `app.js` (with `export default app`) and `server.js`, and that `npm start` still works. If it isn't split yet, do it now.
+- Start the Docker test database (or create one on Neon), then add the setup file and a single Supertest test for `GET /api/books`. Make it pass.
 - Write tests for `GET /api/books/:id`: an existing book (200), a missing id (404) and a non-numeric id (400 or 404, whatever your API promises).
 - Add the GitHub Actions workflow, push, and get a green tick. Then break a test on purpose, push, and look at the failed run's log.
 
@@ -812,7 +821,7 @@ summary: Give your Express + Postgres Books API a full test suite and run it on 
 Add a professional test suite to your Book Library API (Express + PostgreSQL, from the Express and Databases modules) and make GitHub run it automatically on every push and pull request. When you're done you can refactor anything in the API and know within seconds whether you broke something. A green test badge in the README is something employers notice.
 
 ### What it must do
-- `app.js` exports the app; `server.js` is the only file that calls `listen()`.
+- `app.js` exports the app (`export default app`); `server.js` is the only file that calls `listen()`.
 - **Unit tests** for every helper that doesn't need the database: pagination parsing (`?page=abc` → page 1), filter building, and your Zod schemas (valid data passes, each invalid field fails).
 - **Integration tests** with Supertest for **every** endpoint (books, authors, tags), each with its happy path and every error case it can return: 400 for invalid input, 404 for missing resources (plus 401/403 if your API has authentication).
 - Write tests also check the database changed, for example with a follow-up `GET`.
@@ -821,8 +830,8 @@ Add a professional test suite to your Book Library API (Express + PostgreSQL, fr
 - A GitHub Actions workflow runs the tests (with a Postgres service container) on every push and pull request, and the README shows a status badge.
 
 ### Steps
-1. **Split app and server.** Move `listen()` into `server.js`, export `app` from `app.js`, update the `start`/`dev` scripts. Check the API still runs. Commit.
-2. **Create the test database.** Create `books_test` (`CREATE DATABASE books_test;` in psql, or a second database on your local or Docker Postgres). Add a `db:migrate` script that runs your schema file against `DATABASE_URL`, and run it with the test URL. Add `.env.test`.
+1. **Check app and server.** You split them in the Express module: `app.js` ends with `export default app` and `server.js` imports it and calls `listen()`. If yours isn't split yet, do it now and update the `start`/`dev` scripts. Check the API still runs. Commit.
+2. **Create the test database.** Start the `db-test` service from your `compose.yaml` (`docker compose up -d --wait`); it already has your tables. Add `.env.test` with `DATABASE_URL=postgresql://postgres:testpass@localhost:5433/books_test`. No Docker? Create a `books_test` database on Neon and use its URL instead. Add a `db:migrate` script that runs your schema file against `DATABASE_URL`; CI (and a fresh Neon database) will need it.
 3. **Set up Vitest.** Install `vitest`, `supertest` and `@vitest/coverage-v8`. Create `vitest.config.js` (setup file, `fileParallelism: false`) and `test/setup.js` (loads `.env.test`, refuses to run if the URL doesn't contain "test"). Write one smoke test: `GET /api/books` returns 200. Make it pass.
 4. **Fixtures and reset.** Write `resetDb()` that truncates all tables and inserts a small, known set of data (2 authors, 3 books, 2 tags). Call it in `beforeEach`, close the pool in `afterAll`. Run the smoke test several times: always the same result.
 5. **Unit tests.** Test your pure helpers and Zod schemas. These are fast and don't need the database. Use `it.each` for lists of invalid inputs.
@@ -833,8 +842,9 @@ Add a professional test suite to your Book Library API (Express + PostgreSQL, fr
 
 ### Hints
 - The badge is an image: `![tests](https://github.com/USERNAME/REPO/actions/workflows/test.yml/badge.svg)`.
-- `db:migrate` can be a tiny Node script: read `schema.sql` with `fs` and run it with `pool.query(sql)`. The `pg` library accepts several statements in one query when there are no parameters.
-- Hosted databases (Neon, Supabase) are for your deployed app. For tests, use a local Postgres (installed or in Docker) and the service container in CI.
+- `db:migrate` can be a tiny Node script: read `db/migrations/001_init.sql` with `fs` and run it with `pool.query(sql)`. The `pg` library accepts several statements in one query when there are no parameters.
+- Your hosted database is for your deployed app; never point tests at it. For tests, use the Docker test database locally (or a separate `books_test` database on Neon) and the service container in CI.
+- The fixtures in `resetDb()` make the ids predictable (`RESTART IDENTITY`), so a `POST` test can send `authorId: 1` and `tagIds: [1, 2]` and expect `author: { id: 1, name: ... }` and the tag names back.
 - Postgres returns `COUNT(*)` and `bigint` columns as **strings**. If `total` comes back as `"3"`, convert it in the API with `Number()`, and your test will tell you whether you did.
 - Express 5 passes errors thrown in `async` route handlers to your error middleware automatically, so a failing query gives a clean 500 in your tests instead of a hanging request.
 - Seeing different results each run? A test is probably relying on data another test created. Every test should start from `resetDb()`.
@@ -1047,7 +1057,24 @@ npx playwright test
 npx playwright show-report   # open the HTML report
 ```
 
-Playwright tests are run by Playwright's own test runner, not Vitest. Keep them in their own folder so Vitest doesn't try to run them (Vitest only picks up `*.test.*` and `*.spec.*` files, so name E2E files consistently and, if needed, exclude the folder in your Vitest config).
+Playwright tests are run by Playwright's own test runner, not Vitest. But Vitest picks up every `*.test.*` **and** `*.spec.*` file, so `npm test` would also try to run `e2e/home.spec.js` and fail. Tell Vitest to skip the folder (this step is required):
+
+```js
+// vite.config.js
+import { defineConfig, configDefaults } from "vitest/config";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: "jsdom",
+    setupFiles: ["./src/setupTests.js"],
+    exclude: [...configDefaults.exclude, "e2e/**"],
+  },
+});
+```
+
+`configDefaults.exclude` keeps Vitest's normal exclusions (like `node_modules`); you just add your E2E folder.
 
 ## A first test
 
@@ -1076,7 +1103,7 @@ test("adds a book", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Add book" }).click();
   await page.getByLabel("Title").fill(title);
-  await page.getByLabel("Author").fill("Test Author");
+  await page.getByLabel("Author").selectOption({ label: "Ursula K. Le Guin" });
   await page.getByLabel("Year").fill("2020");
   await page.getByRole("button", { name: "Save" }).click();
 
@@ -1084,7 +1111,7 @@ test("adds a book", async ({ page }) => {
 });
 ```
 
-Actions like `click()` and `fill()` wait automatically until the element is visible and enabled. The unique title (`Date.now()`) means the test still works when you run it twice against the same database.
+The Author field in your Books frontend is a `<select>` filled from `/api/authors`, so the test picks an option by its visible text with `selectOption` instead of typing (use an author that your seed data creates). Actions like `click()`, `fill()` and `selectOption()` wait automatically until the element is visible and enabled (`selectOption` also waits until the option exists, so the authors have time to load). The unique title (`Date.now()`) means the test still works when you run it twice against the same database.
 
 `page.goto("/")` works when you set `baseURL` in the config.
 
@@ -1173,8 +1200,8 @@ Go back to the React apps you built in the React Fundamentals module and give th
 4. **Memory game: CI.** Add `.github/workflows/test.yml` (checkout → setup-node → `npm ci` → `npm test`), push, get it green, add the badge.
 5. **Recipe Finder: setup and fixtures.** Same setup as step 1. Save a small, realistic API response in `src/test/fixtures/meals.json` (copy 2–3 meals from a real TheMealDB response). Write a helper that mocks `fetch` to return it.
 6. **Recipe Finder: search states.** Test loading → results, the empty state (`{ meals: null }`, which is what TheMealDB returns for no results), and the error state. Then test favourites, and add the CI workflow.
-7. **Books frontend: Playwright.** Run `npm init playwright@latest`. Keep your API repo in a folder next to the frontend. Configure `webServer` as an array: your API (`cwd: "../books-api"`, test `DATABASE_URL`) and the Vite dev server (with `VITE_API_URL` pointing at the local API). Write the test: list → add book → see it.
-8. **Books frontend: CI.** In the workflow, start a Postgres service, check out both repos (the second `actions/checkout` step with `repository:` and `path:`), install both, run the API's migration, install Playwright browsers and run `npx playwright test`. Upload the HTML report as an artifact so you can inspect failures.
+7. **Books frontend: Playwright.** Run `npm init playwright@latest`, then add `exclude: [...configDefaults.exclude, "e2e/**"]` to the `test` block of `vite.config.js` (as in the lesson) so `npm test` doesn't pick up the Playwright files. Keep your API repo in a folder next to the frontend. Start the Docker test database and run the API's seed script against it, so the Author dropdown has options. To point the seed at the test database, set `DATABASE_URL` in the terminal first; a variable that's already set wins over the value in `.env` (in PowerShell: `$env:DATABASE_URL="postgresql://postgres:testpass@localhost:5433/books_test"; npm run db:seed`). Configure `webServer` as an array: your API (`cwd: "../books-api"`, `DATABASE_URL` set to the test database) and the Vite dev server (with `VITE_API_URL` pointing at the local API). Write the test: list → add book (pick the author with `selectOption`) → see it.
+8. **Books frontend: CI.** In the workflow, start a Postgres service, check out both repos (the second `actions/checkout` step with `repository:` and `path:`), install both, run the API's migration and seed, install Playwright browsers and run `npx playwright test`. If you only test in Chromium, `npx playwright install --with-deps chromium` is much faster than installing all browsers. Upload the HTML report as an artifact so you can inspect failures.
 
 ### Hints
 - The memory game's 1-second "flip back" delay: with real timers, `await waitFor(() => expect(...).toBeInTheDocument(), { timeout: 2000 })` waits for it. With fake timers, create the user with `userEvent.setup({ advanceTimers: vi.advanceTimersByTime })` so user-event and the fake clock work together.
@@ -1183,6 +1210,7 @@ Go back to the React apps you built in the React Fundamentals module and give th
 - Your API's CORS settings must allow `http://localhost:5173`, or the E2E test fails with an empty list and a CORS error in the trace.
 - In the Books E2E test, use a unique title (`Date.now()`) so it passes on repeated local runs.
 - Each `webServer` entry accepts `env: { ... }`, which is the easiest way to give the API its test database URL and the frontend its `VITE_API_URL`.
+- A second `actions/checkout` step without a `token:` can only check out a **public** repository. If your API repo is private, create a fine-grained personal access token with read access to it, save it as a repository secret (for example `API_REPO_TOKEN`), and add `token: ${{ secrets.API_REPO_TOKEN }}` to that step.
 
 ### Stretch goals
 - Add the "best score saved in `localStorage`" behaviour to the memory game tests.

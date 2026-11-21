@@ -173,7 +173,8 @@ body {
   line-height: 1.5;
 }
 
-p, li {
+.prose p,
+.prose li {
   max-width: 65ch;
 }
 
@@ -184,7 +185,7 @@ h1, h2, h3 {
 ```
 
 - **Line height** around 1.5 gives body text room to breathe. Large headings need *less* (1.1–1.25), otherwise multi-line headings look like separate lines.
-- **Line length** of 45–75 characters per line is easiest to read. The `ch` unit is the width of the "0" character, so `max-width: 65ch` limits lines to roughly 65 characters. Long lines across a wide screen make readers lose their place.
+- **Line length** of 45–75 characters per line is easiest to read. The `ch` unit is the width of the "0" character, so `max-width: 65ch` limits lines to roughly 65 characters. Long lines across a wide screen make readers lose their place. The rule is scoped to a `.prose` wrapper (put it on your article or main text area): a global `li { max-width: 65ch }` would also squeeze list items used for navbars, menus and card grids.
 - `text-wrap: balance` spreads heading words evenly across lines, so you don't get one lonely word on the last line. Browsers that don't support it simply ignore it.
 
 ## Fluid headings with clamp
@@ -281,15 +282,16 @@ Don't use `--blue-600` directly all over your CSS. Add a second layer of variabl
   --color-text-muted: var(--gray-500);
   --color-border:    var(--gray-200);
   --color-primary:   var(--blue-600);
+  --color-on-primary: #ffffff; /* text on a primary background */
   --color-danger:    var(--red-600);
 }
 
 body   { background: var(--color-bg); color: var(--color-text); }
 .card  { background: var(--color-surface); border: 1px solid var(--color-border); }
-.btn-primary { background: var(--color-primary); color: #fff; }
+.btn-primary { background: var(--color-primary); color: var(--color-on-primary); }
 ```
 
-If you later change the brand to purple, you change one line. These named values are often called **design tokens**.
+If you later change the brand to purple, you change one line. These named values are often called **design tokens**. Notice `--color-on-primary`: text that sits *on* a coloured background gets its own token, because it must change together with that background (you'll see why in dark mode below).
 
 ## Contrast: the rule you must check
 
@@ -347,9 +349,12 @@ Because components only use semantic tokens, dark mode is just a new set of valu
     --color-text-muted: #94a3b8;
     --color-border: #334155;
     --color-primary: #60a5fa;
+    --color-on-primary: #0f172a;
   }
 }
 ```
+
+The lighter `#60a5fa` blue is easy to see on a dark background, but white text on it is only about 2.5:1 (fails). Dark navy `#0f172a` text on it is about 7:1, so the button text switches to dark in dark mode. This is exactly why `--color-on-primary` is a token and not a hard-coded `#fff`.
 
 ## Common mistakes
 
@@ -440,12 +445,12 @@ Both use `gap` for spacing between items, which is cleaner than margins on every
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
   gap: var(--space-6);
 }
 ```
 
-The card grid line is worth memorising: "make as many columns as fit, each at least 16rem wide, sharing the remaining space". It is responsive without a single media query: one column on a phone, two on a tablet, three or four on desktop.
+The card grid line is worth memorising: "make as many columns as fit, each at least 16rem wide, sharing the remaining space". It is responsive without a single media query: one column on a phone, two on a tablet, three or four on desktop. The `min(16rem, 100%)` part matters: with a plain `16rem`, a container narrower than 16rem (a very small phone, a sidebar) would overflow sideways; with `min()`, the column simply shrinks to the container's width.
 
 ## A content container
 
@@ -708,6 +713,14 @@ async function handleSubmit(event) {
 
 Disabling the button also prevents double submissions. `finally` makes sure it's re-enabled whether the request worked or not.
 
+`showMessage` should write into an element that is already on the page, marked as a status region:
+
+```html
+<p id="message" role="status"></p>
+```
+
+`role="status"` (which implies `aria-live="polite"`) makes screen readers announce new text in that element, like "Book saved", without moving the user's focus. Without it, blind users get no feedback at all.
+
 ## Error messages: what happened and how to fix it
 
 A good error message is specific, polite and tells the user what to do:
@@ -752,7 +765,7 @@ After the user does something, the interface should respond: a button changes on
 
 ## Keyboard and screen readers
 
-Many people use a keyboard instead of a mouse. Test every page by pressing Tab: can you reach every link, button and input, in a sensible order, and can you always see where you are? Use real `<button>` and `<a>` elements instead of clickable `<div>`s: they work with the keyboard and screen readers for free.
+Many people use a keyboard instead of a mouse. Test every page by pressing Tab: can you reach every link, button and input, in a sensible order, and can you always see where you are? Use real `<button>` and `<a>` elements instead of clickable `<div>`s: they work with the keyboard and screen readers for free. For messages that appear after an action ("Saved", "3 results"), use a `role="status"` element, as shown in the loading section above, so screen readers announce them.
 
 ## Common mistakes
 
