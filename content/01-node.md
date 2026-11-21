@@ -37,14 +37,14 @@ What Node does **not** have: `window`, `document`, `alert()` or the DOM. There i
 
 ## Installing Node
 
-Install the **LTS** (Long-Term Support) version from nodejs.org. LTS versions get bug fixes for years, which is what you want for learning and real projects. Then open a new terminal and check it worked:
+Install **Node 24 LTS** (Long-Term Support) from nodejs.org. LTS versions get bug fixes for years, which is what you want for learning and real projects. This course uses several recent features (`import.meta.dirname`, `--env-file`, `util.styleText`, the built-in `node:sqlite`), so you need **at least Node 22**; older versions will give confusing errors later. Then open a new terminal and check it worked:
 
 ```bash
 node -v
 npm -v
 ```
 
-You should see two version numbers. `npm` (Node Package Manager) is installed with Node; you'll use it in the next lesson.
+You should see two version numbers, and the first should start with `v22` or higher. `npm` (Node Package Manager) is installed with Node; you'll use it in the next lesson.
 
 > **Tip:** On Windows, if `node` is "not recognised", close and reopen your terminal (or VS Code) so it picks up the new PATH.
 
@@ -771,15 +771,18 @@ Split the path into segments:
 ```js
 // GET /api/continent/europe
 if (url.pathname.startsWith("/api/continent/") && req.method === "GET") {
-  const continent = url.pathname.split("/").pop(); // "europe"
+  const continent = decodeURIComponent(url.pathname.split("/").pop()); // "europe"
   const result = destinations.filter(
     (d) => d.continent.toLowerCase() === continent.toLowerCase()
   );
-  return sendJSON(res, 200, result);
+  res.setHeader("Content-Type", "application/json");
+  return res.end(JSON.stringify(result));
 }
 ```
 
 `"/api/continent/europe".split("/")` gives `["", "api", "continent", "europe"]`, and `.pop()` takes the last piece. Comparing in lowercase makes `/api/continent/Europe` and `/api/continent/europe` both work.
+
+**`decodeURIComponent` matters for names with spaces.** Browsers send `/api/continent/north america` as `/api/continent/north%20america`, and `url.pathname` keeps the `%20`. Decoding turns it back into `"north america"`. (A broken sequence like `%E0%A4%A` makes `decodeURIComponent` throw a `URIError`; you'll learn to catch unexpected errors in the next lesson.)
 
 ## Reading query parameters
 
@@ -826,7 +829,7 @@ const limit = Number(url.searchParams.get("limit")) || 10; // number, default 10
 - **Matching `req.url` instead of `url.pathname`**, so routes break as soon as a query string is added.
 - **Comparing `"true"` with `true`.** Always convert query values.
 - **Case-sensitive comparisons**: users type `Italy`, `italy` and `ITALY`.
-- **Forgetting URL encoding.** A path like `/api/country/new%20zealand` contains `%20`; use `decodeURIComponent(segment)` for path segments.
+- **Forgetting URL encoding.** A path like `/api/country/new%20zealand` contains `%20`; decode path segments with `decodeURIComponent`. (`searchParams` already decodes query values for you.)
 
 ## In short
 
@@ -866,13 +869,12 @@ Repeated code is a signal to extract a function:
 // utils/sendJSONResponse.js
 export function sendJSONResponse(res, statusCode, payload) {
   res.setHeader("Content-Type", "application/json");
-  res.setHeader("Access-Control-Allow-Origin", "*");
   res.statusCode = statusCode;
   res.end(JSON.stringify(payload));
 }
 ```
 
-Every route now ends with one readable line: `return sendJSONResponse(res, 200, result)`. And when you need to add a header to *every* response, you change one place.
+Every route now ends with one readable line: `return sendJSONResponse(res, 200, result)`. And when you need to add a header to *every* response, you change one place. (You'll do exactly that in the CORS lesson next.)
 
 ## A data-access layer
 
@@ -916,7 +918,7 @@ import { getDataByQueryParams } from "./utils/getDataByQueryParams.js";
 
 const PORT = 8000;
 
-const server = http.createServer(async (req, res) => {
+async function handleRequest(req, res) {
   const destinations = await getDataFromDB();
   const url = new URL(req.url, `http://${req.headers.host}`);
 
@@ -926,17 +928,36 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (url.pathname.startsWith("/api/continent/") && req.method === "GET") {
-    const continent = url.pathname.split("/").pop();
+    const continent = decodeURIComponent(url.pathname.split("/").pop());
     return sendJSONResponse(res, 200, getDataByPathParams(destinations, "continent", continent));
   }
 
   return sendJSONResponse(res, 404, { error: "not found", message: "The requested route does not exist" });
+}
+
+const server = http.createServer(async (req, res) => {
+  try {
+    await handleRequest(req, res);
+  } catch (err) {
+    console.error(err);
+    if (!res.headersSent) {
+      sendJSONResponse(res, 500, { error: "server error", message: "Something went wrong" });
+    } else {
+      res.end();
+    }
+  }
 });
 
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 ```
 
-Read it top to bottom: it now *describes* the API instead of implementing every detail. The folder structure:
+Read `handleRequest` top to bottom: it now *describes* the API instead of implementing every detail.
+
+## Catching unexpected errors
+
+Notice the `try/catch` around `handleRequest`. The `http` module doesn't know your callback is `async`, so if anything inside it throws (a bug, a broken data file, a malformed `%` sequence in `decodeURIComponent`), the rejected promise isn't handled by anyone. Node then either **crashes the whole server** ("unhandled promise rejection") or leaves the request hanging. The wrapper turns any unexpected error into a `500` response and logs the details for you. `res.headersSent` checks whether a response had already started, because you can't send a new status code after that. (Express 5, which you'll learn next, does this for you automatically.)
+
+The folder structure:
 
 ```
 destinations-api/
@@ -958,6 +979,7 @@ Refactoring means changing the structure **without** changing the behaviour. Do 
 
 - **Wrong relative import paths** after moving files. From `utils/` the data file is `../data/data.js`. Read the error message: it prints the path it tried.
 - **Forgetting `await`** on `getDataFromDB()`, so you filter a Promise and get `data.filter is not a function`.
+- **No `try/catch` around an `async` request handler.** One unexpected error then crashes the server for every user.
 - **Over-splitting**: one file per three-line function isn't always better. Group by responsibility.
 - **Refactoring and adding features at the same time.** Keep them separate so you can tell what broke.
 
@@ -1143,24 +1165,44 @@ const PUBLIC_DIR = path.join(import.meta.dirname, "public");
 
 export async function serveStatic(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  const pathname = url.pathname === "/" ? "/index.html" : url.pathname;
+
+  let pathname;
+  try {
+    pathname = decodeURIComponent(url.pathname); // "/my%20photo.png" → "/my photo.png"
+  } catch {
+    res.writeHead(400, { "Content-Type": "text/plain" });
+    return res.end("Bad request");
+  }
+  if (pathname.endsWith("/")) pathname += "index.html";
+
   const filePath = path.join(PUBLIC_DIR, pathname);
+  if (!filePath.startsWith(PUBLIC_DIR + path.sep)) {
+    res.writeHead(403, { "Content-Type": "text/plain" });
+    return res.end("Forbidden"); // see "Security: path traversal" below
+  }
 
   try {
     const content = await fs.readFile(filePath);
     res.writeHead(200, { "Content-Type": getContentType(filePath) });
     res.end(content);
   } catch (err) {
-    if (err.code === "ENOENT") {
+    if (err.code === "ENOENT" || err.code === "EISDIR") {
       res.writeHead(404, { "Content-Type": "text/html" });
       return res.end("<h1>404: page not found</h1>");
     }
-    throw err;
+    throw err; // anything else is a real problem
   }
 }
 ```
 
-Notice there's no `"utf8"` in `readFile`: we want the raw bytes, because images aren't text. `/` is mapped to `/index.html`, since browsers request `/` for the home page.
+Step by step:
+
+- **Decode the path.** `url.pathname` keeps URL encoding, so a file called `my photo.png` is requested as `/my%20photo.png`. `decodeURIComponent` turns it back into the real file name. It throws on broken sequences like `%E0%A4%A`, which we answer with `400 Bad request`.
+- **Folders get `index.html`.** `/` becomes `/index.html` (browsers request `/` for the home page), and `/blog/` becomes `/blog/index.html`.
+- **Stay inside `public/`.** Explained in the security section below.
+- **Missing files are a 404.** `ENOENT` means the file doesn't exist. `EISDIR` means the path is a *folder* (e.g. `/images` without a slash): `readFile` can't read a folder, so we treat it as not found too.
+
+Notice there's no `"utf8"` in `readFile`: we want the raw bytes, because images aren't text.
 
 ## Content types (MIME types)
 
@@ -1191,35 +1233,45 @@ In `server.js`, check API routes first; everything else is treated as a file:
 
 ```js
 const server = http.createServer(async (req, res) => {
-  if (req.url.startsWith("/api")) {
-    return handleApi(req, res);
+  try {
+    if (req.url.startsWith("/api")) {
+      return await handleApi(req, res);
+    }
+    return await serveStatic(req, res);
+  } catch (err) {
+    console.error(err);
+    if (!res.headersSent) res.writeHead(500, { "Content-Type": "text/plain" });
+    res.end("Server error");
   }
-  return serveStatic(req, res);
 });
 ```
+
+The `try/catch` is the same safety net as in the "Modularising your code" lesson: any unexpected error becomes a 500 instead of crashing the server. The `await` matters: without it, a rejected promise would skip the `catch`.
 
 In the frontend you can now use **relative** URLs, `fetch("/api/stories")`, because the page and the API share the same origin.
 
 ## Security: path traversal
 
-What if someone requests `/../server.js` or `/../../.env`? `path.join` resolves the `..` and could point *outside* `public/`, leaking your source code or secrets. Always check the final path is still inside the public folder:
+What if someone requests `/../server.js` or `/../.env`? `path.join` resolves `..` segments, so the final path could point *outside* `public/`, leaking your source code or secrets. The `URL` class removes plain `/../` from the path, but an attacker can hide the slash as `%2F`: `/..%2F.env` survives URL parsing, and after `decodeURIComponent` it becomes `/../.env`. So after decoding, always check that the final path is still inside the public folder:
 
 ```js
 const filePath = path.join(PUBLIC_DIR, pathname);
-if (!filePath.startsWith(PUBLIC_DIR)) {
+if (!filePath.startsWith(PUBLIC_DIR + path.sep)) {
   res.writeHead(403);
   return res.end("Forbidden");
 }
 ```
 
-Browsers normalise `..` in URLs, but attackers use curl, so this check matters.
+Why `PUBLIC_DIR + path.sep` and not just `PUBLIC_DIR`? If your folder is `C:\app\public`, a request for `/..%2Fpublic-secret%2Fkey.txt` resolves to `C:\app\public-secret\key.txt`, which still *starts with* `C:\app\public`! Adding the separator (`\` on Windows, `/` elsewhere) means "inside this folder", not "a name that begins the same way".
 
 ## Common mistakes
 
 - **Reading images with `"utf8"`**, which corrupts them. Read bytes (no encoding).
 - **Wrong or missing Content-Type**, so CSS is ignored or JS modules refuse to load. Check the Network tab.
 - **Absolute links in HTML** like `<link href="C:\...">`. Use paths relative to the site root: `/styles.css`.
-- **Skipping the path-traversal check.**
+- **Skipping the path-traversal check**, or writing it as `startsWith(PUBLIC_DIR)` without the separator.
+- **Not decoding the path**, so files with spaces or accents in their names always 404.
+- **Only handling `ENOENT`**: requesting a folder throws `EISDIR`, which then crashes the request.
 
 ## In short
 
@@ -1247,19 +1299,33 @@ Up to now your API only *gives* data. Real apps also *receive* it: a sign-up for
 
 ## The body arrives in pieces
 
-Request bodies can be large (think of a file upload), so Node doesn't wait to receive all of it. `req` is a **stream**: the body arrives in chunks. With `for await…of` you can collect them in a few lines:
+Request bodies can be large (think of a file upload), so Node doesn't wait to receive all of it. `req` is a **stream**: the body arrives in chunks, each one a `Buffer` (raw bytes). With `for await…of` you can collect them:
 
 ```js
+const MAX_BODY_BYTES = 10_000; // 10 KB is plenty for a short story
+
 export async function parseJSONBody(req) {
-  let body = "";
+  const chunks = [];
+  let size = 0;
   for await (const chunk of req) {
-    body += chunk;
+    size += chunk.length;
+    if (size > MAX_BODY_BYTES) {
+      const err = new Error("Request body too large");
+      err.statusCode = 413; // 413 Content Too Large
+      throw err;
+    }
+    chunks.push(chunk);
   }
-  return JSON.parse(body);
+  const text = Buffer.concat(chunks).toString("utf8");
+  return JSON.parse(text);
 }
 ```
 
-The loop ends when the last chunk has arrived. Then the complete text is parsed as JSON. If the client sent invalid JSON, `JSON.parse` throws, so the caller must handle that.
+Three details make this robust:
+
+- **Collect bytes, convert once.** It's tempting to write `body += chunk`, which converts each chunk to text separately. But characters like `é` or `🙂` take several bytes, and a chunk can end in the middle of one, leaving garbage characters (`�`). Joining all the bytes with `Buffer.concat` first and converting to text once avoids that.
+- **Limit the size.** Without a limit, someone can send a 2 GB body and your server keeps all of it in memory. Stop reading once the body is bigger than you'd ever need and answer `413`. (Express's `express.json({ limit: "10kb" })` does exactly this, as you'll see in the next module.)
+- **Invalid JSON throws.** `JSON.parse` throws a `SyntaxError` if the client sent broken JSON, so the caller must handle it.
 
 ## A POST route
 
@@ -1268,7 +1334,8 @@ if (url.pathname === "/api/stories" && req.method === "POST") {
   let data;
   try {
     data = await parseJSONBody(req);
-  } catch {
+  } catch (err) {
+    if (err.statusCode === 413) return sendJSONResponse(res, 413, { error: "Story is too large" });
     return sendJSONResponse(res, 400, { error: "Invalid JSON" });
   }
 
@@ -1346,19 +1413,21 @@ With no tags allowed, any HTML is stripped and only plain text remains.
 ## Common mistakes
 
 - **Parsing without try/catch**: one bad request crashes the whole server.
+- **`body += chunk`**: works in English tests, then corrupts accented letters and emoji in real use.
+- **No size limit**: anyone can fill your server's memory with one huge request.
 - **Forgetting the `Content-Type: application/json` header in fetch**, or sending an object without `JSON.stringify`.
 - **Trusting client-sent ids, dates or prices.** The server generates them.
 - **Rendering user input with `innerHTML`.**
 
 ## In short
 
-- `req` is a stream; collect chunks with `for await…of` and `JSON.parse` in a try/catch.
+- `req` is a stream; collect the byte chunks with `for await…of`, enforce a size limit, `Buffer.concat` them and `JSON.parse` in a try/catch.
 - Create endpoints: parse → validate → build → save → `201` with the new item.
 - Return `400` with a clear message for invalid input.
 - Sanitise user text on the server and render it with `textContent`.
 
 ### Exercises
-- Write `parseJSONBody(req)` and a `POST /api/echo` route that sends back whatever JSON it receives. Test it with Thunder Client/Postman.
+- Write `parseJSONBody(req)` and a `POST /api/echo` route that sends back whatever JSON it receives. Test it with Thunder Client/Postman, including a body with emoji and accented letters.
 - Send invalid JSON (e.g. `{title:`) and make sure you get a 400, not a crash.
 - Build `POST /api/stories` that validates and appends to `data/stories.json`, responding with 201.
 - Post a story containing `<b>bold</b><script>alert(1)</script>` and check what gets stored after adding `sanitize-html`.
@@ -1409,13 +1478,14 @@ if (url.pathname === "/api/live" && req.method === "GET") {
     "Cache-Control": "no-cache",
     Connection: "keep-alive",
   });
+  res.write(": connected\n\n"); // a comment line: sends the headers right away
 
   const onStory = (story) => {
     res.write(`data: ${JSON.stringify(story)}\n\n`);
   };
   storyEvents.on("story-added", onStory);
 
-  req.on("close", () => {
+  res.on("close", () => {
     storyEvents.off("story-added", onStory);
   });
   return;
@@ -1425,9 +1495,21 @@ if (url.pathname === "/api/live" && req.method === "GET") {
 The important parts:
 
 - **`text/event-stream`** tells the browser this is an SSE stream.
+- **`: connected`** is an SSE comment (lines starting with `:` are ignored by the browser). Writing something immediately makes Node send the headers now, so the browser knows the stream is open instead of waiting for the first story.
 - Each message has the format `data: <text>` followed by a **blank line** (`\n\n`). Without the blank line, the browser keeps waiting.
 - Every connected browser gets its own `onStory` listener. When `"story-added"` is emitted, all of them write to their own open response, which is how one new story reaches everyone.
-- When the user closes the tab, `req` emits `"close"` and we remove the listener. Otherwise listeners pile up forever (a memory leak).
+- When the user closes the tab, the **response** (`res`) emits `"close"` and we remove the listener. Otherwise listeners pile up forever (a memory leak). Listen on `res`, not `req`: the response's `"close"` is the documented signal that the connection to this client is gone. The request's `"close"` is about the *incoming* request, and in some Node versions it fired as soon as the request had been read, long before the user left.
+
+## More than 10 listeners
+
+By default an EventEmitter prints `MaxListenersExceededWarning` when one event has more than 10 listeners, because that's often a sign of a leak. With SSE, 11 open tabs means 11 legitimate listeners, so raise the limit on purpose:
+
+```js
+export const storyEvents = new EventEmitter();
+storyEvents.setMaxListeners(100); // one listener per connected browser
+```
+
+The cleanup on `close` is still essential: the limit only silences the warning, it doesn't free memory.
 
 ## The browser side
 
@@ -1464,21 +1546,22 @@ SSE is **one-way** (server to browser) over normal HTTP, and very simple. **WebS
 
 - **Missing the blank line** after `data: …`, so messages never arrive.
 - **Calling `res.end()`** in the SSE route: the stream closes immediately.
-- **Not removing listeners on `close`**: Node warns `MaxListenersExceededWarning` after about 10 connections.
+- **Not removing listeners on `close`**: memory grows with every visitor who ever opened the page.
+- **Cleaning up on `req.on("close")`** instead of `res.on("close")`: depending on the Node version, the listener may be removed too early and live updates silently stop.
 - **Sending objects without `JSON.stringify`.**
 
 ## In short
 
 - `EventEmitter`: `on(name, fn)` subscribes, `emit(name, data)` publishes.
 - SSE keeps a response open with `Content-Type: text/event-stream` and writes `data: …\n\n` messages.
-- Remove listeners when the client disconnects.
+- Remove listeners on `res.on("close")`, and raise `setMaxListeners` when many browsers are connected.
 - The browser listens with `new EventSource(url)`.
 
 ### Exercises
 - Create an EventEmitter, register two listeners for `"greet"`, emit it with a name and see both run.
 - Build `GET /api/time` that streams the current time every 2 seconds via SSE (`setInterval`, cleared on close). Show it live on a page.
 - Emit `"story-added"` in your POST route and push new stories to all connected browsers. Test with two windows.
-- Open and close the page 15 times and confirm no `MaxListenersExceededWarning` appears.
+- Log `storyEvents.listenerCount("story-added")` every time a browser connects or disconnects. Open 12 tabs (see the warning without `setMaxListeners`), then close them all and check the count goes back to 0.
 
 ---lesson
 id: node-12
@@ -1527,6 +1610,8 @@ Put it in your scripts so you never forget:
 ```
 
 In older tutorials you'll see the `dotenv` package doing the same job. Notice that `start` doesn't load the file: in production, the hosting provider sets real environment variables in its dashboard instead.
+
+One catch: `--env-file=.env` **stops with an error if the file doesn't exist**, which is exactly what happens when someone clones your repo and hasn't created their `.env` yet. If your app has sensible defaults for everything, use `--env-file-if-exists=.env` instead (Node 22.9+): it loads the file when it's there and quietly skips it otherwise.
 
 ## Reading them with defaults
 

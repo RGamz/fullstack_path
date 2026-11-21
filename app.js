@@ -64,9 +64,10 @@
     const docs = l.docs.map(([label, url]) =>
       `<a class="res" href="${esc(url)}" target="_blank" rel="noopener"><span class="ico">📄</span>${esc(label)}</a>`).join("");
     return `
-    <details class="lesson ${isDone(l.id) ? "is-done" : ""}" id="l-${l.id}" data-lesson="${l.id}">
+    <div class="lesson ${isDone(l.id) ? "is-done" : ""}" id="l-${l.id}" data-lesson="${l.id}">
+      <input type="checkbox" class="check lesson-check" data-id="${l.id}" aria-label="Mark “${esc(l.title)}” as done" ${isDone(l.id) ? "checked" : ""}>
+      <details class="lesson-details">
       <summary>
-        <input type="checkbox" class="check" data-id="${l.id}" aria-label="Mark lesson done" ${isDone(l.id) ? "checked" : ""}>
         <span class="lesson-num">${n}</span>
         <span class="lesson-title">${esc(l.title)}</span>
         <span class="lesson-meta">
@@ -87,7 +88,8 @@
         <textarea class="notes" data-notes="${l.id}" placeholder="What did you learn? What was confusing? Links to your code…">${esc(state.notes[l.id] || "")}</textarea>
         <div class="done-at" data-done-at="${l.id}">${isDone(l.id) ? "Completed " + fmtDate(state.done[l.id]) : ""}</div>
       </div>
-    </details>`;
+      </details>
+    </div>`;
   }
 
   function renderProject(p) {
@@ -96,7 +98,7 @@
       <div class="project-head">
         <input type="checkbox" class="check" data-id="${p.id}" aria-label="Mark project done" ${isDone(p.id) ? "checked" : ""}>
         <div>
-          <div class="project-kicker">🛠 Project</div>
+          <div class="project-kicker">🛠 Project <span class="chip" data-feat-count="${p.id}"></span></div>
           <h3>${esc(p.title)}</h3>
           <p class="project-summary">${esc(p.summary)}</p>
         </div>
@@ -107,7 +109,10 @@
       </details>
       <h4 class="label">Done when</h4>
       <ul class="ex-list">${checklist(p.features, (i) => featId(p.id, i))}</ul>
-      <input class="repo" type="url" data-repo="${p.id}" placeholder="Paste your GitHub / live link" value="${esc(state.repos[p.id] || "")}">
+      <div class="repo-row">
+        <input class="repo" type="url" data-repo="${p.id}" placeholder="Paste your GitHub / live link" value="${esc(state.repos[p.id] || "")}">
+        <a class="repo-open" data-repo-link="${p.id}" target="_blank" rel="noopener" hidden>↗ Open</a>
+      </div>
     </article>`;
   }
 
@@ -182,6 +187,14 @@
         const chip = $(`[data-sec-count="${s.id}"]`);
         chip.textContent = `${sl + sp}/${sTotal}`;
         chip.classList.toggle("done", sl + sp === sTotal);
+        $(`#s-${CSS.escape(s.id)}`).classList.toggle("is-done", sl + sp === sTotal);
+
+        for (const p of s.projects) {
+          const f = p.features.filter((_, i) => isDone(featId(p.id, i))).length;
+          const c = $(`[data-feat-count="${p.id}"]`);
+          c.textContent = `${f}/${p.features.length} done`;
+          c.classList.toggle("done", f === p.features.length);
+        }
         mLessons += s.lessons.length; mLessonsDone += sl; mProjs += s.projects.length; mProjsDone += sp;
 
         for (const l of s.lessons) {
@@ -230,34 +243,53 @@
     if (!t.matches("input[type=checkbox][data-id]")) return;
     const id = t.dataset.id;
     setDone(id, t.checked);
-    if (t.classList.contains("check")) {
-      const card = t.closest(".lesson, .project");
-      card.classList.toggle("is-done", t.checked);
-      const at = $(`[data-done-at="${id}"]`);
-      if (at) at.textContent = t.checked ? "Completed " + fmtDate(state.done[id]) : "";
+    if (t.classList.contains("check")) markCard(id, t.checked);
+
+    // Ticking the last "Done when" box of a project completes the project.
+    const feat = id.match(/^(.+)#f\d+$/);
+    if (feat && t.checked && !isDone(feat[1])) {
+      const project = findProject(feat[1]);
+      if (project && project.features.every((_, i) => isDone(featId(project.id, i)))) {
+        setDone(project.id, true);
+        markCard(project.id, true);
+      }
     }
     updateProgress();
+  }
+
+  function markCard(id, done) {
+    const card = $(`#l-${CSS.escape(id)}, #p-${CSS.escape(id)}`);
+    if (!card) return;
+    card.classList.toggle("is-done", done);
+    $(`.check[data-id="${CSS.escape(id)}"]`, card).checked = done;
+    const at = $(`[data-done-at="${CSS.escape(id)}"]`);
+    if (at) at.textContent = done ? "Completed " + fmtDate(state.done[id]) : "";
+  }
+
+  function findProject(id) {
+    for (const m of MODULES) for (const s of m.sections) for (const p of s.projects) if (p.id === id) return p;
+    return null;
+  }
+
+  const isLink = (v) => /^https?:\/\/\S+\.\S+/.test(v.trim());
+  function updateRepoLink(id) {
+    const link = $(`[data-repo-link="${CSS.escape(id)}"]`);
+    const value = state.repos[id] || "";
+    link.hidden = !isLink(value);
+    if (isLink(value)) link.href = value.trim();
   }
 
   function onInput(e) {
     const t = e.target;
     if (t.dataset.notes) { state.notes[t.dataset.notes] = t.value; save(); }
-    if (t.dataset.repo) { state.repos[t.dataset.repo] = t.value; save(); }
-  }
-
-  // Ticking the checkbox inside a <summary> should not open/close the lesson.
-  function keepDetailsState(e) {
-    const details = e.target.closest("details");
-    const wasOpen = details.open;
-    requestAnimationFrame(() => { details.open = wasOpen; });
+    if (t.dataset.repo) { state.repos[t.dataset.repo] = t.value; save(); updateRepoLink(t.dataset.repo); }
   }
 
   function continueLearning() {
     const next = [...steps()].find((s) => !isDone(s.item.id));
     if (!next) return;
     const el = next.kind === "lesson" ? $(`#l-${CSS.escape(next.item.id)}`) : $(`#p-${CSS.escape(next.item.id)}`);
-    if (next.kind === "lesson") el.open = true;
-    else $(".brief", el).open = true;
+    $(next.kind === "lesson" ? ".lesson-details" : ".brief", el).open = true;
     highlightIn(el);
     el.scrollIntoView({ behavior: "smooth", block: "start" });
     el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
@@ -269,7 +301,7 @@
     a.href = URL.createObjectURL(blob);
     a.download = `study-progress-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
-    URL.revokeObjectURL(a.href);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000); // give the browser time to start the download
   }
 
   function importProgress(file) {
@@ -277,9 +309,10 @@
     reader.onload = () => {
       try {
         const data = JSON.parse(reader.result);
-        if (typeof data.done !== "object") throw new Error("Missing 'done'");
+        const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+        if (!isObj(data) || !isObj(data.done)) throw new Error("Missing 'done'");
         if (!confirm("Replace your current progress with the imported file?")) return;
-        state = { done: data.done || {}, notes: data.notes || {}, repos: data.repos || {} };
+        state = { done: data.done, notes: isObj(data.notes) ? data.notes : {}, repos: isObj(data.repos) ? data.repos : {} };
         save();
         renderAll();
       } catch (err) {
@@ -292,6 +325,7 @@
   function renderAll() {
     renderNav();
     renderModules();
+    for (const m of MODULES) for (const s of m.sections) for (const p of s.projects) updateRepoLink(p.id);
     updateProgress();
   }
 
@@ -302,7 +336,6 @@
   const main = $("main");
   main.addEventListener("change", onChange);
   main.addEventListener("input", onInput);
-  main.addEventListener("click", (e) => { if (e.target.matches("summary .check")) keepDetailsState(e); });
   main.addEventListener("toggle", (e) => { if (e.target.open) highlightIn(e.target); }, true);
 
   $("#continue-btn").addEventListener("click", continueLearning);
@@ -313,8 +346,8 @@
   try {
     if (localStorage.getItem(STORAGE_KEY + "-hide")) { $("#hide-done").checked = true; document.body.classList.add("hide-done"); }
   } catch {}
-  $("#expand-all").addEventListener("click", () => $$(".lesson").forEach((d) => { d.open = true; }));
-  $("#collapse-all").addEventListener("click", () => $$(".lesson, .brief").forEach((d) => { d.open = false; }));
+  $("#expand-all").addEventListener("click", () => $$(".lesson-details").forEach((d) => { d.open = true; }));
+  $("#collapse-all").addEventListener("click", () => $$(".lesson-details, .brief").forEach((d) => { d.open = false; }));
   $("#export-btn").addEventListener("click", exportProgress);
   $("#import-input").addEventListener("change", (e) => { if (e.target.files[0]) importProgress(e.target.files[0]); e.target.value = ""; });
   $("#reset-btn").addEventListener("click", () => {
