@@ -152,8 +152,31 @@
             ${s.lessons.map((l) => renderLesson(l, `${i + 1}.${++n}`)).join("")}
             ${s.projects.map(renderProject).join("")}
           </div>`).join("")}
+        <nav class="module-pager" aria-label="Module navigation">
+          ${i > 0 ? `<a class="btn" href="#m-${MODULES[i - 1].id}">← ${esc(MODULES[i - 1].title)}</a>` : "<span></span>"}
+          ${i < MODULES.length - 1
+            ? `<a class="btn primary" href="#m-${MODULES[i + 1].id}">Next module: ${esc(MODULES[i + 1].title)} →</a>`
+            : `<span class="muted">🎉 This is the last module.</span>`}
+        </nav>
       </section>`;
     }).join("");
+  }
+
+  // ---------- One module at a time ----------
+  const MODULE_KEY = STORAGE_KEY + "-module";
+  let currentModule = null;
+  const moduleFromHash = () => {
+    const id = location.hash.replace(/^#m-/, "");
+    return MODULES.some((m) => m.id === id) ? id : null;
+  };
+
+  function showModule(id, { scroll = true } = {}) {
+    currentModule = id;
+    for (const m of MODULES) $(`#m-${CSS.escape(m.id)}`).hidden = m.id !== id;
+    for (const a of $$("#module-nav a")) a.classList.toggle("active", a.getAttribute("href") === `#m-${id}`);
+    if (location.hash !== `#m-${id}`) history.replaceState(null, "", `#m-${id}`);
+    try { localStorage.setItem(MODULE_KEY, id); } catch {}
+    if (scroll) $(`#m-${CSS.escape(id)}`).scrollIntoView({ block: "start" });
   }
 
   // ---------- Syntax highlighting (only when a lesson is opened; skipped if the CDN didn't load) ----------
@@ -293,6 +316,7 @@
   function continueLearning() {
     const next = [...steps()].find((s) => !isDone(s.item.id));
     if (!next) return;
+    if (next.module.id !== currentModule) showModule(next.module.id, { scroll: false });
     const el = next.kind === "lesson" ? $(`#l-${CSS.escape(next.item.id)}`) : $(`#p-${CSS.escape(next.item.id)}`);
     $(next.kind === "lesson" ? ".lesson-details" : ".brief", el).open = true;
     highlightIn(el);
@@ -332,11 +356,17 @@
     renderModules();
     for (const m of MODULES) for (const s of m.sections) for (const p of s.projects) updateRepoLink(p.id);
     updateProgress();
+    showModule(currentModule, { scroll: false });
   }
 
   // ---------- Init ----------
   if (!MODULES.length) return; // keeps the "lessons haven't loaded" message visible
+  let saved = null;
+  try { saved = localStorage.getItem(MODULE_KEY); } catch {}
+  currentModule = moduleFromHash() ?? (MODULES.some((m) => m.id === saved) ? saved : MODULES[0].id);
   renderAll();
+  // Sidebar links and the previous/next buttons change the #m-… hash.
+  window.addEventListener("hashchange", () => { const id = moduleFromHash(); if (id) showModule(id); });
 
   const main = $("main");
   main.addEventListener("change", onChange);
@@ -351,8 +381,8 @@
   try {
     if (localStorage.getItem(STORAGE_KEY + "-hide")) { $("#hide-done").checked = true; document.body.classList.add("hide-done"); }
   } catch {}
-  $("#expand-all").addEventListener("click", () => $$(".lesson-details").forEach((d) => { d.open = true; }));
-  $("#collapse-all").addEventListener("click", () => $$(".lesson-details, .brief").forEach((d) => { d.open = false; }));
+  $("#expand-all").addEventListener("click", () => $$(".module:not([hidden]) .lesson-details").forEach((d) => { d.open = true; }));
+  $("#collapse-all").addEventListener("click", () => $$(".module:not([hidden]) .lesson-details, .module:not([hidden]) .brief").forEach((d) => { d.open = false; }));
   $("#export-btn").addEventListener("click", exportProgress);
   $("#import-input").addEventListener("change", (e) => { if (e.target.files[0]) importProgress(e.target.files[0]); e.target.value = ""; });
   $("#reset-btn").addEventListener("click", () => {

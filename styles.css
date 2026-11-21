@@ -72,6 +72,13 @@ a { color: var(--accent); }
   font-size: .92rem;
 }
 .sidebar li a:hover { background: var(--surface-2); }
+.sidebar li a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.sidebar li a.active .num { color: var(--accent); }
+
+/* Previous / next module buttons at the end of each module */
+.module-pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); }
+.module-pager .btn { text-decoration: none; padding: 10px 16px; font-size: .95rem; }
+.module-pager .btn.primary { margin-left: auto; }
 .sidebar .nav-row { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
 .sidebar .nav-pct { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
 .sidebar .num { color: var(--muted); margin-right: 6px; font-variant-numeric: tabular-nums; }
