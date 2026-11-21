@@ -17,7 +17,7 @@ intro: Install Node, learn how projects and modules are organised, and read and 
 id: node-1
 title: What is Node.js? Setup and your first script
 time: 1h
-video: Fireship Node.js in 100 seconds
+video: Fireship — Node.js Ultimate Beginner's Guide in 7 Easy Steps | https://www.youtube.com/watch?v=ENrzD9HAZK4
 docs: Node.js – Learn | https://nodejs.org/en/learn
 docs: Introduction to Node.js | https://nodejs.org/en/learn/getting-started/introduction-to-nodejs
 docs: The event loop explained | https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick
@@ -138,7 +138,7 @@ The practical rule for you: use the asynchronous versions of functions (with `aw
 id: node-2
 title: npm, package.json and modules
 time: 1.5h
-video: Net Ninja Node.js tutorial modules npm package.json
+video: Tech & Story — Modules in Node.js (CommonJS and ES Modules) | https://www.youtube.com/watch?v=qXCGwDIOTJs
 docs: package.json reference | https://docs.npmjs.com/cli/configuring-npm/package-json
 docs: ES modules in Node | https://nodejs.org/api/esm.html
 docs: Node.js: an introduction to npm | https://nodejs.org/en/learn/getting-started/an-introduction-to-the-npm-package-manager
@@ -277,7 +277,7 @@ Anyone who clones your project runs `npm install`, and npm rebuilds `node_module
 id: node-9
 title: Reading and writing files with fs and path
 time: 1.5h
-video: Node.js fs promises readFile writeFile tutorial
+video: Codevolution — Node.js fs Promise Module | https://www.youtube.com/watch?v=wG2-vF4QyZ0
 docs: fs/promises API | https://nodejs.org/api/fs.html#promises-api
 docs: path module | https://nodejs.org/api/path.html
 docs: Node.js: reading files | https://nodejs.org/en/learn/manipulating-files/reading-files-with-nodejs
@@ -432,7 +432,7 @@ intro: Learn how the web talks (HTTP), then build a JSON API using nothing but N
 id: node-3
 title: The http module: your first server
 time: 1h
-video: Node.js http module createServer tutorial
+video: Programming with Mosh — HTTP Module in Node.js | https://www.youtube.com/watch?v=VLXAzzRjQws
 docs: http module docs | https://nodejs.org/api/http.html
 docs: Anatomy of an HTTP transaction | https://nodejs.org/en/learn/http/anatomy-of-an-http-transaction
 ---
@@ -533,7 +533,7 @@ Or put it in your `package.json` scripts as `"dev": "node --watch server.js"` an
 id: node-4
 title: HTTP and the request/response cycle
 time: 1h
-video: HTTP crash course request response methods status codes
+video: Traversy Media — HTTP Crash Course & Exploration | https://www.youtube.com/watch?v=iYM2zFP3Zn0
 docs: MDN: An overview of HTTP | https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview
 docs: MDN: HTTP status codes | https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 docs: MDN: HTTP request methods | https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
@@ -629,7 +629,7 @@ curl -i -X POST http://localhost:8000/api/stories -H "Content-Type: application/
 id: node-5
 title: Routing and serving JSON
 time: 1.5h
-video: Node.js API without Express routing JSON tutorial
+video: Traversy Media — Vanilla Node.js REST API (No Framework) | https://www.youtube.com/watch?v=_1xa8Bsho6A
 docs: MDN: Working with JSON | https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/JSON
 docs: Anatomy of an HTTP transaction | https://nodejs.org/en/learn/http/anatomy-of-an-http-transaction
 ---
@@ -738,7 +738,7 @@ Before writing code, list your routes in a small table. It's what professional A
 id: node-6
 title: Path parameters and query parameters
 time: 2h
-video: JavaScript URL and URLSearchParams explained
+video: WebStylePress — Get URL Parameters in JavaScript (URLSearchParams) | https://www.youtube.com/watch?v=CZP1iQFQjEY
 docs: URL class (Node) | https://nodejs.org/api/url.html#the-whatwg-url-api
 docs: MDN: URLSearchParams | https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
 ---
@@ -848,7 +848,7 @@ const limit = Number(url.searchParams.get("limit")) || 10; // number, default 10
 id: node-7
 title: Modularising your code
 time: 1h
-video: how to structure a Node.js project folders
+video: Software Developer Diaries — Node.js Project Structure & Architecture | https://www.youtube.com/watch?v=fc6o1gwqZuA
 docs: Node.js best practices (GitHub) | https://github.com/goldbergyoni/nodebestpractices
 ---
 Your `server.js` is probably getting long: routing, filtering, JSON responses and data, all in one function. That works for 50 lines but becomes painful at 300. Splitting code into small modules with one job each makes it easier to read, to change and (later) to test. This is also exactly how Express projects are organised, so you're learning the shape early.
@@ -1000,7 +1000,7 @@ Refactoring means changing the structure **without** changing the behaviour. Do 
 id: node-8
 title: CORS
 time: 45m
-video: Fireship CORS in 100 seconds
+video: Fireship — CORS in 100 Seconds | https://www.youtube.com/watch?v=4KHiSt0oLJ0
 docs: MDN: CORS | https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 ---
 Sooner or later you'll see this red error in the browser console: *"has been blocked by CORS policy"*. It confuses almost everyone the first time, because the same request works perfectly in Postman or curl. This lesson explains why, and how to fix it on the server, which is the only place it can be fixed.
@@ -1133,7 +1133,7 @@ intro: Make one Node server deliver both a website and an API. You'll serve stat
 id: node-13
 title: Serving a website: static files
 time: 1.5h
-video: Node.js serve static files without express
+video: Aldo Caamal — Simple Node.js Server: Return HTML Files Without Express | https://www.youtube.com/watch?v=lAGYzdOkSDA
 docs: MDN: MIME types | https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types
 docs: path module | https://nodejs.org/api/path.html
 ---
@@ -1290,7 +1290,7 @@ Why `PUBLIC_DIR + path.sep` and not just `PUBLIC_DIR`? If your folder is `C:\app
 id: node-10
 title: Handling POST requests and request bodies
 time: 1.5h
-video: Node.js handle POST request body without express
+video: ProgrammingKnowledge — Read Request Body & Streams in Node.js HTTP Module | https://www.youtube.com/watch?v=EqnwUbXc-SA
 docs: Anatomy of an HTTP transaction | https://nodejs.org/en/learn/http/anatomy-of-an-http-transaction
 docs: Streams overview | https://nodejs.org/api/stream.html
 docs: OWASP: Cross Site Scripting | https://owasp.org/www-community/attacks/xss/
@@ -1436,7 +1436,7 @@ With no tags allowed, any HTML is stripped and only plain text remains.
 id: node-11
 title: Events, EventEmitter and Server-Sent Events
 time: 1.5h
-video: Server-Sent Events Node.js tutorial
+video: Web Dev Cody — Server-Sent Events Are Pretty Cool | https://www.youtube.com/watch?v=_XQiU3mLNk0
 docs: events module | https://nodejs.org/api/events.html
 docs: MDN: Using server-sent events | https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
 ---
@@ -1567,7 +1567,7 @@ SSE is **one-way** (server to browser) over normal HTTP, and very simple. **WebS
 id: node-12
 title: Environment variables and configuration
 time: 45m
-video: Node.js environment variables env-file tutorial
+video: Backend Brewery — Node.js Built-in --env-file & process.loadEnvFile() | https://www.youtube.com/watch?v=8TrmkT90vGE
 docs: Node.js: environment variables | https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs
 docs: process.env | https://nodejs.org/api/process.html#processenv
 ---

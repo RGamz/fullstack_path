@@ -17,7 +17,7 @@ intro: Learn what a database is and how to talk to one in SQL: reading, filterin
 id: db-1
 title: What is a database?
 time: 1h
-video: Fireship SQL explained in 100 seconds
+video: Fireship — SQL Explained in 100 Seconds | https://www.youtube.com/watch?v=zsjvFFKOm3c
 docs: PostgreSQL tutorial | https://www.postgresqltutorial.com/
 docs: SQLite: appropriate uses | https://www.sqlite.org/whentouse.html
 docs: DB Browser for SQLite | https://sqlitebrowser.org/
@@ -137,7 +137,7 @@ SELECT 'Hello, database!' AS greeting, 6 * 7 AS answer;
 id: db-2
 title: SQL basics: SELECT, WHERE, ORDER BY
 time: 2h
-video: Programming with Mosh SQL tutorial for beginners
+video: Adam Finer — Learn Basic SQL in 15 Minutes | https://www.youtube.com/watch?v=kbKty5ZVKMY
 docs: SQLBolt interactive lessons | https://sqlbolt.com/
 docs: SQLZoo | https://sqlzoo.net/
 ---
@@ -301,7 +301,7 @@ You *write* `SELECT … FROM … WHERE … ORDER BY … LIMIT`, but the database
 id: db-3
 title: Creating tables and modifying data
 time: 1.5h
-video: SQL CREATE TABLE INSERT UPDATE DELETE tutorial
+video: GNT Creator — Basic SQL Commands (SELECT, INSERT, UPDATE, DELETE) | https://www.youtube.com/watch?v=POx-8XRHzUM
 docs: SQLBolt: creating and modifying | https://sqlbolt.com/lesson/inserting_rows
 docs: SQLite: CREATE TABLE | https://www.sqlite.org/lang_createtable.html
 docs: PostgreSQL: constraints | https://www.postgresql.org/docs/current/ddl-constraints.html
@@ -437,7 +437,7 @@ These errors are good news: the database just stopped bad data. Later, your Expr
 id: db-4
 title: Aggregation: COUNT, SUM, GROUP BY
 time: 1.5h
-video: SQL GROUP BY HAVING explained
+video: Becoming a Data Scientist — SQL GROUP BY, HAVING vs. WHERE | https://www.youtube.com/watch?v=nNrgRVIzeHg
 docs: SQLBolt: aggregates | https://sqlbolt.com/lesson/select_queries_with_aggregates
 docs: SQLite: date and time functions | https://www.sqlite.org/lang_datefunc.html
 ---
@@ -646,7 +646,7 @@ intro: Real data is spread over many related tables. Learn to combine them with 
 id: db-5
 title: JOINs and relationships
 time: 2h
-video: SQL joins explained visually
+video: Anton Putra — 6 SQL Joins You MUST Know (Animated + Practice) | https://www.youtube.com/watch?v=Yh4CrPHVBdE
 docs: SQLBolt: joins | https://sqlbolt.com/lesson/select_queries_with_joins
 docs: PostgreSQL tutorial: joins | https://www.postgresqltutorial.com/postgresql-tutorial/postgresql-joins/
 ---
@@ -843,7 +843,7 @@ WHERE NOT EXISTS (SELECT 1 FROM books AS b WHERE b.author_id = a.id);
 id: db-6
 title: Schema design and normalisation
 time: 1.5h
-video: database design course normalization
+video: Decomplexify — Learn Database Normalization (1NF–5NF) | https://www.youtube.com/watch?v=GFQaEYEc8_8
 docs: dbdiagram.io | https://dbdiagram.io/
 docs: PostgreSQL: constraints | https://www.postgresql.org/docs/current/ddl-constraints.html
 ---
@@ -978,7 +978,7 @@ Table recipes {
 id: db-10
 title: Indexes and transactions
 time: 1.5h
-video: database indexing explained
+video: Hello Interview — Database Indexing Explained (B-Trees & More) | https://www.youtube.com/watch?v=BHCSL_ZifI0
 docs: Use The Index, Luke | https://use-the-index-luke.com/
 docs: SQLite: EXPLAIN QUERY PLAN | https://www.sqlite.org/eqp.html
 docs: PostgreSQL: transactions | https://www.postgresql.org/docs/current/tutorial-transactions.html
@@ -1183,7 +1183,7 @@ intro: Connect your Express apps to real databases: SQLite with Node's built-in 
 id: db-7
 title: Using SQLite from Node (and SQL injection)
 time: 2h
-video: Node.js built-in SQLite node:sqlite tutorial
+video: Coding Jitsu — Node.js Built-In SQLite Module (node:sqlite) | https://www.youtube.com/watch?v=scrB5xqhhlU
 docs: node:sqlite | https://nodejs.org/api/sqlite.html
 docs: OWASP: SQL injection prevention | https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
 ---
@@ -1372,7 +1372,7 @@ If any tag id is invalid, the foreign key error jumps to `catch`, the book inser
 id: db-8
 title: PostgreSQL and hosted databases
 time: 2h
-video: PostgreSQL Node.js tutorial pg
+video: United Top Tech — PostgreSQL Node.js Express CRUD Tutorial | https://www.youtube.com/watch?v=CL_cvH9OpOc
 docs: node-postgres | https://node-postgres.com/
 docs: node-postgres: transactions | https://node-postgres.com/features/transactions
 docs: Supabase docs | https://supabase.com/docs
@@ -1538,7 +1538,7 @@ If you validate `:id` with `IdParamSchema` as in the Express module, `22P02` sho
 id: db-12
 title: Running Postgres locally with Docker
 time: 1.5h
-video: Docker for beginners Postgres docker compose tutorial
+video: Caleb Curry — Run Postgres in a Docker Container | https://www.youtube.com/watch?v=Hs9Fh1fr5s8
 docs: Docker: get started | https://docs.docker.com/get-started/
 docs: Official postgres image | https://hub.docker.com/_/postgres
 docs: Docker Compose docs | https://docs.docker.com/compose/
@@ -1690,7 +1690,7 @@ Your `.env` points at the development database, and your tests use `postgresql:/
 id: db-9
 title: ORMs, query builders and migrations
 time: 2h
-video: Drizzle ORM crash course PostgreSQL
+video: Web Dev Simplified — Learn Drizzle in 60 Minutes | https://www.youtube.com/watch?v=7-NZ0MlPpJA
 docs: Prisma docs | https://www.prisma.io/docs
 docs: Drizzle ORM docs | https://orm.drizzle.team/docs/overview
 ---
@@ -1847,7 +1847,7 @@ Both are popular and either is a good choice. Drizzle stays close to SQL, so you
 id: db-11
 title: (Optional) NoSQL with MongoDB
 time: 1.5h
-video: Net Ninja MongoDB tutorial
+video: Web Dev Simplified — Mongoose Crash Course | https://www.youtube.com/watch?v=DZBGEVgL2eE
 docs: MongoDB manual | https://www.mongodb.com/docs/manual/
 docs: Mongoose docs | https://mongoosejs.com/docs/
 ---

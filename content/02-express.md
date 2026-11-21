@@ -17,7 +17,7 @@ intro: Learn the building blocks of Express (routes, routers, middleware, error 
 id: ex-1
 title: Hello Express
 time: 1h
-video: Net Ninja Express.js tutorial for beginners
+video: Web Dev Simplified — Learn Express JS in 35 Minutes | https://www.youtube.com/watch?v=SccSCuHhOw0
 docs: Express: Hello world | https://expressjs.com/en/starter/hello-world.html
 docs: Express 5 migration notes | https://expressjs.com/en/guide/migrating-5.html
 docs: Express 5 API reference | https://expressjs.com/en/5x/api.html
@@ -161,7 +161,7 @@ curl -i http://localhost:3000/api/books/99
 id: ex-2
 title: Routers and project structure
 time: 1.5h
-video: Express Router tutorial routes controllers folder structure
+video: PedroTech — ExpressJS Routes Tutorial (Separating Routes into Files) | https://www.youtube.com/watch?v=0Hu27PoloYw
 docs: Express routing guide | https://expressjs.com/en/guide/routing.html
 docs: Express 5 API: Router | https://expressjs.com/en/5x/api.html#router
 ---
@@ -334,7 +334,7 @@ It does the same as writing separate `router.get(...)` and `router.post(...)` li
 id: ex-3
 title: Middleware
 time: 1.5h
-video: Web Dev Simplified Express middleware
+video: Web Dev Simplified — Learn Express Middleware in 14 Minutes | https://www.youtube.com/watch?v=lY6icfhap2o
 docs: Using middleware | https://expressjs.com/en/guide/using-middleware.html
 docs: Writing middleware | https://expressjs.com/en/guide/writing-middleware.html
 ---
@@ -464,7 +464,7 @@ Because all functions in the chain share the same `req` and `res`, a middleware 
 id: ex-4
 title: REST API design and CRUD
 time: 2h
-video: REST API explained crash course
+video: Software Developer Diaries — REST API Design & Best Practices | https://www.youtube.com/watch?v=7nm1pYuKAhY
 docs: MDN: HTTP request methods | https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
 docs: MDN: HTTP response status codes | https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 docs: Microsoft REST API design guide | https://learn.microsoft.com/en-us/azure/architecture/best-practices/api-design
@@ -636,7 +636,7 @@ It doubles as documentation, and you can re-run everything after each change.
 id: ex-6
 title: Error handling
 time: 1h
-video: Express error handling middleware tutorial
+video: Alex Rusin — Best Way to Handle Errors in Express.js | https://www.youtube.com/watch?v=EUYnERcOGpA
 docs: Express error handling | https://expressjs.com/en/guide/error-handling.html
 ---
 So far, every controller checks for problems and sends its own error response. That's repetitive, and it's easy to end up with `{ error: ... }` in one place and `{ message: ... }` in another. Worse: what happens when something *unexpected* throws, like a bug or a file that can't be read? Express has one central place for all of this: **error-handling middleware**.
@@ -779,7 +779,7 @@ res.status(status).json({
 id: ex-7
 title: Validation
 time: 1.5h
-video: Zod validation Express tutorial
+video: Web Dev Simplified — Learn Zod in 30 Minutes | https://www.youtube.com/watch?v=L6BE-U3oy80
 docs: Zod docs | https://zod.dev
 docs: Zod: basic usage | https://zod.dev/basics
 ---
@@ -1019,7 +1019,7 @@ intro: Serve a frontend from the same Express app, render HTML on the server wit
 id: ex-5
 title: Serving static files and templates
 time: 1h
-video: Express static files and EJS templates tutorial
+video: Net Ninja — Node.js Crash Course: View Engines (EJS) | https://www.youtube.com/watch?v=yXEesONd_54
 docs: Serving static files | https://expressjs.com/en/starter/static-files.html
 docs: Using template engines with Express | https://expressjs.com/en/guide/using-template-engines.html
 docs: EJS | https://ejs.co/
@@ -1185,7 +1185,7 @@ Next.js, at the end of the course, combines both ideas.
 id: ex-10
 title: Deploying an Express app
 time: 1.5h
-video: deploy Node Express app to Render free
+video: Arpan Neupane — How to Deploy a Node/Express App to Render | https://www.youtube.com/watch?v=tNpoc86cHrQ
 docs: Render: deploy Express | https://render.com/docs/deploy-node-express-app
 docs: Render: free instances | https://render.com/docs/free
 docs: Express: production best practices | https://expressjs.com/en/advanced/best-practice-performance.html
@@ -1339,7 +1339,7 @@ intro: Let people create accounts and log in, keep each user's data private, and
 id: ex-8
 title: Authentication: passwords, sessions and JWT
 time: 3h
-video: Web Dev Simplified JWT authentication Node
+video: Web Dev Simplified — Build Node.js User Authentication (Password Login) | https://www.youtube.com/watch?v=Ud5xKCYQTjM
 docs: OWASP Authentication Cheat Sheet | https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html
 docs: OWASP Password Storage Cheat Sheet | https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
 docs: express-session | https://github.com/expressjs/session
@@ -1517,7 +1517,7 @@ The trade-offs: a session can be ended instantly on the server, while a JWT stay
 id: ex-9
 title: Security essentials
 time: 1h
-video: Node.js Express security best practices
+video: Software Developer Diaries — Node.js Security Best Practices | https://www.youtube.com/watch?v=DYme1m4RiwI
 docs: Express security best practices | https://expressjs.com/en/advanced/best-practice-security.html
 docs: OWASP Top 10 | https://owasp.org/www-project-top-ten/
 docs: Helmet | https://helmetjs.github.io/

@@ -266,7 +266,7 @@ function buildModule(file) {
     id: mb.meta.id, title: mb.meta.title, scrimba: mb.meta.scrimba || "", weeks: mb.meta.weeks,
     intro: mb.meta.intro, fullCourse: mb.meta.fullCourse || "", sections: [],
   };
-  const stats = { lessons: 0, projects: 0, words: [], short: [] };
+  const stats = { lessons: 0, projects: 0, videos: 0, words: [], short: [] };
 
   for (const b of blocks.slice(1)) {
     if (b.type === "module") fail(file, b.line, "only one ---module per file");
@@ -301,11 +301,22 @@ function buildModule(file) {
         links.add(url);
         return [label, url];
       });
+      // video: either a YouTube search query, or "Label | https://…" for a specific video
+      let video = b.meta.video;
+      if (/\s\|\s/.test(video)) {
+        const [label, url, ...rest] = video.split(/\s+\|\s+/);
+        if (!label || !/^https?:\/\//.test(url || "") || rest.length) {
+          fail(file, b.line, `video must be a search query or "Label | https://…" (no other " | " in the label)`);
+        }
+        links.add(url);
+        video = [label, url];
+        stats.videos++;
+      }
       const words = wordCount(theory);
       stats.words.push(words);
       if (words < MIN_THEORY_WORDS) stats.short.push(`${b.meta.id} (${words} words)`);
       sec.lessons.push({
-        id: b.meta.id, title: b.meta.title, time: b.meta.time, video: b.meta.video, docs,
+        id: b.meta.id, title: b.meta.title, time: b.meta.time, video, docs,
         theory: render(file, b, theory), exercises: exercises.map(inline), words,
       });
       stats.lessons++;
@@ -389,7 +400,7 @@ try {
     totals.lessons += stats.lessons; totals.projects += stats.projects; totals.exercises += ex;
     const avg = stats.words.length ? Math.round(stats.words.reduce((a, b) => a + b, 0) / stats.words.length) : 0;
     if (!PRINT_LINKS) {
-      console.log(`${f.padEnd(28)} ${String(mod.sections.length).padStart(2)} sections ${String(stats.lessons).padStart(3)} lessons ${String(ex).padStart(3)} exercises ${String(stats.projects).padStart(2)} projects  avg ${avg} words/lesson`);
+      console.log(`${f.padEnd(28)} ${String(mod.sections.length).padStart(2)} sections ${String(stats.lessons).padStart(3)} lessons ${String(ex).padStart(3)} exercises ${String(stats.projects).padStart(2)} projects  ${String(stats.videos).padStart(2)}/${stats.lessons} picked videos  avg ${avg} words/lesson`);
       if (stats.short.length) console.log(`   ⚠ theory shorter than ${MIN_THEORY_WORDS} words: ${stats.short.join(", ")}`);
     }
   }
