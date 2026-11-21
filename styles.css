@@ -160,7 +160,11 @@ a { color: var(--accent); }
   width: 100%; min-height: 70px; resize: vertical; padding: 8px 10px; border-radius: 8px;
   border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font: inherit; font-size: .9rem;
 }
-.done-at { font-size: .78rem; color: var(--done); margin-top: 10px; }
+.done-at { font-size: .78rem; color: var(--done); }
+.lesson-footer { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
+.mark-done.primary { background: var(--done); border-color: var(--done); color: #fff; font-weight: 600; }
+.mark-done.primary:hover { filter: brightness(1.08); }
+@media (prefers-color-scheme: dark) { .mark-done.primary { color: #0f1220; } }
 
 /* Projects */
 .projects { display: grid; grid-template-columns: 1fr; gap: 12px; }

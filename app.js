@@ -91,11 +91,16 @@
         <ul class="ex-list">${checklist(l.exercises, (i) => exId(l.id, i))}</ul>
         <h4 class="label">My notes</h4>
         <textarea class="notes" data-notes="${l.id}" placeholder="What did you learn? What was confusing? Links to your code…">${esc(state.notes[l.id] || "")}</textarea>
-        <div class="done-at" data-done-at="${l.id}">${isDone(l.id) ? "Completed " + fmtDate(state.done[l.id]) : ""}</div>
+        <div class="lesson-footer">
+          <button type="button" class="btn mark-done ${isDone(l.id) ? "" : "primary"}" data-mark="${l.id}">${markLabel(isDone(l.id))}</button>
+          <span class="done-at" data-done-at="${l.id}">${isDone(l.id) ? "Completed " + fmtDate(state.done[l.id]) : ""}</span>
+        </div>
       </div>
       </details>
     </div>`;
   }
+
+  const markLabel = (done) => (done ? "↺ Mark as not done" : "✓ Mark as done");
 
   function renderProject(p) {
     return `
@@ -292,6 +297,24 @@
     $(`.check[data-id="${CSS.escape(id)}"]`, card).checked = done;
     const at = $(`[data-done-at="${CSS.escape(id)}"]`);
     if (at) at.textContent = done ? "Completed " + fmtDate(state.done[id]) : "";
+    const btn = $(`[data-mark="${CSS.escape(id)}"]`);
+    if (btn) { btn.textContent = markLabel(done); btn.classList.toggle("primary", !done); }
+  }
+
+  // "Mark as done" at the end of a lesson: tick it, close it, and keep its header in view.
+  function onMarkClick(e) {
+    const btn = e.target.closest(".mark-done");
+    if (!btn) return;
+    const id = btn.dataset.mark;
+    const done = !isDone(id);
+    setDone(id, done);
+    markCard(id, done);
+    if (done) {
+      const card = $(`#l-${CSS.escape(id)}`);
+      $(".lesson-details", card).open = false;
+      if (card.getBoundingClientRect().top < 0) card.scrollIntoView({ block: "start" });
+    }
+    updateProgress();
   }
 
   function findProject(id) {
@@ -372,6 +395,7 @@
   main.addEventListener("change", onChange);
   main.addEventListener("input", onInput);
   main.addEventListener("toggle", (e) => { if (e.target.open) highlightIn(e.target); }, true);
+  main.addEventListener("click", onMarkClick);
 
   $("#continue-btn").addEventListener("click", continueLearning);
   $("#hide-done").addEventListener("change", (e) => {
