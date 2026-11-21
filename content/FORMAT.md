@@ -3,10 +3,22 @@
 Every module lives in one file: `content/NN-name.md` (NN = order on the page).
 After editing, run `node build.mjs` in the project's root folder (the folder with `index.html`; it's `fullstack_path` on GitHub). It validates the files and regenerates:
 
-- `data/curriculum.js`, which the website loads (and it updates the version code in `index.html`, so browsers fetch the new file right away)
+- `data/curriculum.js`, which the website loads (it also updates the version codes in `index.html`, so browsers fetch the new files right away)
 - `SYLLABUS.md`, the plain-Markdown outline shown on GitHub
 
-`node build.mjs --check` only validates and prints stats; add file names to check just those, e.g. `node build.mjs --check content/02-express.md`.
+`node build.mjs --check` only validates and prints stats; add file names to check just those, e.g. `node build.mjs --check content/02-express.md`. `node build.mjs --links` prints every external link (docs and links in the text) so you can check them.
+
+## What the build checks
+
+The build **stops with an error** (file name and line number) when:
+
+- a header has an unknown key (allowed: module `id, title, scrimba, weeks, fullCourse, intro`; section `id, title, intro`; lesson `id, title, time, video, docs`; project `id, title, summary`) or a required one is missing
+- a lesson has no `### Exercises`, fewer than 2 exercises, or a `###` heading *after* the exercises
+- a project has no `### The task`, fewer than 2 "Done when" items, or text before its first `###` heading
+- a line inside the exercises or "Done when" list isn't a list item (for example `-missing space`)
+- an id is used twice, a code fence is never closed, or a `docs:` line isn't `Label | URL`
+
+It **warns** (but still builds) when a lesson's theory is shorter than 350 words, or a table row has a different number of cells than its header. To put a `|` inside a table cell, write it inside `code` or as `\|`.
 
 ## Structure
 

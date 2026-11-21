@@ -11,9 +11,11 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 
+// Needs Node 20.11+ (import.meta.dirname); the course itself uses Node 22+.
 const ROOT = import.meta.dirname;
 const CONTENT_DIR = path.join(ROOT, "content");
 const OUT_FILE = path.join(ROOT, "data", "curriculum.js");
+const SITE_URL = "https://rgamz.github.io/fullstack_path/"; // change this if you fork the repo
 const args = process.argv.slice(2);
 const CHECK_ONLY = args.includes("--check");
 const PRINT_LINKS = args.includes("--links");
@@ -25,6 +27,7 @@ const fail = (file, line, msg) => { throw new BuildError(`${path.basename(file)}
 // ---------------------------------------------------------------- Markdown → HTML
 const escapeHtml = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const links = new Set();
+let tableWarnings = []; // filled by md(), reported per lesson/project
 
 function inline(text) {
   const codes = [];
@@ -42,6 +45,33 @@ function inline(text) {
 }
 
 const isFence = (l) => /^\s*(```|~~~)/.test(l);
+// Tracks code fences the same way md() does: a block opened with ``` only closes with ```, and ~~~ with ~~~.
+function fenceTracker() {
+  let open = null;
+  return (line) => {
+    if (isFence(line)) {
+      const mark = line.trim().slice(0, 3);
+      if (!open) open = mark;
+      else if (line.trim().startsWith(open)) open = null;
+    }
+    return open !== null;
+  };
+}
+// Split a table row on "|", but not on "|" inside `code` or written as "\|".
+function splitRow(l) {
+  const s = l.trim().replace(/^\|/, "").replace(/(?<!\\)\|$/, "");
+  const cells = [];
+  let cur = "", inCode = false;
+  for (let k = 0; k < s.length; k++) {
+    const c = s[k];
+    if (c === "\\" && s[k + 1] === "|") { cur += "|"; k++; continue; }
+    if (c === "`") inCode = !inCode;
+    if (c === "|" && !inCode) { cells.push(cur.trim()); cur = ""; continue; }
+    cur += c;
+  }
+  cells.push(cur.trim());
+  return cells;
+}
 const isHeading = (l) => /^#{1,4}\s+\S/.test(l);
 const isQuote = (l) => /^>\s?/.test(l);
 const ulItem = (l) => l.match(/^(\s*)[-*]\s+(.*)$/);
@@ -88,11 +118,15 @@ function md(src) {
     }
 
     if (isTableStart(lines, i)) {
-      const row = (l) => l.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
-      const head = row(lines[i]);
+      const head = splitRow(lines[i]);
       i += 2;
       const body = [];
-      while (i < lines.length && /^\s*\|/.test(lines[i])) body.push(row(lines[i++]));
+      while (i < lines.length && /^\s*\|/.test(lines[i])) {
+        const r = splitRow(lines[i]);
+        if (r.length !== head.length) tableWarnings.push(`a table row has ${r.length} cells but the header has ${head.length}: ${lines[i].trim().slice(0, 70)}`);
+        body.push(r);
+        i++;
+      }
       out.push(`<div class="table-wrap"><table><thead><tr>${head.map((c) => `<th>${inline(c)}</th>`).join("")}</tr></thead><tbody>${
         body.map((r) => `<tr>${r.map((c) => `<td>${inline(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
       continue;
@@ -139,13 +173,21 @@ function md(src) {
 }
 
 // ---------------------------------------------------------------- Parse content files
+const ALLOWED_KEYS = {
+  module: ["id", "title", "scrimba", "weeks", "fullCourse", "intro"],
+  section: ["id", "title", "intro"],
+  lesson: ["id", "title", "time", "video", "docs"],
+  project: ["id", "title", "summary"],
+};
+
 function parseBlocks(file) {
   const lines = fs.readFileSync(file, "utf8").replace(/\r\n/g, "\n").split("\n");
   const blocks = [];
+  const inFenceAfter = fenceTracker();
   let cur = null, inHeader = false, inFence = false;
   lines.forEach((line, idx) => {
     const ln = idx + 1;
-    if (!inHeader && isFence(line)) inFence = !inFence;
+    if (!inHeader) inFence = inFenceAfter(line);
     const start = !inFence && line.match(/^---(module|section|lesson|project)\s*$/);
     if (start) {
       if (inHeader) fail(file, ln, `previous header (line ${cur.line}) was not closed with ---`);
@@ -159,6 +201,9 @@ function parseBlocks(file) {
       if (!line.trim()) return;
       const kv = line.match(/^(\w+):\s*(.*)$/);
       if (!kv) fail(file, ln, `expected "key: value" inside the ${cur.type} header, got: ${line}`);
+      if (!ALLOWED_KEYS[cur.type].includes(kv[1])) {
+        fail(file, ln, `unknown key "${kv[1]}:" in a ${cur.type} header (allowed: ${ALLOWED_KEYS[cur.type].join(", ")})`);
+      }
       if (kv[1] === "docs") cur.docs.push({ value: kv[2].trim(), line: ln });
       else cur.meta[kv[1]] = kv[2].trim();
       return;
@@ -174,28 +219,39 @@ function need(block, ...keys) {
   for (const k of keys) if (!block.meta[k]) fail(block.file, block.line, `${block.type} is missing "${k}:"`);
 }
 
-function listItems(lines) {
+function listItems(file, lines, what) {
   // top-level "- item" / "1. item" entries; indented lines continue the previous item
   const items = [];
-  for (const { text } of lines) {
+  for (const { text, line } of lines) {
     const m = text.match(/^[-*]\s+(.*)$/) || text.match(/^\d+[.)]\s+(.*)$/);
     if (m) items.push(m[1]);
     else if (text.trim() && items.length && /^\s+/.test(text)) items[items.length - 1] += " " + text.trim();
+    else if (text.trim()) fail(file, line, `${what} must be a list ("- item"); this line would be lost: ${text.trim().slice(0, 60)}`);
   }
   return items;
 }
 
 function splitSections(bodyLines) {
   // split a body by "### Heading" lines (outside code fences)
-  const parts = [{ title: null, lines: [] }];
-  let fence = false;
+  const parts = [{ title: null, line: bodyLines[0]?.line, lines: [] }];
+  const inFenceAfter = fenceTracker();
   for (const l of bodyLines) {
-    if (isFence(l.text)) fence = !fence;
-    const h = !fence && l.text.match(/^###\s+(.+?)\s*$/);
-    if (h) parts.push({ title: h[1], lines: [] });
+    const inFence = inFenceAfter(l.text);
+    const h = !inFence && l.text.match(/^###\s+(.+?)\s*$/);
+    if (h) parts.push({ title: h[1], line: l.line, lines: [] });
     else parts.at(-1).lines.push(l);
   }
   return parts;
+}
+
+const hasText = (part) => part.lines.some((l) => l.text.trim());
+
+// Report table problems found while rendering, pointing at the lesson/project they belong to.
+function render(file, block, markdown) {
+  tableWarnings = [];
+  const html = md(markdown);
+  for (const w of tableWarnings) console.log(`   ⚠ ${path.basename(file)}:${block.line} (${block.meta.id}): ${w}`);
+  return html;
 }
 
 const wordCount = (s) => (s.match(/[A-Za-z0-9'’]+/g) || []).length;
@@ -225,16 +281,18 @@ function buildModule(file) {
     if (b.type === "lesson") {
       need(b, "id", "title", "time", "video");
       const parts = splitSections(b.body);
-      const exPart = parts.find((p) => /^exercises$/i.test(p.title));
-      if (!exPart) fail(file, b.line, `lesson ${b.meta.id} has no "### Exercises" heading`);
+      const exIndex = parts.findIndex((p) => /^exercises$/i.test(p.title));
+      if (exIndex === -1) fail(file, b.line, `lesson ${b.meta.id} has no "### Exercises" heading`);
+      const exPart = parts[exIndex];
+      const after = parts.slice(exIndex + 1);
+      if (after.length) fail(file, after[0].line, `lesson ${b.meta.id}: "### ${after[0].title}" comes after "### Exercises" and would be lost; move it above the exercises`);
       const theoryLines = [];
-      for (const p of parts) {
-        if (p === exPart) break;
+      for (const p of parts.slice(0, exIndex)) {
         if (p.title) theoryLines.push({ text: "### " + p.title });
         theoryLines.push(...p.lines);
       }
       const theory = textOf(theoryLines).trim();
-      const exercises = listItems(exPart.lines);
+      const exercises = listItems(file, exPart.lines, `lesson ${b.meta.id}: exercises`);
       if (!theory) fail(file, b.line, `lesson ${b.meta.id} has no theory`);
       if (exercises.length < 2) fail(file, b.line, `lesson ${b.meta.id} needs at least 2 exercises`);
       const docs = b.docs.map(({ value, line }) => {
@@ -248,7 +306,7 @@ function buildModule(file) {
       if (words < MIN_THEORY_WORDS) stats.short.push(`${b.meta.id} (${words} words)`);
       sec.lessons.push({
         id: b.meta.id, title: b.meta.title, time: b.meta.time, video: b.meta.video, docs,
-        theory: md(theory), exercises: exercises.map(inline), words,
+        theory: render(file, b, theory), exercises: exercises.map(inline), words,
       });
       stats.lessons++;
       continue;
@@ -259,12 +317,13 @@ function buildModule(file) {
       const parts = splitSections(b.body);
       const done = parts.find((p) => /^done when$/i.test(p.title || ""));
       if (!done) fail(file, b.line, `project ${b.meta.id} has no "### Done when" list`);
-      const features = listItems(done.lines);
+      const features = listItems(file, done.lines, `project ${b.meta.id}: "Done when"`);
       if (features.length < 2) fail(file, b.line, `project ${b.meta.id} needs at least 2 "Done when" items`);
       if (!parts.some((p) => /^the task$/i.test(p.title || ""))) fail(file, b.line, `project ${b.meta.id} has no "### The task"`);
+      if (hasText(parts[0])) fail(file, parts[0].lines.find((l) => l.text.trim()).line, `project ${b.meta.id}: text before the first "###" heading would be lost; put it under "### The task"`);
       const brief = parts.filter((p) => p !== done && p.title)
         .map((p) => `## ${p.title}\n${textOf(p.lines)}`).join("\n\n");
-      sec.projects.push({ id: b.meta.id, title: b.meta.title, summary: b.meta.summary, brief: md(brief), features: features.map(inline) });
+      sec.projects.push({ id: b.meta.id, title: b.meta.title, summary: b.meta.summary, brief: render(file, b, brief), features: features.map(inline) });
       stats.projects++;
     }
   }
@@ -286,7 +345,7 @@ function syllabus(modules, totals) {
     `${modules.length} modules · ${totals.lessons} lessons · ${totals.exercises} exercises · ${totals.projects} projects. ` +
       "Each part is a few lessons followed by a project (🛠) that uses what those lessons taught.",
     "",
-    "Full lessons, exercises, project briefs and a progress tracker: **https://rgamz.github.io/fullstack_path/** (or open `index.html` locally).",
+    `Full lessons, exercises, project briefs and a progress tracker: **${SITE_URL}** (or open \`index.html\` locally).`,
     "",
     "## Modules",
     "",
@@ -341,15 +400,27 @@ try {
 
   for (const m of modules) for (const s of m.sections) for (const l of s.lessons) delete l.words;
   const js = `// GENERATED by build.mjs from content/*.md. Do not edit this file; edit the .md files and run: node build.mjs\nwindow.CURRICULUM = ${JSON.stringify(modules)};\n`;
+  fs.mkdirSync(path.dirname(OUT_FILE), { recursive: true });
   fs.writeFileSync(OUT_FILE, js);
   console.log(`Wrote ${path.relative(ROOT, OUT_FILE)} (${Math.round(js.length / 1024)} KB)`);
 
-  // Cache-busting: point index.html at data/curriculum.js?v=<hash>, so browsers load new content right after a deploy.
-  const hash = crypto.createHash("sha256").update(js).digest("hex").slice(0, 10);
+  // Cache-busting: index.html loads each file as file?v=<hash of its content>,
+  // so browsers fetch new content, scripts and styles right after a deploy.
+  const version = (text) => crypto.createHash("sha256").update(text).digest("hex").slice(0, 10);
+  const assets = [
+    ["src", "data/curriculum.js", version(js)],
+    ["src", "app.js", version(fs.readFileSync(path.join(ROOT, "app.js")))],
+    ["href", "styles.css", version(fs.readFileSync(path.join(ROOT, "styles.css")))],
+  ];
   const indexFile = path.join(ROOT, "index.html");
   const html = fs.readFileSync(indexFile, "utf8");
-  const updated = html.replace(/src="data\/curriculum\.js(\?v=[^"]*)?"/, `src="data/curriculum.js?v=${hash}"`);
-  if (updated !== html) { fs.writeFileSync(indexFile, updated); console.log(`Updated index.html (curriculum version ${hash})`); }
+  let updated = html;
+  for (const [attr, file, v] of assets) {
+    const re = new RegExp(`${attr}="${file.replace(/[.\/]/g, "\\$&")}(\\?v=[^"]*)?"`);
+    if (!re.test(updated)) throw new BuildError(`index.html has no ${attr}="${file}" to version`);
+    updated = updated.replace(re, `${attr}="${file}?v=${v}"`);
+  }
+  if (updated !== html) { fs.writeFileSync(indexFile, updated); console.log("Updated index.html asset versions"); }
 
   fs.writeFileSync(SYLLABUS_FILE, syllabus(modules, totals));
   console.log(`Wrote ${path.relative(ROOT, SYLLABUS_FILE)}`);

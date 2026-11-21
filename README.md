@@ -2,6 +2,8 @@
 
 A free, self-paced plan for the rest of a full-stack path: **Node.js → Express → Databases → UI Design → React → Testing → TypeScript → Advanced React → Next.js → AI Engineering → Career**.
 
+**Assumed before Module 1:** HTML, CSS, JavaScript (including `fetch` and `async`/`await`) and basic Git (commit, push). You'll need Node 22 or newer (Node 24 LTS recommended).
+
 Like Scrimba, you **learn a chunk, then build**: every module is split into parts, and each part ends with a project that uses exactly what you just learned.
 
 **Live site:** https://rgamz.github.io/fullstack_path/ · **Full outline:** [SYLLABUS.md](SYLLABUS.md)
@@ -18,20 +20,21 @@ Double-click `index.html` (it opens in your browser). No install needed.
 
 > Don't use an editor's built-in preview panel: many of them don't run JavaScript, and the page will stay empty.
 
-## Publish on GitHub Pages
+## Publish your own copy on GitHub Pages
+
+Fork this repository (or create an empty one and push this folder to it):
 
 ```powershell
-cd learning-tracker
 git init
 git add .
 git commit -m "Add study tracker"
 git branch -M main
-git remote add origin https://github.com/<your-username>/study-tracker.git
+git remote add origin https://github.com/<your-username>/<your-repo>.git
 git push -u origin main
 ```
 
 Then on GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: `main` / `(root)` → Save**.
-After a minute your site is live at `https://<your-username>.github.io/study-tracker/`.
+After a minute your site is live at `https://<your-username>.github.io/<your-repo>/`. Change `SITE_URL` at the top of `build.mjs` to that address, so `SYLLABUS.md` links to your copy.
 
 > Progress is stored per browser. If you study on two devices, use **Export** on one and **Import** on the other.
 
@@ -39,13 +42,20 @@ After a minute your site is live at `https://<your-username>.github.io/study-tra
 
 The lessons live in readable Markdown files in `content/` (one per module). The format is explained in [`content/FORMAT.md`](content/FORMAT.md).
 
-After editing, regenerate the data file the website loads:
+After editing, regenerate the data file the website loads (needs Node 20.11 or newer):
 
 ```powershell
 node build.mjs
 ```
 
-`node build.mjs --check` validates without writing anything. Never change an existing `id:`, because your saved progress is keyed by it.
+It validates every file, then writes `data/curriculum.js` and `SYLLABUS.md`, and updates the version codes in `index.html` so browsers pick up changes right after you push.
+
+Other options:
+
+- `node build.mjs --check` validates without writing anything; add file names to check only those, e.g. `node build.mjs --check content/02-express.md`
+- `node build.mjs --links` prints every external link, for checking that none are broken
+
+Never change an existing `id:`, because your saved progress is keyed by it.
 
 ## Files
 
