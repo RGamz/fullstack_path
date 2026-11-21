@@ -917,7 +917,7 @@ intro: Turn a single page into a real multi-page app with React Router, load and
 id: ar-6
 title: React Router
 time: 2h
-video: PedroTech — React Router v7 Tutorial (Routing, Nested Routes, Layouts) | https://www.youtube.com/watch?v=h7MTWLv3xvw
+video: Maximilian Schwarzmüller — React Router 7: library mode vs framework mode | https://www.youtube.com/watch?v=NVuxUktUvxc
 docs: React Router docs | https://reactrouter.com/home
 docs: React Router: declarative routing | https://reactrouter.com/start/declarative/routing
 ---
@@ -1285,6 +1285,7 @@ Add `<ReactQueryDevtools />` (from `@tanstack/react-query-devtools`) inside the 
 id: ar-9
 title: Suspense, lazy loading and error boundaries
 time: 1.5h
+video: RoadsideCoder — Code Splitting & Lazy Loading in React | https://www.youtube.com/watch?v=IBrmsyy9R94
 video: Web Dev Simplified — Learn React Error Boundaries in 7 Minutes | https://www.youtube.com/watch?v=_FuDMEgIy7I
 docs: Suspense | https://react.dev/reference/react/Suspense
 docs: lazy | https://react.dev/reference/react/lazy
@@ -1651,7 +1652,7 @@ intro: Learn why React re-renders, how to measure it with the React DevTools Pro
 id: ar-8
 title: Performance: re-renders, memo, deferred values and virtualisation
 time: 2h
-video: Justin Kim — React.memo, useMemo & useCallback: Optimize React Performance | https://www.youtube.com/watch?v=3cYtqrNUiVw
+video: Cosden Solutions — The Best Ways to Optimize Performance in Modern React | https://www.youtube.com/watch?v=LuQ8VWh6eYE
 docs: memo | https://react.dev/reference/react/memo
 docs: useMemo | https://react.dev/reference/react/useMemo
 docs: useCallback | https://react.dev/reference/react/useCallback

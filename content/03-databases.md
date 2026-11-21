@@ -301,6 +301,7 @@ You *write* `SELECT … FROM … WHERE … ORDER BY … LIMIT`, but the database
 id: db-3
 title: Creating tables and modifying data
 time: 1.5h
+video: Bro Code — How to Create a SQL Table (MySQL syntax, same ideas) | https://www.youtube.com/watch?v=XfrgCK6BX5w
 video: GNT Creator — Basic SQL Commands (SELECT, INSERT, UPDATE, DELETE) | https://www.youtube.com/watch?v=POx-8XRHzUM
 docs: SQLBolt: creating and modifying | https://sqlbolt.com/lesson/inserting_rows
 docs: SQLite: CREATE TABLE | https://www.sqlite.org/lang_createtable.html
@@ -978,7 +979,8 @@ Table recipes {
 id: db-10
 title: Indexes and transactions
 time: 1.5h
-video: Hello Interview — Database Indexing Explained (B-Trees & More) | https://www.youtube.com/watch?v=BHCSL_ZifI0
+video: CockroachDB — SQL Indexing Best Practices | https://www.youtube.com/watch?v=BIlFTFrEFOI
+video: Intellipaat — How SQL Transactions Work | https://www.youtube.com/watch?v=20SXjcg6EIw
 docs: Use The Index, Luke | https://use-the-index-luke.com/
 docs: SQLite: EXPLAIN QUERY PLAN | https://www.sqlite.org/eqp.html
 docs: PostgreSQL: transactions | https://www.postgresql.org/docs/current/tutorial-transactions.html
@@ -1184,6 +1186,7 @@ id: db-7
 title: Using SQLite from Node (and SQL injection)
 time: 2h
 video: Coding Jitsu — Node.js Built-In SQLite Module (node:sqlite) | https://www.youtube.com/watch?v=scrB5xqhhlU
+video: Computerphile — Hacking Websites with SQL Injection | https://www.youtube.com/watch?v=_jKylhJtPmI
 docs: node:sqlite | https://nodejs.org/api/sqlite.html
 docs: OWASP: SQL injection prevention | https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
 ---

@@ -162,7 +162,7 @@ This is the same ES Modules `import`/`export` you used in Node. CSS works by imp
 id: react-2
 title: Props
 time: 1.5h
-video: Codevolution — ReactJS Tutorial: Destructuring Props and State | https://www.youtube.com/watch?v=5_PdMS9CLLI
+video: Codevolution — React 19 Tutorial: Props | https://www.youtube.com/watch?v=JQBaytmgmGo
 docs: Passing props | https://react.dev/learn/passing-props-to-a-component
 docs: react.dev: Your first component | https://react.dev/learn/your-first-component
 ---

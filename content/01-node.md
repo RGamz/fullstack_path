@@ -138,7 +138,8 @@ The practical rule for you: use the asynchronous versions of functions (with `aw
 id: node-2
 title: npm, package.json and modules
 time: 1.5h
-video: Tech & Story — Modules in Node.js (CommonJS and ES Modules) | https://www.youtube.com/watch?v=qXCGwDIOTJs
+video: Coder Coder — What is NPM, and Why Do We Need It? | https://www.youtube.com/watch?v=P3aKRdUyr0s
+video: Codevolution — Node.js ES Modules | https://www.youtube.com/watch?v=g98XlFOiXz0
 docs: package.json reference | https://docs.npmjs.com/cli/configuring-npm/package-json
 docs: ES modules in Node | https://nodejs.org/api/esm.html
 docs: Node.js: an introduction to npm | https://nodejs.org/en/learn/getting-started/an-introduction-to-the-npm-package-manager
@@ -1133,7 +1134,7 @@ intro: Make one Node server deliver both a website and an API. You'll serve stat
 id: node-13
 title: Serving a website: static files
 time: 1.5h
-video: Aldo Caamal — Simple Node.js Server: Return HTML Files Without Express | https://www.youtube.com/watch?v=lAGYzdOkSDA
+video: Traversy Media — Node.js Crash Course (2024; watch the http server and file-serving parts) | https://www.youtube.com/watch?v=32M1al-Y6Ag
 docs: MDN: MIME types | https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types
 docs: path module | https://nodejs.org/api/path.html
 ---
@@ -1436,6 +1437,7 @@ With no tags allowed, any HTML is stripped and only plain text remains.
 id: node-11
 title: Events, EventEmitter and Server-Sent Events
 time: 1.5h
+video: Codevolution — Node.js Events Module | https://www.youtube.com/watch?v=Su0-Y9coU3s
 video: Web Dev Cody — Server-Sent Events Are Pretty Cool | https://www.youtube.com/watch?v=_XQiU3mLNk0
 docs: events module | https://nodejs.org/api/events.html
 docs: MDN: Using server-sent events | https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events

@@ -108,7 +108,7 @@ Tests also act as **documentation**: a list of test names like "returns 404 when
 id: test-2
 title: Vitest basics
 time: 1.5h
-video: Net Ninja — Unit Testing (Vitest) Tutorial #1: What is Unit Testing? | https://www.youtube.com/watch?v=XdDZKeM5_pQ
+video: Net Ninja — Unit Testing (Vitest) Tutorial #2: Writing Your First Test | https://www.youtube.com/watch?v=9Op6lK4wnRE
 docs: Vitest guide | https://vitest.dev/guide/
 docs: expect API | https://vitest.dev/api/expect.html
 docs: Vitest coverage | https://vitest.dev/guide/coverage.html

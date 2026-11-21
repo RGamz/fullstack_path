@@ -17,7 +17,7 @@ intro: Create a Next.js project, learn how folders become pages and layouts, und
 id: next-1
 title: What is Next.js? App Router basics
 time: 1.5h
-video: Fireship — Next.js in 100 Seconds | https://www.youtube.com/watch?v=Sklc_fQBmcs
+video: PedroTech — Learn Next.js in 7 Minutes (2025) | https://www.youtube.com/watch?v=xnOwOBYaA3w
 docs: Learn Next.js (official free course) | https://nextjs.org/learn
 docs: Next.js: installation | https://nextjs.org/docs/app/getting-started/installation
 docs: Next.js: project structure | https://nextjs.org/docs/app/getting-started/project-structure
@@ -458,6 +458,7 @@ For extra safety, install the `server-only` package and add `import "server-only
 id: next-5
 title: Dynamic routes and metadata
 time: 1.5h
+video: Codevolution — Next.js 15 Tutorial: Dynamic Routes | https://www.youtube.com/watch?v=k9g6aVLH3p4
 video: Codevolution — Next.js 15 Tutorial: Routing Metadata | https://www.youtube.com/watch?v=OldUurB0Wx8
 docs: Next.js: dynamic routes | https://nextjs.org/docs/app/api-reference/file-conventions/dynamic-routes
 docs: Next.js: metadata and OG images | https://nextjs.org/docs/app/getting-started/metadata-and-og-images

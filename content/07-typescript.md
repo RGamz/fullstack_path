@@ -277,7 +277,7 @@ Use it only when you really know more than the compiler (like here, where you wr
 id: ts-3
 title: Object types: type aliases and interfaces
 time: 1h
-video: Matt Pocock — Types vs Interfaces | https://www.youtube.com/watch?v=e0AIkYrXAYE
+video: Dave Gray — TypeScript Objects, Arrays, Tuples & Enums | https://www.youtube.com/watch?v=9dw2ik9N8wo
 docs: Object types | https://www.typescriptlang.org/docs/handbook/2/objects.html
 docs: Everyday types: aliases and interfaces | https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-aliases
 ---

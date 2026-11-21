@@ -231,7 +231,7 @@ The h1 is never smaller than 2rem or larger than 3.5rem, and in between it grows
 id: ui-3
 title: Colour and accessibility
 time: 1.5h
-video: Flux Academy — How to Choose Colors (Easy 3-Step Process) | https://www.youtube.com/watch?v=KMS3VwGh3HY
+video: Sajid — The Easy Way to Pick UI Colors | https://www.youtube.com/watch?v=vvPklRN0Tco
 docs: WebAIM contrast checker | https://webaim.org/resources/contrastchecker/
 docs: W3C: accessibility intro | https://www.w3.org/WAI/fundamentals/accessibility-intro/
 docs: Lighthouse overview | https://developer.chrome.com/docs/lighthouse/overview

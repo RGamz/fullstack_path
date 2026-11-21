@@ -1340,6 +1340,7 @@ id: ex-8
 title: Authentication: passwords, sessions and JWT
 time: 3h
 video: Web Dev Simplified — Build Node.js User Authentication (Password Login) | https://www.youtube.com/watch?v=Ud5xKCYQTjM
+video: ByteByteGo — Session vs JWT: The Differences You May Not Know | https://www.youtube.com/watch?v=fyTxwIa-1U0
 docs: OWASP Authentication Cheat Sheet | https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html
 docs: OWASP Password Storage Cheat Sheet | https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
 docs: express-session | https://github.com/expressjs/session
