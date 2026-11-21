@@ -70,7 +70,7 @@ summary: One line shown on the card.
 
 Rules:
 - Headers start with `---module`, `---section`, `---lesson` or `---project` on their own line and end with `---`.
-- `video:` is either a YouTube **search query** (the site turns it into a search link), or a specific video as `Label | URL`, e.g. `video: Fireship — CORS in 100 Seconds | https://www.youtube.com/watch?v=4KHiSt0oLJ0`. A specific video also gets a "More on YouTube" search link as a fallback. The label must not contain ` | `. Before adding a video, check that it exists and matches the lesson (for example by opening `https://www.youtube.com/oembed?format=json&url=<video URL>`, which shows its real title and channel).
+- `video:` is either a YouTube **search query** (the site turns it into a search link), or a specific video as `Label | URL`, e.g. `video: Fireship — CORS in 100 Seconds | https://www.youtube.com/watch?v=4KHiSt0oLJ0`. A specific video also gets a "More on YouTube" search link as a fallback. The label must not contain ` | `. Like `docs:`, `video:` can be repeated: a lesson that covers two topics can list one video for each, in the order the lesson teaches them. Before adding a video, check that it exists and matches the lesson (for example by opening `https://www.youtube.com/oembed?format=json&url=<video URL>`, which shows its real title and channel).
 - `docs:` can repeat; format `Label | URL`.
 - **IDs must never change** once you've started ticking things off: progress is saved by ID.
 - Exercises and "Done when" items are saved by their **position** in the list. Add new ones at the end and don't reorder or delete existing ones, or ticks move to the wrong item. Rewording an item in place is fine.

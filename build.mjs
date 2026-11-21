@@ -191,7 +191,7 @@ function parseBlocks(file) {
     const start = !inFence && line.match(/^---(module|section|lesson|project)\s*$/);
     if (start) {
       if (inHeader) fail(file, ln, `previous header (line ${cur.line}) was not closed with ---`);
-      cur = { type: start[1], meta: {}, docs: [], body: [], line: ln, file };
+      cur = { type: start[1], meta: {}, docs: [], videos: [], body: [], line: ln, file };
       blocks.push(cur);
       inHeader = true;
       return;
@@ -205,6 +205,7 @@ function parseBlocks(file) {
         fail(file, ln, `unknown key "${kv[1]}:" in a ${cur.type} header (allowed: ${ALLOWED_KEYS[cur.type].join(", ")})`);
       }
       if (kv[1] === "docs") cur.docs.push({ value: kv[2].trim(), line: ln });
+      else if (kv[1] === "video") { cur.videos.push({ value: kv[2].trim(), line: ln }); cur.meta.video ??= kv[2].trim(); }
       else cur.meta[kv[1]] = kv[2].trim();
       return;
     }
@@ -301,22 +302,22 @@ function buildModule(file) {
         links.add(url);
         return [label, url];
       });
-      // video: either a YouTube search query, or "Label | https://…" for a specific video
-      let video = b.meta.video;
-      if (/\s\|\s/.test(video)) {
-        const [label, url, ...rest] = video.split(/\s+\|\s+/);
+      // video: (repeatable) either a YouTube search query, or "Label | https://…" for a specific video
+      const videos = b.videos.map(({ value, line }) => {
+        if (!/\s\|\s/.test(value)) return value; // search query
+        const [label, url, ...rest] = value.split(/\s+\|\s+/);
         if (!label || !/^https?:\/\//.test(url || "") || rest.length) {
-          fail(file, b.line, `video must be a search query or "Label | https://…" (no other " | " in the label)`);
+          fail(file, line, `video must be a search query or "Label | https://…" (no other " | " in the label)`);
         }
         links.add(url);
-        video = [label, url];
-        stats.videos++;
-      }
+        return [label, url];
+      });
+      if (videos.some(Array.isArray)) stats.videos++;
       const words = wordCount(theory);
       stats.words.push(words);
       if (words < MIN_THEORY_WORDS) stats.short.push(`${b.meta.id} (${words} words)`);
       sec.lessons.push({
-        id: b.meta.id, title: b.meta.title, time: b.meta.time, video, docs,
+        id: b.meta.id, title: b.meta.title, time: b.meta.time, videos, docs,
         theory: render(file, b, theory), exercises: exercises.map(inline), words,
       });
       stats.lessons++;

@@ -79,10 +79,12 @@
         <div class="theory">${l.theory}</div>
         <h4 class="label">Watch &amp; read</h4>
         <div class="resources">
-          ${Array.isArray(l.video)
-            ? `<a class="res video" href="${esc(l.video[1])}" target="_blank" rel="noopener"><span class="ico">▶</span>${esc(l.video[0])}</a>
-               <a class="res" href="${ytSearch(l.title)}" target="_blank" rel="noopener"><span class="ico">🔍</span>More on YouTube</a>`
-            : `<a class="res video" href="${ytSearch(l.video)}" target="_blank" rel="noopener"><span class="ico">▶</span>YouTube: ${esc(l.video)}</a>`}
+          ${l.videos.map((v) => Array.isArray(v)
+            ? `<a class="res video" href="${esc(v[1])}" target="_blank" rel="noopener"><span class="ico">▶</span>${esc(v[0])}</a>`
+            : `<a class="res video" href="${ytSearch(v)}" target="_blank" rel="noopener"><span class="ico">▶</span>YouTube: ${esc(v)}</a>`).join("")}
+          ${l.videos.some(Array.isArray)
+            ? `<a class="res" href="${ytSearch(l.title)}" target="_blank" rel="noopener"><span class="ico">🔍</span>More on YouTube</a>`
+            : ""}
           ${docs}
         </div>
         <h4 class="label">Exercises</h4>
