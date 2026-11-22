@@ -153,13 +153,17 @@
         </div>
         ${m.sections.map((s, si) => `
           <div class="section" id="s-${s.id}">
-            <div class="section-head">
-              <div class="section-kicker">Part ${si + 1} <span class="chip" data-sec-count="${s.id}"></span></div>
-              <h3>${esc(s.title)}</h3>
-              ${s.intro ? `<p>${esc(s.intro)}</p>` : ""}
-            </div>
-            ${s.lessons.map((l) => renderLesson(l, `${i + 1}.${++n}`)).join("")}
-            ${s.projects.map(renderProject).join("")}
+            <details class="section-details" data-section="${s.id}" ${openSections.has(s.id) ? "open" : ""}>
+              <summary class="section-head">
+                <div class="section-kicker">Part ${si + 1} <span class="chip" data-sec-count="${s.id}"></span></div>
+                <h3>${esc(s.title)}</h3>
+                ${s.intro ? `<p>${esc(s.intro)}</p>` : ""}
+              </summary>
+              <div class="section-body">
+                ${s.lessons.map((l) => renderLesson(l, `${i + 1}.${++n}`)).join("")}
+                ${s.projects.map(renderProject).join("")}
+              </div>
+            </details>
           </div>`).join("")}
         <nav class="module-pager" aria-label="Module navigation">
           ${i > 0 ? `<a class="btn" href="#m-${MODULES[i - 1].id}">← ${esc(MODULES[i - 1].title)}</a>` : "<span></span>"}
@@ -169,6 +173,16 @@
         </nav>
       </section>`;
     }).join("");
+  }
+
+  // ---------- Parts (sections) are collapsed by default; remember which ones are open ----------
+  const SECTIONS_KEY = STORAGE_KEY + "-open-parts";
+  let openSections = new Set();
+  try { openSections = new Set(JSON.parse(localStorage.getItem(SECTIONS_KEY) || "[]")); } catch {}
+  function rememberSection(details) {
+    if (details.open) openSections.add(details.dataset.section);
+    else openSections.delete(details.dataset.section);
+    try { localStorage.setItem(SECTIONS_KEY, JSON.stringify([...openSections])); } catch {}
   }
 
   // ---------- One module at a time ----------
@@ -345,6 +359,7 @@
     if (!next) return;
     if (next.module.id !== currentModule) showModule(next.module.id, { scroll: false });
     const el = next.kind === "lesson" ? $(`#l-${CSS.escape(next.item.id)}`) : $(`#p-${CSS.escape(next.item.id)}`);
+    el.closest(".section-details").open = true;
     $(next.kind === "lesson" ? ".lesson-details" : ".project-details", el).open = true;
     highlightIn(el);
     el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -398,7 +413,10 @@
   const main = $("main");
   main.addEventListener("change", onChange);
   main.addEventListener("input", onInput);
-  main.addEventListener("toggle", (e) => { if (e.target.open) highlightIn(e.target); }, true);
+  main.addEventListener("toggle", (e) => {
+    if (e.target.matches(".section-details")) rememberSection(e.target);
+    else if (e.target.open) highlightIn(e.target); // highlight code only in the lesson/project being opened
+  }, true);
   main.addEventListener("click", onMarkClick);
 
   $("#continue-btn").addEventListener("click", continueLearning);
@@ -409,8 +427,8 @@
   try {
     if (localStorage.getItem(STORAGE_KEY + "-hide")) { $("#hide-done").checked = true; document.body.classList.add("hide-done"); }
   } catch {}
-  $("#expand-all").addEventListener("click", () => $$(".module:not([hidden]) .lesson-details").forEach((d) => { d.open = true; }));
-  $("#collapse-all").addEventListener("click", () => $$(".module:not([hidden]) .lesson-details, .module:not([hidden]) .project-details").forEach((d) => { d.open = false; }));
+  $("#expand-all").addEventListener("click", () => $$(".module:not([hidden]) .section-details, .module:not([hidden]) .lesson-details").forEach((d) => { d.open = true; }));
+  $("#collapse-all").addEventListener("click", () => $$(".module:not([hidden]) .section-details, .module:not([hidden]) .lesson-details, .module:not([hidden]) .project-details").forEach((d) => { d.open = false; }));
   $("#export-btn").addEventListener("click", exportProgress);
   $("#import-input").addEventListener("change", (e) => { if (e.target.files[0]) importProgress(e.target.files[0]); e.target.value = ""; });
   $("#reset-btn").addEventListener("click", () => {
