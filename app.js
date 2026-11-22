@@ -105,24 +105,28 @@
   function renderProject(p) {
     return `
     <article class="project ${isDone(p.id) ? "is-done" : ""}" id="p-${p.id}" data-project="${p.id}">
-      <div class="project-head">
-        <input type="checkbox" class="check" data-id="${p.id}" aria-label="Mark project done" ${isDone(p.id) ? "checked" : ""}>
-        <div>
-          <div class="project-kicker">🛠 Project <span class="chip" data-feat-count="${p.id}"></span></div>
-          <h3>${esc(p.title)}</h3>
-          <p class="project-summary">${esc(p.summary)}</p>
+      <input type="checkbox" class="check project-check" data-id="${p.id}" aria-label="Mark project “${esc(p.title)}” as done" ${isDone(p.id) ? "checked" : ""}>
+      <details class="project-details">
+        <summary>
+          <div class="project-heading">
+            <div class="project-kicker">🛠 Project <span class="chip" data-feat-count="${p.id}"></span></div>
+            <h3>${esc(p.title)}</h3>
+            <p class="project-summary">${esc(p.summary)}</p>
+          </div>
+        </summary>
+        <div class="project-body">
+          <div class="theory">${p.brief}</div>
+          <h4 class="label">Done when</h4>
+          <ul class="ex-list">${checklist(p.features, (i) => featId(p.id, i))}</ul>
+          <div class="repo-row">
+            <input class="repo" type="url" data-repo="${p.id}" placeholder="Paste your GitHub / live link" value="${esc(state.repos[p.id] || "")}">
+            <a class="repo-open" data-repo-link="${p.id}" target="_blank" rel="noopener" hidden>↗ Open</a>
+          </div>
+          <div class="lesson-footer">
+            <button type="button" class="btn mark-done ${isDone(p.id) ? "" : "primary"}" data-mark="${p.id}">${markLabel(isDone(p.id))}</button>
+          </div>
         </div>
-      </div>
-      <details class="brief">
-        <summary>📋 Read the full brief</summary>
-        <div class="theory">${p.brief}</div>
       </details>
-      <h4 class="label">Done when</h4>
-      <ul class="ex-list">${checklist(p.features, (i) => featId(p.id, i))}</ul>
-      <div class="repo-row">
-        <input class="repo" type="url" data-repo="${p.id}" placeholder="Paste your GitHub / live link" value="${esc(state.repos[p.id] || "")}">
-        <a class="repo-open" data-repo-link="${p.id}" target="_blank" rel="noopener" hidden>↗ Open</a>
-      </div>
     </article>`;
   }
 
@@ -310,8 +314,8 @@
     setDone(id, done);
     markCard(id, done);
     if (done) {
-      const card = $(`#l-${CSS.escape(id)}`);
-      $(".lesson-details", card).open = false;
+      const card = $(`#l-${CSS.escape(id)}, #p-${CSS.escape(id)}`);
+      $(".lesson-details, .project-details", card).open = false;
       if (card.getBoundingClientRect().top < 0) card.scrollIntoView({ block: "start" });
     }
     updateProgress();
@@ -341,7 +345,7 @@
     if (!next) return;
     if (next.module.id !== currentModule) showModule(next.module.id, { scroll: false });
     const el = next.kind === "lesson" ? $(`#l-${CSS.escape(next.item.id)}`) : $(`#p-${CSS.escape(next.item.id)}`);
-    $(next.kind === "lesson" ? ".lesson-details" : ".brief", el).open = true;
+    $(next.kind === "lesson" ? ".lesson-details" : ".project-details", el).open = true;
     highlightIn(el);
     el.scrollIntoView({ behavior: "smooth", block: "start" });
     el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
@@ -406,7 +410,7 @@
     if (localStorage.getItem(STORAGE_KEY + "-hide")) { $("#hide-done").checked = true; document.body.classList.add("hide-done"); }
   } catch {}
   $("#expand-all").addEventListener("click", () => $$(".module:not([hidden]) .lesson-details").forEach((d) => { d.open = true; }));
-  $("#collapse-all").addEventListener("click", () => $$(".module:not([hidden]) .lesson-details, .module:not([hidden]) .brief").forEach((d) => { d.open = false; }));
+  $("#collapse-all").addEventListener("click", () => $$(".module:not([hidden]) .lesson-details, .module:not([hidden]) .project-details").forEach((d) => { d.open = false; }));
   $("#export-btn").addEventListener("click", exportProgress);
   $("#import-input").addEventListener("change", (e) => { if (e.target.files[0]) importProgress(e.target.files[0]); e.target.value = ""; });
   $("#reset-btn").addEventListener("click", () => {
