@@ -437,9 +437,9 @@ Other useful helpers: `path.extname("photo.png")` gives `".png"` and `path.basen
   Hint: Uppercasing is plain JavaScript: `text.toUpperCase()`.
 - Write a script that counts the lines, words and characters in any file passed as an argument: `node count.js notes.txt`.
   Hint: Counting is plain JavaScript you already know: the file content is one long string. Characters: `text.length`. Lines: `text.split("\n").length`. Words: `text.trim().split(/\s+/).length` (and treat an empty file as 0 words).
-- Write `loadTasks()` and `saveTasks(tasks)` functions (handling the missing-file case) and use them to add one task every time the script runs. Run it 3 times and check the file.
-  Hint: To add a task: load the array, `push` a new object like `{ id, text, done: false }`, then save the whole array again.
-- Move your script into a subfolder and run it from the parent folder. Does it still find its file? Fix it with `import.meta.dirname`.
+- A warm-up for this part's project (a to-do list in the terminal): create `tasks.js`. In it, write `loadTasks()`, which returns the array saved in `tasks.json` (or `[]` if the file doesn't exist yet), and `saveTasks(tasks)`, which writes the array to `tasks.json`. At the bottom of the script, load the tasks, add one new task like `{ id: 1, text: "Task 1", done: false }` (numbered after the existing ones), and save. Run `node tasks.js` three times, then open `tasks.json`: it should contain 3 tasks.
+  Hint: Start from the `loadTasks()` example in "When the file doesn't exist yet" above. The new task's number is `tasks.length + 1`; add it with `tasks.push(…)`, then call `saveTasks(tasks)`.
+- Create a folder `app`, move `tasks.js` into it, and run `node app/tasks.js` from the parent folder. Where does `tasks.json` end up now: next to the script, or in the folder you ran the command from? Fix it with `path.join(import.meta.dirname, "tasks.json")` so the file always stays next to the script.
 
 ---project
 id: node-p3
