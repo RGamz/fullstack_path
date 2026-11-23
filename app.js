@@ -55,10 +55,21 @@
       </a></li>`).join("");
   }
 
-  const checklist = (items, idFn) => items.map((html, i) => {
+  const checklist = (items, idFn, hints = []) => items.map((html, i) => {
     const id = idFn(i);
-    return `<li><input type="checkbox" id="${esc(id)}" data-id="${esc(id)}" ${isDone(id) ? "checked" : ""}><label for="${esc(id)}">${html}</label></li>`;
+    const hint = hints[i] ? `<details class="hint"><summary>💡 Hint</summary><div>${hints[i]}</div></details>` : "";
+    return `<li><input type="checkbox" id="${esc(id)}" data-id="${esc(id)}" ${isDone(id) ? "checked" : ""}><div class="ex-text"><label for="${esc(id)}">${html}</label>${hint}</div></li>`;
   }).join("");
+
+  // Takeaways box and "Check your understanding" questions (present on lessons that have them)
+  const takeawaysBox = (l) => l.takeaways
+    ? `<div class="takeaways"><h4 class="label">Takeaways</h4>${l.takeaways}</div>` : "";
+  const recallBox = (l) => l.check?.length
+    ? `<h4 class="label">Check your understanding</h4>
+       <p class="recall-tip">Answer each one in your head (or out loud) first, then reveal the answer.</p>
+       <ol class="recall">${l.check.map(({ q, a }) =>
+         `<li><div class="recall-q">${q}</div><details><summary>Show answer</summary><div class="recall-a">${a}</div></details></li>`).join("")}</ol>`
+    : "";
 
   function renderLesson(l, n) {
     const docs = l.docs.map(([label, url]) =>
@@ -87,10 +98,13 @@
             : ""}
           ${docs}
         </div>
+        ${takeawaysBox(l)}
+        ${recallBox(l)}
         <h4 class="label">Exercises</h4>
-        <ul class="ex-list">${checklist(l.exercises, (i) => exId(l.id, i))}</ul>
+        <ul class="ex-list">${checklist(l.exercises, (i) => exId(l.id, i), l.hints)}</ul>
         <h4 class="label">My notes</h4>
-        <textarea class="notes" data-notes="${l.id}" placeholder="What did you learn? What was confusing? Links to your code…">${esc(state.notes[l.id] || "")}</textarea>
+        ${l.notes ? `<p class="notes-prompt">✍️ ${esc(l.notes)}</p>` : ""}
+        <textarea class="notes" data-notes="${l.id}" placeholder="${l.notes ? "Answer in your own words, without looking back at the lesson…" : "What did you learn? What was confusing? Links to your code…"}">${esc(state.notes[l.id] || "")}</textarea>
         <div class="lesson-footer">
           <button type="button" class="btn mark-done ${isDone(l.id) ? "" : "primary"}" data-mark="${l.id}">${markLabel(isDone(l.id))}</button>
           <span class="done-at" data-done-at="${l.id}">${isDone(l.id) ? "Completed " + fmtDate(state.done[l.id]) : ""}</span>

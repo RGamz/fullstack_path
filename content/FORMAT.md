@@ -85,9 +85,31 @@ The theory should teach, not just summarise. Aim for 500–900 words:
 2. **The concept, step by step**: `##` subheadings, plain language, one idea at a time.
 3. **Code examples**: small, complete and runnable, each followed by an explanation of what the important lines do.
 4. **Common mistakes**: the 2–4 errors beginners actually hit, and how to recognise and fix them.
-5. **In short**: a 3–5 bullet recap.
+5. **In short**: a 3–5 bullet recap. (Module 1 replaces this with the Takeaways and Check parts below; they're being piloted there first.)
 
 Exercises are small, concrete tasks that practise exactly this lesson (2–4 per lesson), ordered easy → harder.
+
+### Optional parts (piloted in Module 1)
+
+These go between the theory and `### Exercises`, in this order:
+
+```
+### Takeaways
+**Understand**
+- 2–4 ideas you should be able to explain without notes
+**Muscle memory (no need to cram: it sticks by using it)**
+- the few lines you'll type often
+**Look up when needed**
+- things to know exist, not to memorise
+
+### Check your understanding
+- A question to answer from memory?
+  Answer: The answer, shown behind "Show answer".
+```
+
+- Exercises can have a hint, shown behind "💡 Hint": put it on an indented line under the exercise, starting with `Hint:`. Add one whenever an exercise needs a skill the lesson didn't teach.
+- `notes:` in the lesson header sets a specific question above the notes box, e.g. `notes: In two sentences, why do you JSON.stringify before saving?`
+- A project's first step can be a short warm-up from memory: rebuild the lesson's key function in a blank file, then compare.
 
 ## What a good project brief looks like
 

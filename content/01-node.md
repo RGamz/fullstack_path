@@ -17,6 +17,7 @@ intro: Install Node, learn how projects and modules are organised, and read and 
 id: node-1
 title: What is Node.js? Setup and your first script
 time: 1h
+notes: In your own words: what can Node do that browser JavaScript can't, and what can't it do?
 video: Fireship — Node.js Ultimate Beginner's Guide in 7 Easy Steps | https://www.youtube.com/watch?v=ENrzD9HAZK4
 docs: Node.js – Learn | https://nodejs.org/en/learn
 docs: Introduction to Node.js | https://nodejs.org/en/learn/getting-started/introduction-to-nodejs
@@ -121,23 +122,41 @@ The practical rule for you: use the asynchronous versions of functions (with `aw
 - **Using browser APIs.** `document.querySelector` will throw `ReferenceError: document is not defined`. That's expected: there's no page in Node.
 - **Forgetting that `process.argv` values are strings.** `node add.js 2 3` gives you `"2"` and `"3"`; convert with `Number()` before adding.
 
-## In short
+### Takeaways
+**Understand**
+- Node runs JavaScript outside the browser: the same language, but with tools for files, the network and processes, and no DOM.
+- Slow work (files, network) is non-blocking: Node starts it, keeps going, and continues your code when the result is ready (the event loop).
+- Command-line arguments arrive as an array of strings in `process.argv`; yours start at index 2.
 
-- Node runs JavaScript outside the browser, using Chrome's V8 engine plus extra modules (`fs`, `http`, `path`…).
-- Run a file with `node file.js`; experiment in the REPL with `node`.
-- `process.argv` holds command-line arguments (your own start at index 2).
-- Slow I/O is non-blocking: Node waits for it in the background via the event loop.
+**Muscle memory (no need to cram: it sticks by using it)**
+- `node file.js` to run a script, `node` alone for the REPL
+- `process.argv[2]`
+
+**Look up when needed**
+- Other `process` features (`process.platform`, `process.cwd()`, `process.exit()`)
+- How the event loop works in detail
+
+### Check your understanding
+- Why does `document.querySelector` throw in Node?
+  Answer: Node has no page and no DOM: `document` and `window` exist only in browsers.
+- You run `node add.js 2 3` and get `23` instead of `5`. Why?
+  Answer: Everything in `process.argv` is a string, so `+` joins them. Convert with `Number()` first.
+- Node runs your code on one thread. How can one server still handle many users at once?
+  Answer: Most of a request's time is spent waiting for disks and networks. Node hands that waiting to the operating system and serves other requests in the meantime.
 
 ### Exercises
 - Install Node LTS and print both `node -v` and `npm -v`.
 - Create `hello.js` that logs a greeting plus today's date in a readable format. Run it.
+  Hint: This part is plain JavaScript from your frontend course: `new Date().toLocaleDateString()` gives a readable date.
 - Write `greet.js` so that `node greet.js Anna` prints `Hi, Anna!` and `node greet.js` (no name) prints `Hi, stranger!`.
 - Write `add.js` so that `node add.js 4 5 10` prints the sum of all the numbers given (any number of them). Print a helpful message if one of them isn't a number.
+  Hint: Take all the arguments with `process.argv.slice(2)`, convert each one with `Number()`, and check it with `Number.isNaN()`. To add them up, a `for…of` loop works (or `reduce` if you know it).
 
 ---lesson
 id: node-2
 title: npm, package.json and modules
 time: 1.5h
+notes: Explain to a friend the difference between your own module (./math.js) and a package (dayjs): where does each come from, and how do you import it?
 video: Coder Coder — What is NPM, and Why Do We Need It? | https://www.youtube.com/watch?v=P3aKRdUyr0s
 video: Codevolution — Node.js ES Modules | https://www.youtube.com/watch?v=g98XlFOiXz0
 docs: package.json reference | https://docs.npmjs.com/cli/configuring-npm/package-json
@@ -261,23 +280,43 @@ Anyone who clones your project runs `npm install`, and npm rebuilds `node_module
 - **Mixing `require` and `import`** in the same project. Pick ES Modules and stick with them.
 - **Committing `node_modules`**: add the `.gitignore` *before* your first commit.
 
-## In short
+### Takeaways
+**Understand**
+- `package.json` describes the project: its scripts, its dependencies and (with `"type": "module"`) that files use `import`/`export`.
+- Your own files are imported with a relative path (`./`, with the `.js` ending); packages are imported by name, from `node_modules`.
+- `node_modules` is rebuilt from `package.json` and `package-lock.json` with `npm install`, so it never goes into git.
 
-- `package.json` describes the project; set `"type": "module"` and add `scripts`.
-- `export` from one file, `import { … } from "./file.js"` in another.
-- `npm install name` adds a package; `-D` for development-only tools.
-- `node --watch` restarts on save; `node_modules` never goes into git.
+**Muscle memory (no need to cram: it sticks by using it)**
+- `npm init -y`, `npm install name`, `npm install -D name`
+- `export function …` / `import { … } from "./file.js"`
+- A `"dev": "node --watch index.js"` script
+
+**Look up when needed**
+- Version ranges like `^1.11.13`
+- CommonJS (`require`, `module.exports`), for reading older code
+- The list of built-in modules (`node:os`, `node:path`, …)
+
+### Check your understanding
+- What does `"type": "module"` in `package.json` change?
+  Answer: It tells Node your `.js` files use ES Modules (`import`/`export`). Without it, Node expects the older `require` style.
+- Why does `import { add } from "math.js"` fail with `ERR_MODULE_NOT_FOUND`?
+  Answer: Without `./`, Node looks for a package called `math.js` in `node_modules`. Your own files need a relative path like `./math.js`.
+- A teammate clones your repo, which has no `node_modules` folder. How do they get the packages?
+  Answer: They run `npm install`, which reads `package.json` and `package-lock.json` and installs the same versions.
 
 ### Exercises
 - Create a new folder, run `npm init -y`, add `"type": "module"` and `start`/`dev` scripts. Check both work.
 - Create `math.js` exporting `add`, `subtract`, `multiply` and `divide` (throw an error when dividing by zero). Import them in `index.js` and log some results.
+  Hint: Throwing is plain JavaScript: `throw new Error("Cannot divide by zero")` inside `divide`, then call it inside `try { … } catch (err) { console.log(err.message) }` to see the message.
 - Install `dayjs` and print how many days are left until New Year. Then uninstall it and look at what changed in `package.json`.
+  Hint: Look up `diff` in the dayjs docs. One way: `dayjs().endOf("year").diff(dayjs(), "day")`.
 - Add a `.gitignore`, run `git init` and `git status`, and confirm `node_modules` is not listed.
 
 ---lesson
 id: node-9
 title: Reading and writing files with fs and path
 time: 1.5h
+notes: In two sentences: why do you JSON.stringify before saving a file, and JSON.parse after reading it?
 video: Codevolution — Node.js fs Promise Module | https://www.youtube.com/watch?v=wG2-vF4QyZ0
 docs: fs/promises API | https://nodejs.org/api/fs.html#promises-api
 docs: path module | https://nodejs.org/api/path.html
@@ -367,17 +406,39 @@ Other useful helpers: `path.extname("photo.png")` gives `".png"` and `path.basen
 - **Writing an object directly.** `fs.writeFile("x.json", tasks)` writes `[object Object]`. Always `JSON.stringify` first.
 - **Paths relative to the terminal.** Use `path.join(import.meta.dirname, …)` for files that belong next to your script.
 
-## In short
+### Takeaways
+**Understand**
+- Files store only text (or raw bytes), not JavaScript objects: turn data into JSON text to save it, and parse it back to use it.
+- Reading and writing files is slow, so the `fs/promises` functions are asynchronous and must be awaited.
+- A relative path like `"tasks.json"` is resolved from the folder you run the command in, not the script's folder. Build paths from `import.meta.dirname` for files that belong to your script.
+- Catch only the error you expect (a missing file on the first run) and rethrow everything else, so real bugs stay visible.
 
-- `import fs from "node:fs/promises"`, then `await fs.readFile(path, "utf8")` / `await fs.writeFile(path, text)`.
-- Save data with `JSON.stringify(data, null, 2)` and load it with `JSON.parse`.
-- Catch `ENOENT` to handle "file doesn't exist yet", and rethrow everything else.
-- Build paths with `path.join(import.meta.dirname, "file")`.
+**Muscle memory (no need to cram: it sticks by using it)**
+- `import fs from "node:fs/promises"`
+- `await fs.readFile(file, "utf8")` / `await fs.writeFile(file, text)`
+- `JSON.stringify(data)` / `JSON.parse(text)`
+- `path.join(import.meta.dirname, "tasks.json")`
+
+**Look up when needed**
+- The error code for "file not found" (`ENOENT`) and other codes
+- Pretty-printing: `JSON.stringify(data, null, 2)`
+- `fs.appendFile`, `fs.mkdir`, `fs.readdir`, `path.extname`, `path.basename`
+
+### Check your understanding
+- You log `fs.readFile("notes.txt", "utf8")` and see `Promise { <pending> }`. What's missing?
+  Answer: `await`: `readFile` returns a promise, and only `await` gives you the content.
+- Why does `fs.readFile("notes.txt")` without `"utf8"` print `<Buffer 48 65 …>`?
+  Answer: Without an encoding, Node returns raw bytes (a Buffer). `"utf8"` tells it to decode the bytes as text.
+- Your script works with `node cli.js`, but not with `node app/cli.js` from the parent folder. Why?
+  Answer: The relative path is resolved from the terminal's current folder. Build it with `path.join(import.meta.dirname, "tasks.json")` instead.
 
 ### Exercises
 - Create `notes.txt` with a few lines. Write a script that reads it and writes `notes-upper.txt` in capitals.
+  Hint: Uppercasing is plain JavaScript: `text.toUpperCase()`.
 - Write a script that counts the lines, words and characters in any file passed as an argument: `node count.js notes.txt`.
+  Hint: Counting is plain JavaScript you already know: the file content is one long string. Characters: `text.length`. Lines: `text.split("\n").length`. Words: `text.trim().split(/\s+/).length` (and treat an empty file as 0 words).
 - Write `loadTasks()` and `saveTasks(tasks)` functions (handling the missing-file case) and use them to add one task every time the script runs. Run it 3 times and check the file.
+  Hint: To add a task: load the array, `push` a new object like `{ id, text, done: false }`, then save the whole array again.
 - Move your script into a subfolder and run it from the parent folder. Does it still find its file? Fix it with `import.meta.dirname`.
 
 ---project
@@ -398,13 +459,14 @@ Build a to-do list you use from the terminal, like `node tasks.js add "Buy milk"
 - Unknown commands, missing text or invalid numbers print a short usage guide instead of crashing
 
 ### Steps
-1. Create the project with `npm init -y`, set `"type": "module"`, and create `tasks.js`. Log `process.argv.slice(2)` and try a few commands to see what you receive.
-2. Create `storage.js` exporting `loadTasks()` and `saveTasks(tasks)` (from the fs lesson, using `import.meta.dirname`).
-3. In `tasks.js`, read the command (`argv[2]`) and use a `switch` statement to call a function per command. Start with `add` and `list`.
-4. Implement `done`, `undo` and `remove`. Find the task by id; if it doesn't exist, print `No task with id 7`.
-5. Implement `clear` and a `printUsage()` function shown for unknown commands or `help`.
-6. Make it look good: colour done tasks green and pending ones yellow with Node's built-in `util.styleText` (`import { styleText } from "node:util"`).
-7. Add a README with example commands and a screenshot of your terminal, then push to GitHub.
+1. **Warm-up from memory (10 minutes).** Before you start, open a blank file and write `loadTasks()` and `saveTasks(tasks)` without looking at the lesson. Then compare with lesson 1.3 and fix what you missed.
+2. Create the project with `npm init -y`, set `"type": "module"`, and create `tasks.js`. Log `process.argv.slice(2)` and try a few commands to see what you receive.
+3. Create `storage.js` exporting `loadTasks()` and `saveTasks(tasks)` (from the fs lesson, using `import.meta.dirname`).
+4. In `tasks.js`, read the command (`argv[2]`) and use a `switch` statement to call a function per command. Start with `add` and `list`.
+5. Implement `done`, `undo` and `remove`. Find the task by id; if it doesn't exist, print `No task with id 7`.
+6. Implement `clear` and a `printUsage()` function shown for unknown commands or `help`.
+7. Make it look good: colour done tasks green and pending ones yellow with Node's built-in `util.styleText` (`import { styleText } from "node:util"`).
+8. Add a README with example commands and a screenshot of your terminal, then push to GitHub.
 
 ### Hints
 - Give new tasks `id = highest existing id + 1` (not `tasks.length + 1`), or ids repeat after deletions.
@@ -433,6 +495,7 @@ intro: Learn how the web talks (HTTP), then build a JSON API using nothing but N
 id: node-3
 title: The http module: your first server
 time: 1h
+notes: Describe step by step what happens between typing localhost:8000 in the browser and seeing your text on the page.
 video: Programming with Mosh — HTTP Module in Node.js | https://www.youtube.com/watch?v=VLXAzzRjQws
 docs: http module docs | https://nodejs.org/api/http.html
 docs: Anatomy of an HTTP transaction | https://nodejs.org/en/learn/http/anatomy-of-an-http-transaction
@@ -517,12 +580,30 @@ Or put it in your `package.json` scripts as `"dev": "node --watch server.js"` an
 - **Calling `res.end()` twice.** You'll get `ERR_STREAM_WRITE_AFTER_END`. Use `return res.end(...)` so the function stops after responding.
 - **Editing code but seeing old output**: you forgot to restart (use `--watch`).
 
-## In short
+### Takeaways
+**Understand**
+- A server is a program that waits for requests; `http.createServer` runs your callback once for every request.
+- `req` describes what the client asked for; `res` is what you send back: a status code, headers and a body.
+- Every request must get exactly one response: always finish with `res.end()`, exactly once.
+- The `Content-Type` header tells the browser how to treat the body (plain text, HTML, JSON…).
 
-- `http.createServer((req, res) => { … })` runs the callback for every request.
-- Set `res.statusCode` and headers, then `res.end(body)`, always exactly once.
-- `req.method` and `req.url` tell you what the client asked for.
-- `server.listen(PORT)` starts the server; `node --watch` restarts it on save.
+**Muscle memory (no need to cram: it sticks by using it)**
+- `http.createServer((req, res) => { … })` and `server.listen(PORT)`
+- `res.statusCode = 200`, `res.setHeader("Content-Type", "text/html")`, `res.end(body)`
+- `node --watch server.js`
+
+**Look up when needed**
+- `res.writeHead(status, headers)` as a shortcut
+- Full lists of status codes and content (MIME) types
+- What `EADDRINUSE` means (the port is already in use)
+
+### Check your understanding
+- The browser keeps loading and never shows your page. What's the most likely bug?
+  Answer: A code path that never calls `res.end()`, so the response never finishes.
+- Why does your server log a request for `/favicon.ico` that you never made?
+  Answer: Browsers automatically ask every site for its tab icon.
+- What's the difference between sending HTML with `text/plain` and with `text/html`?
+  Answer: With `text/plain` the browser shows the tags as text; with `text/html` it renders them as a page.
 
 ### Exercises
 - Build a server on port 8000 that replies with plain text: `Hello from my server`.
@@ -534,6 +615,7 @@ Or put it in your `package.json` scripts as `"dev": "node --watch server.js"` an
 id: node-4
 title: HTTP and the request/response cycle
 time: 1h
+notes: Pick one request from DevTools on a site you use and explain each part: method, path, one header, the status and what the body contained.
 video: Traversy Media — HTTP Crash Course & Exploration | https://www.youtube.com/watch?v=iYM2zFP3Zn0
 docs: MDN: An overview of HTTP | https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview
 docs: MDN: HTTP status codes | https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
@@ -613,15 +695,33 @@ curl -i -X POST http://localhost:8000/api/stories -H "Content-Type: application/
 - **Confusing 401 and 403.** 401 = "who are you?", 403 = "I know who you are, and the answer is no."
 - **Assuming `fetch` throws on 404.** It only throws on network failures; check `response.ok`.
 
-## In short
+### Takeaways
+**Understand**
+- A request has a method, a path, headers and sometimes a body; a response has a status code, headers and a body.
+- The method says what the request does: GET reads (and must never change data), POST creates, PUT/PATCH update, DELETE removes.
+- The first digit of a status code is its category: 2xx success, 3xx redirect, 4xx the client's mistake, 5xx the server's failure.
+- `fetch` does not throw on a 404 or 500: your code must check `response.ok`.
 
-- A request = method + path + headers + optional body; a response = status + headers + body.
-- GET reads, POST creates, PUT/PATCH update, DELETE removes.
-- 2xx success, 3xx redirect, 4xx client error, 5xx server error.
-- Use DevTools → Network, curl, Thunder Client or Postman to see and send requests.
+**Muscle memory (no need to cram: it sticks by using it)**
+- The common codes: 200, 201, 204, 400, 401, 403, 404, 500
+- `curl -i URL` to see a response with its headers
+
+**Look up when needed**
+- Rarer status codes (301 vs 302, 409, 429…)
+- curl options (`-X`, `-H`, `-d`)
+- Specific headers like `Cache-Control` or `Authorization`
+
+### Check your understanding
+- Why is a route like `GET /deleteBook?id=3` a bad idea?
+  Answer: GET must be safe to repeat: browsers, caches and search engines may call it on their own and delete data by accident. Use DELETE.
+- A logged-in user opens someone else's private diary entry. 401 or 403?
+  Answer: 403 Forbidden: the server knows who they are, but they aren't allowed. 401 means "not logged in".
+- Your frontend's `fetch` gets a 404, but no error is thrown. Why?
+  Answer: `fetch` only rejects on network failures. A 404 is a normal response, so check `response.ok`.
 
 ### Exercises
 - Open a website you use daily, open DevTools → Network, and write down three requests with their method, status code and `Content-Type`.
+  Hint: In DevTools → Network, click a request: the Headers tab shows the method, status and `Content-Type`.
 - Run `curl -i http://localhost:8000` against your server from the last lesson and identify the status line, the headers and the body.
 - Install Thunder Client or Postman and send a POST request to your server. What status does it return, and why does the server not care that it was a POST?
 - For each situation, pick the status code: a user submits a form with an invalid email; a book was created; a page doesn't exist; the database crashed; a user opens someone else's private diary entry.
@@ -630,6 +730,7 @@ curl -i -X POST http://localhost:8000/api/stories -H "Content-Type: application/
 id: node-5
 title: Routing and serving JSON
 time: 1.5h
+notes: From memory, write the route table of your API (method, path, what it returns), then compare it with your code.
 video: Traversy Media — Vanilla Node.js REST API (No Framework) | https://www.youtube.com/watch?v=_1xa8Bsho6A
 docs: MDN: Working with JSON | https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/JSON
 docs: Anatomy of an HTTP transaction | https://nodejs.org/en/learn/http/anatomy-of-an-http-transaction
@@ -722,23 +823,41 @@ Before writing code, list your routes in a small table. It's what professional A
 - **Exact matches break with a trailing slash or query string.** `req.url === "/api"` is false for `/api/` and `/api?x=1`. The next lesson parses URLs properly.
 - **Inconsistent error formats.** Pick one shape (e.g. `{ error, message }`) and use it everywhere.
 
-## In short
+### Takeaways
+**Understand**
+- Routing means choosing what to do from the request's method and path: specific routes first, a 404 fallback last.
+- APIs answer in JSON: convert with `JSON.stringify` and set `Content-Type: application/json` so clients know what they got.
+- `return` right after answering a route, so no other code sends a second response.
+- Keep the data in its own module, so where it comes from can change later.
 
-- Routing = choosing what to do based on `req.method` and the path.
-- Check specific routes first and end with a 404 fallback.
-- Send `JSON.stringify(data)` with `Content-Type: application/json`.
-- Keep data in its own module so the source can change later.
+**Muscle memory (no need to cram: it sticks by using it)**
+- `if (req.url === "/api" && req.method === "GET") { … }`
+- `res.setHeader("Content-Type", "application/json")` and `res.end(JSON.stringify(data))`
+
+**Look up when needed**
+- The exact shape of your error responses (just keep it consistent)
+- `res.writeHead(...)` shortcuts
+
+### Check your understanding
+- Why must the 404 answer come after all the other routes?
+  Answer: It's the fallback for anything not matched. Placed earlier, it would answer requests meant for real routes.
+- What happens with `res.end(destinations)`, passing the array directly?
+  Answer: It throws `ERR_INVALID_ARG_TYPE`: `res.end` only accepts text or bytes, so stringify first.
+- Why does `req.url === "/api"` stop matching `/api?country=italy`?
+  Answer: `req.url` includes the query string. The next lesson parses the URL so you can match only the path.
 
 ### Exercises
 - Create `data.js` exporting an array of at least 8 destinations with the fields shown above.
 - Make `GET /api` return all destinations as JSON with the correct `Content-Type` and status 200.
 - Return a 404 JSON error for every other URL. Test with the browser and curl.
 - Add `GET /api/count` returning `{ "count": 8 }` (computed, not hard-coded). Think about where it must go relative to the 404 fallback.
+  Hint: Count with the array's `.length`, and remember the order rule from this lesson.
 
 ---lesson
 id: node-6
 title: Path parameters and query parameters
 time: 2h
+notes: Give one example of a path parameter and one of a query parameter, and explain why each belongs where it is.
 video: WebStylePress — Get URL Parameters in JavaScript (URLSearchParams) | https://www.youtube.com/watch?v=CZP1iQFQjEY
 docs: URL class (Node) | https://nodejs.org/api/url.html#the-whatwg-url-api
 docs: MDN: URLSearchParams | https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
@@ -832,23 +951,42 @@ const limit = Number(url.searchParams.get("limit")) || 10; // number, default 10
 - **Case-sensitive comparisons**: users type `Italy`, `italy` and `ITALY`.
 - **Forgetting URL encoding.** A path like `/api/country/new%20zealand` contains `%20`; decode path segments with `decodeURIComponent`. (`searchParams` already decodes query values for you.)
 
-## In short
+### Takeaways
+**Understand**
+- Path parameters identify which resource (`/api/books/42`); query parameters filter or sort a list (`?genre=fantasy`).
+- Parse URLs with the `URL` class instead of splitting strings by hand.
+- Query values are always strings: convert `"true"` and `"5"` yourself.
+- Path segments keep their URL encoding (`%20`), so decode them; `searchParams` decodes for you.
 
-- Path parameters identify a resource; query parameters filter a list.
-- `new URL(req.url, base)` (with the request's host as the base) gives you `pathname` and `searchParams`.
-- Use `split("/")` for path segments and `Object.fromEntries(url.searchParams)` for queries.
-- Query values are strings: convert to booleans and numbers yourself.
+**Muscle memory (no need to cram: it sticks by using it)**
+- ``new URL(req.url, `http://${req.headers.host}`)``
+- `url.pathname`, `url.searchParams.get("limit")`, `Object.fromEntries(url.searchParams)`
+- `url.pathname.split("/").pop()`
+
+**Look up when needed**
+- Other `URLSearchParams` methods (`getAll`, `has`, …)
+- `decodeURIComponent` and its `URIError`
+
+### Check your understanding
+- `?is_open_to_public=false` still returns closed places. What's wrong?
+  Answer: The value is the string `"false"`, which is truthy. Compare with `=== "true"` to get a real boolean.
+- Should "books by genre" be a path parameter or a query parameter?
+  Answer: A query parameter (`/api/books?genre=fantasy`): it filters a list instead of naming one resource.
+- Why does `/api/country/new%20zealand` find nothing without `decodeURIComponent`?
+  Answer: The path still contains `%20` instead of a space, so the comparison with `"new zealand"` fails.
 
 ### Exercises
 - Switch your router to use `url.pathname` and confirm `/api?anything=1` still returns all destinations.
 - Add `GET /api/continent/:continent` and `GET /api/country/:country` (case-insensitive). Unknown values should return an empty array, not a 404.
 - Make `GET /api` support `continent`, `country` and `is_open_to_public` query parameters, combined.
 - Add `?limit=3` support. Make sure `limit=abc` doesn't break anything.
+  Hint: `Number("abc")` is `NaN`. Only apply the limit when `Number.isInteger(limit) && limit > 0`, then use `array.slice(0, limit)`.
 
 ---lesson
 id: node-7
 title: Modularising your code
 time: 1h
+notes: If the data moved to a real database, which file would you change, and why would nothing else need to change?
 video: Software Developer Diaries — Node.js Project Structure & Architecture | https://www.youtube.com/watch?v=fc6o1gwqZuA
 docs: Node.js best practices (GitHub) | https://github.com/goldbergyoni/nodebestpractices
 ---
@@ -984,12 +1122,29 @@ Refactoring means changing the structure **without** changing the behaviour. Do 
 - **Over-splitting**: one file per three-line function isn't always better. Group by responsibility.
 - **Refactoring and adding features at the same time.** Keep them separate so you can tell what broke.
 
-## In short
+### Takeaways
+**Understand**
+- Repeated code is a signal to extract a helper (like `sendJSONResponse`).
+- A data-access layer hides where data comes from; making it `async` now means callers won't change when a database arrives.
+- Pure functions (arguments in, result out, no `req`/`res`) are the easiest to reuse and test.
+- The `http` module doesn't catch errors from `async` handlers: wrap your handler in `try/catch` and answer 500.
+- Refactor in small steps: change the structure, re-test, commit.
 
-- Extract repeated code (like sending JSON) into helpers.
-- Put data access behind an `async` function so the source can change later.
-- Keep logic in pure functions; keep `server.js` thin and readable.
-- Refactor in small, tested, committed steps.
+**Muscle memory (no need to cram: it sticks by using it)**
+- `export async function getDataFromDB()` / `await getDataFromDB()`
+- The `try/catch` wrapper around your request handler
+
+**Look up when needed**
+- Folder-structure conventions (they vary between projects)
+- `res.headersSent`
+
+### Check your understanding
+- Why is `getDataFromDB` async when the data is just an array?
+  Answer: So the code calling it won't need to change when a real (asynchronous) database replaces the array.
+- What makes `getDataByPathParams` a pure function?
+  Answer: It only uses its arguments and returns a result, without touching `req`, `res`, files or anything else outside.
+- What happens without the `try/catch` if your async handler throws?
+  Answer: The rejected promise isn't handled, so Node can crash the whole server or leave the request hanging.
 
 ### Exercises
 - Write `utils/sendJSONResponse.js` and replace every repeated response block with it.
@@ -1001,6 +1156,7 @@ Refactoring means changing the structure **without** changing the behaviour. Do 
 id: node-8
 title: CORS
 time: 45m
+notes: Explain CORS to someone who just saw the red error: whose rule is it, who has to fix it, and why does Postman not complain?
 video: Fireship — CORS in 100 Seconds | https://www.youtube.com/watch?v=4KHiSt0oLJ0
 docs: MDN: CORS | https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 ---
@@ -1065,15 +1221,31 @@ Seeing the error and the fix with your own eyes makes it stick.
 - **Ignoring OPTIONS**, so GET works but POST fails with a preflight error.
 - **Using `*` together with cookies.** Browsers reject that combination; credentials require an exact origin.
 
-## In short
+### Takeaways
+**Understand**
+- An origin is protocol + domain + port: `localhost:5173` and `localhost:8000` are different origins.
+- Browsers block a page from reading another origin's responses unless that server allows it with CORS headers.
+- CORS is enforced by the browser to protect its user: curl and Postman ignore it, and the fix is always on the server.
+- Non-simple requests (JSON POST, PUT, DELETE) send an OPTIONS "preflight" first, which the server must answer.
 
-- Browsers block reading responses from another origin unless the server allows it.
-- Allow it with `Access-Control-Allow-Origin` (use `*` only for public data).
-- Non-simple requests trigger an OPTIONS preflight; answer it with the allowed methods and headers.
-- CORS is a browser rule: Postman and curl ignore it, so test in a real page.
+**Muscle memory (no need to cram: it sticks by using it)**
+- `res.setHeader("Access-Control-Allow-Origin", "*")` for public data
+
+**Look up when needed**
+- `Access-Control-Allow-Methods` / `Access-Control-Allow-Headers` and the exact preflight rules
+- Why `*` doesn't work together with cookies
+
+### Check your understanding
+- Your API works in Postman, but your page shows a CORS error. Is the API broken?
+  Answer: No. CORS is a browser rule: the server must send `Access-Control-Allow-Origin` for the page's origin.
+- Why doesn't `mode: "no-cors"` in `fetch` fix the error?
+  Answer: It makes the response opaque (unreadable), so your code still can't use the data. The fix belongs on the server.
+- GET works from your page, but a POST with JSON fails. What's missing?
+  Answer: An answer to the OPTIONS preflight request, listing the allowed methods and headers.
 
 ### Exercises
 - Reproduce the CORS error: serve an `index.html` from another port (Live Server) that fetches your API.
+  Hint: VS Code's Live Server extension serves a folder on port 5500, which is a different origin from your API on port 8000. Any other static server works too, for example `npx serve`.
 - Add `Access-Control-Allow-Origin: *` in `sendJSONResponse` and confirm the page now shows the data.
 - Add OPTIONS handling, then send a POST with a JSON body from the page and find the preflight request in DevTools → Network.
 - Change the allowed origin to an exact URL that is *not* your page's origin and observe the error message change.
@@ -1097,14 +1269,15 @@ A travel website needs a backend that returns destinations as JSON, with filteri
 - Code split into `server.js`, `database/`, `utils/` and `data/`
 
 ### Steps
-1. Create the project (`npm init -y`, `"type": "module"`, a `dev` script with `node --watch`). Write `data/data.js` with real places you'd like to visit. Generate uuids with `crypto.randomUUID()` in the REPL and paste them in.
-2. Create `server.js` that returns the whole array for `GET /api` and a 404 JSON for everything else. Test both with the browser and curl.
-3. Parse URLs with `new URL(...)` and add the `/api/continent/:continent` and `/api/country/:country` routes.
-4. Add query-parameter filtering to `/api`, converting `is_open_to_public` to a boolean.
-5. Add `GET /api/:uuid`. Think about route order: why must it come after the continent/country routes?
-6. Refactor into `utils/sendJSONResponse.js`, `database/db.js` and the two filter modules. Re-test every route after each step.
-7. Add CORS headers and OPTIONS handling. Build a tiny `index.html` (served from another port) with a dropdown of continents that fetches and lists matching destinations.
-8. Write a README: a table of all endpoints with an example request and response for each. Push to GitHub.
+1. **Warm-up from memory (10 minutes).** In a blank file, write a server that answers `GET /api` with a JSON array and every other URL with a 404 JSON error, without looking. Then compare with lessons 1.4–1.6.
+2. Create the project (`npm init -y`, `"type": "module"`, a `dev` script with `node --watch`). Write `data/data.js` with real places you'd like to visit. Generate uuids with `crypto.randomUUID()` in the REPL and paste them in.
+3. Create `server.js` that returns the whole array for `GET /api` and a 404 JSON for everything else. Test both with the browser and curl.
+4. Parse URLs with `new URL(...)` and add the `/api/continent/:continent` and `/api/country/:country` routes.
+5. Add query-parameter filtering to `/api`, converting `is_open_to_public` to a boolean.
+6. Add `GET /api/:uuid`. Think about route order: why must it come after the continent/country routes?
+7. Refactor into `utils/sendJSONResponse.js`, `database/db.js` and the two filter modules. Re-test every route after each step.
+8. Add CORS headers and OPTIONS handling. Build a tiny `index.html` (served from another port) with a dropdown of continents that fetches and lists matching destinations.
+9. Write a README: a table of all endpoints with an example request and response for each. Push to GitHub.
 
 ### Hints
 - Write your test URLs in a `requests.http` file (REST Client extension) or a Postman collection, so re-testing after each step takes seconds.
@@ -1134,6 +1307,7 @@ intro: Make one Node server deliver both a website and an API. You'll serve stat
 id: node-13
 title: Serving a website: static files
 time: 1.5h
+notes: Why does the browser need the right Content-Type for a CSS file, and what happens when it's wrong?
 video: Traversy Media — Node.js Crash Course (2024; watch the http server and file-serving parts) | https://www.youtube.com/watch?v=32M1al-Y6Ag
 docs: MDN: MIME types | https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types
 docs: path module | https://nodejs.org/api/path.html
@@ -1274,23 +1448,41 @@ Why `PUBLIC_DIR + path.sep` and not just `PUBLIC_DIR`? If your folder is `C:\app
 - **Not decoding the path**, so files with spaces or accents in their names always 404.
 - **Only handling `ENOENT`**: requesting a folder throws `EISDIR`, which then crashes the request.
 
-## In short
+### Takeaways
+**Understand**
+- Static files are sent exactly as they are on disk; one server can deliver both the website and the API (same origin, so no CORS).
+- The browser decides what a file is from its `Content-Type` header, not from its extension.
+- Read files as bytes (no `"utf8"`), so images aren't corrupted.
+- Never trust the request path: decode it, then make sure the final path is still inside `public/`.
 
-- Static files are sent as-is from a `public/` folder; `/` maps to `index.html`.
-- Read files as bytes and set the right `Content-Type` per extension.
-- Route `/api` requests to your API, everything else to the static handler.
-- Make sure the resolved path stays inside `public/`.
+**Muscle memory (no need to cram: it sticks by using it)**
+- `path.join(PUBLIC_DIR, pathname)` and the `startsWith(PUBLIC_DIR + path.sep)` check
+- A small object mapping file extensions to content types
+
+**Look up when needed**
+- Content types for other kinds of files
+- Error codes like `EISDIR`
+
+### Check your understanding
+- Your page loads but has no styles, and DevTools shows `styles.css` arriving as `text/plain`. What's wrong?
+  Answer: The server sent the wrong `Content-Type`: map `.css` to `text/css`.
+- Why must the path check come after `decodeURIComponent`?
+  Answer: Encoded tricks like `%2F` only turn into `/` after decoding, so a check before decoding would miss them.
+- Why check `startsWith(PUBLIC_DIR + path.sep)` and not just `startsWith(PUBLIC_DIR)`?
+  Answer: Without the separator, a sibling folder like `public-secret` also "starts with" `public`.
 
 ### Exercises
 - Create `public/index.html`, `styles.css` and `index.js` (logging "loaded"), and serve them with `serveStatic`. Check all three arrive with the right `Content-Type` in DevTools.
 - Add an image and display it on the page.
 - Create a custom `public/404.html` and send it (with status 404) for missing files.
-- Try `curl --path-as-is http://localhost:8000/../package.json` before and after adding the path-traversal check.
+- Temporarily remove the path-traversal check and run `curl "http://localhost:8000/..%2Fpackage.json"`: your server leaks `package.json`. Put the check back and run it again to get a 403.
+  Hint: Your browser cleans up `..` in addresses, so use curl. The `%2F` is an encoded `/` that only becomes a real slash after `decodeURIComponent`.
 
 ---lesson
 id: node-10
 title: Handling POST requests and request bodies
 time: 1.5h
+notes: List, in order, the five things your create-story endpoint does, and explain why the server (not the client) creates the id and the date.
 video: ProgrammingKnowledge — Read Request Body & Streams in Node.js HTTP Module | https://www.youtube.com/watch?v=EqnwUbXc-SA
 docs: Anatomy of an HTTP transaction | https://nodejs.org/en/learn/http/anatomy-of-an-http-transaction
 docs: Streams overview | https://nodejs.org/api/stream.html
@@ -1420,16 +1612,33 @@ With no tags allowed, any HTML is stripped and only plain text remains.
 - **Trusting client-sent ids, dates or prices.** The server generates them.
 - **Rendering user input with `innerHTML`.**
 
-## In short
+### Takeaways
+**Understand**
+- A request body arrives as a stream of byte chunks: collect them all, then convert to text once.
+- Never trust input: parse inside `try/catch`, validate, and reject bad data with a 400 before saving anything.
+- Every create endpoint follows the same flow: parse → validate → build → save → respond 201.
+- User text shown to other people must be sanitized and inserted with `textContent`, or attackers can run scripts in their browsers (XSS).
 
-- `req` is a stream; collect the byte chunks with `for await…of`, enforce a size limit, `Buffer.concat` them and `JSON.parse` in a try/catch.
-- Create endpoints: parse → validate → build → save → `201` with the new item.
-- Return `400` with a clear message for invalid input.
-- Sanitise user text on the server and render it with `textContent`.
+**Muscle memory (no need to cram: it sticks by using it)**
+- `for await (const chunk of req)` and `Buffer.concat(chunks).toString("utf8")`
+- `fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) })`
+
+**Look up when needed**
+- `sanitize-html` options
+- Status 413 and body size limits
+
+### Check your understanding
+- Why collect the chunks and convert once, instead of `body += chunk`?
+  Answer: A character like é or 🙂 takes several bytes and can be split across two chunks; converting each chunk separately corrupts it.
+- Why does the server generate `id` and `createdAt`?
+  Answer: The client can't be trusted to send correct or unique values: the server is the source of truth.
+- What's the danger of showing a story with `innerHTML`?
+  Answer: If the story contains HTML or a script, it runs in every visitor's browser (XSS). Use `textContent`.
 
 ### Exercises
 - Write `parseJSONBody(req)` and a `POST /api/echo` route that sends back whatever JSON it receives. Test it with Thunder Client/Postman, including a body with emoji and accented letters.
 - Send invalid JSON (e.g. `{title:`) and make sure you get a 400, not a crash.
+  Hint: In Thunder Client or Postman, choose a raw JSON body and type broken JSON yourself, like `{"title":` with nothing after it.
 - Build `POST /api/stories` that validates and appends to `data/stories.json`, responding with 201.
 - Post a story containing `<b>bold</b><script>alert(1)</script>` and check what gets stored after adding `sanitize-html`.
 
@@ -1437,6 +1646,7 @@ With no tags allowed, any HTML is stripped and only plain text remains.
 id: node-11
 title: Events, EventEmitter and Server-Sent Events
 time: 1.5h
+notes: Explain how one new story travels from the POST request to every open browser, step by step.
 video: Codevolution — Node.js Events Module | https://www.youtube.com/watch?v=Su0-Y9coU3s
 video: Web Dev Cody — Server-Sent Events Are Pretty Cool | https://www.youtube.com/watch?v=_XQiU3mLNk0
 docs: events module | https://nodejs.org/api/events.html
@@ -1552,16 +1762,34 @@ SSE is **one-way** (server to browser) over normal HTTP, and very simple. **WebS
 - **Cleaning up on `req.on("close")`** instead of `res.on("close")`: depending on the Node version, the listener may be removed too early and live updates silently stop.
 - **Sending objects without `JSON.stringify`.**
 
-## In short
+### Takeaways
+**Understand**
+- An EventEmitter separates parts of your code: one part announces "something happened" and any number of listeners react, without knowing about each other.
+- Server-Sent Events keep a response open and write messages into it; the browser's `EventSource` receives them.
+- Each SSE message is `data: …` followed by a blank line.
+- Remove listeners when the client disconnects (`res.on("close")`), or memory keeps growing.
 
-- `EventEmitter`: `on(name, fn)` subscribes, `emit(name, data)` publishes.
-- SSE keeps a response open with `Content-Type: text/event-stream` and writes `data: …\n\n` messages.
-- Remove listeners on `res.on("close")`, and raise `setMaxListeners` when many browsers are connected.
-- The browser listens with `new EventSource(url)`.
+**Muscle memory (no need to cram: it sticks by using it)**
+- `emitter.on(name, fn)`, `emitter.emit(name, data)`, `emitter.off(name, fn)`
+- `new EventSource(url)` with `onmessage`
+
+**Look up when needed**
+- The exact SSE headers
+- `setMaxListeners`, `listenerCount`
+- When WebSockets are the better choice
+
+### Check your understanding
+- Messages never arrive in the browser, and there's no error. What's the classic cause?
+  Answer: A missing blank line (`\n\n`) after `data: …`, so the browser keeps waiting for the message to end.
+- Why remove the listener when the connection closes?
+  Answer: Otherwise every visitor who ever connected leaves a listener behind that keeps running and holding memory.
+- When would you choose WebSockets instead of SSE?
+  Answer: When the browser also needs to send a stream of messages to the server (two-way), like games or chats with typing indicators.
 
 ### Exercises
 - Create an EventEmitter, register two listeners for `"greet"`, emit it with a name and see both run.
 - Build `GET /api/time` that streams the current time every 2 seconds via SSE (`setInterval`, cleared on close). Show it live on a page.
+  Hint: Start a timer with `const timer = setInterval(() => res.write(…), 2000)` and stop it with `res.on("close", () => clearInterval(timer))`.
 - Emit `"story-added"` in your POST route and push new stories to all connected browsers. Test with two windows.
 - Log `storyEvents.listenerCount("story-added")` every time a browser connects or disconnects. Open 12 tabs (see the warning without `setMaxListeners`), then close them all and check the count goes back to 0.
 
@@ -1569,6 +1797,7 @@ SSE is **one-way** (server to browser) over normal HTTP, and very simple. **WebS
 id: node-12
 title: Environment variables and configuration
 time: 45m
+notes: Why should secrets never be written in your code, and what must you do if one reaches GitHub anyway?
 video: Backend Brewery — Node.js Built-in --env-file & process.loadEnvFile() | https://www.youtube.com/watch?v=8TrmkT90vGE
 docs: Node.js: environment variables | https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs
 docs: process.env | https://nodejs.org/api/process.html#processenv
@@ -1666,12 +1895,30 @@ If you ever push a real key to GitHub, consider it stolen: bots scan GitHub for 
 - **Forgetting values are strings**: `process.env.DEBUG === "true"`, not `=== true`.
 - **Changing `.env` and not restarting.** Env files are read once at startup (even `--watch` may not reload them).
 
-## In short
+### Takeaways
+**Understand**
+- Settings and secrets come from environment variables, not from code, because your code ends up on GitHub.
+- Locally they live in `.env` (git-ignored); in production the hosting platform sets them; `.env.example` documents which ones exist.
+- All values are strings, and a missing required value should stop the app at startup with a clear message.
+- A leaked key is compromised for good: revoke it and create a new one.
 
-- `process.env.NAME` reads environment variables; values are strings.
-- Keep local values in `.env`, load them with `node --env-file=.env`.
-- Read them in one `config.js`, with defaults or a clear failure for required ones.
-- Never commit `.env`; commit `.env.example` instead.
+**Muscle memory (no need to cram: it sticks by using it)**
+- `process.env.NAME`
+- `node --env-file=.env server.js` in your `dev` script
+- `.env` in `.gitignore`
+
+**Look up when needed**
+- `--env-file-if-exists`
+- `process.exit(1)` and exit codes
+- The `dotenv` package (in older projects)
+
+### Check your understanding
+- Why doesn't the `start` script load `.env`?
+  Answer: In production the hosting platform sets real environment variables; `.env` is only for your own machine.
+- `process.env.DEBUG === true` is never true. Why?
+  Answer: Environment variables are always strings: compare with `"true"`.
+- You pushed an API key to GitHub and then deleted the commit. Are you safe?
+  Answer: No. Bots scan GitHub within minutes. Revoke the key and create a new one.
 
 ### Exercises
 - Move your server's port into `.env` and load it with `--env-file`. Change the port and confirm it's used.
@@ -1697,15 +1944,16 @@ Build a small community website where visitors post short, anonymous stories (up
 - The port comes from `.env`; `.env` is git-ignored and `.env.example` is committed
 
 ### Steps
-1. Set up the project and `public/` with a static `index.html` (form + empty list). Write `serveStatic` and route everything that isn't `/api` to it. Check the page, CSS and JS load.
-2. Create `data/stories.json` with 3 example stories. Build `GET /api/stories` and render the list in `index.js` with `fetch` and `textContent`.
-3. Write `parseJSONBody` and `POST /api/stories` with validation. Test it with Thunder Client/Postman before touching the frontend.
-4. Connect the form: prevent the default submit, POST with fetch, clear the form on success, and show the server's error message on failure.
-5. Install `sanitize-html` and sanitise all three fields before saving. Try posting HTML to check.
-6. Create `events.js` with an EventEmitter. Emit `"story-added"` after saving.
-7. Build `GET /api/live` (SSE) with listener cleanup on close. In the browser, use `EventSource` to add new stories to the top of the list. Test with two windows side by side.
-8. Move the port into `.env`, add `.env.example`, and write a README with screenshots. Push to GitHub.
-9. Deploy to Render or Railway and send the link to a friend to test it live.
+1. **Warm-up from memory (10 minutes).** In a blank file, write `parseJSONBody(req)` (byte chunks in, object out, with a size limit) without looking. Then compare with lesson 1.11.
+2. Set up the project and `public/` with a static `index.html` (form + empty list). Write `serveStatic` and route everything that isn't `/api` to it. Check the page, CSS and JS load.
+3. Create `data/stories.json` with 3 example stories. Build `GET /api/stories` and render the list in `index.js` with `fetch` and `textContent`.
+4. Write `parseJSONBody` and `POST /api/stories` with validation. Test it with Thunder Client/Postman before touching the frontend.
+5. Connect the form: prevent the default submit, POST with fetch, clear the form on success, and show the server's error message on failure.
+6. Install `sanitize-html` and sanitise all three fields before saving. Try posting HTML to check.
+7. Create `events.js` with an EventEmitter. Emit `"story-added"` after saving.
+8. Build `GET /api/live` (SSE) with listener cleanup on close. In the browser, use `EventSource` to add new stories to the top of the list. Test with two windows side by side.
+9. Move the port into `.env`, add `.env.example`, and write a README with screenshots. Push to GitHub.
+10. Deploy to Render or Railway and send the link to a friend to test it live.
 
 ### Hints
 - When the page posts a story, it will also receive it through SSE. Either render it only from SSE, or skip duplicates by `id`.

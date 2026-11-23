@@ -176,7 +176,7 @@ function md(src) {
 const ALLOWED_KEYS = {
   module: ["id", "title", "scrimba", "weeks", "fullCourse", "intro"],
   section: ["id", "title", "intro"],
-  lesson: ["id", "title", "time", "video", "docs"],
+  lesson: ["id", "title", "time", "video", "docs", "notes"],
   project: ["id", "title", "summary"],
 };
 
@@ -287,13 +287,28 @@ function buildModule(file) {
       const exPart = parts[exIndex];
       const after = parts.slice(exIndex + 1);
       if (after.length) fail(file, after[0].line, `lesson ${b.meta.id}: "### ${after[0].title}" comes after "### Exercises" and would be lost; move it above the exercises`);
+      // Optional parts before the exercises: "### Takeaways" (a box) and "### Check your understanding" (Q + Answer)
+      const isTake = (p) => /^takeaways$/i.test(p.title || "");
+      const isCheck = (p) => /^check your understanding$/i.test(p.title || "");
+      const before = parts.slice(0, exIndex);
+      const takePart = before.find(isTake);
+      const checkPart = before.find(isCheck);
       const theoryLines = [];
-      for (const p of parts.slice(0, exIndex)) {
+      for (const p of before) {
+        if (isTake(p) || isCheck(p)) continue;
         if (p.title) theoryLines.push({ text: "### " + p.title });
         theoryLines.push(...p.lines);
       }
       const theory = textOf(theoryLines).trim();
-      const exercises = listItems(file, exPart.lines, `lesson ${b.meta.id}: exercises`);
+      const check = checkPart ? listItems(file, checkPart.lines, `lesson ${b.meta.id}: check your understanding`).map((t) => {
+        const [q, a, ...rest] = t.split(/\s+Answer:\s+/);
+        if (!a || rest.length) fail(file, checkPart.line, `lesson ${b.meta.id}: each question needs exactly one indented "Answer: …" line`);
+        return { q: inline(q.trim()), a: inline(a.trim()) };
+      }) : [];
+      // Exercises may carry an indented "Hint: …" line, shown behind a click
+      const exerciseItems = listItems(file, exPart.lines, `lesson ${b.meta.id}: exercises`).map((t) => t.split(/\s+Hint:\s+/));
+      const exercises = exerciseItems.map(([text]) => text);
+      const hints = exerciseItems.map(([, hint]) => (hint ? inline(hint) : ""));
       if (!theory) fail(file, b.line, `lesson ${b.meta.id} has no theory`);
       if (exercises.length < 2) fail(file, b.line, `lesson ${b.meta.id} needs at least 2 exercises`);
       const docs = b.docs.map(({ value, line }) => {
@@ -319,6 +334,10 @@ function buildModule(file) {
       sec.lessons.push({
         id: b.meta.id, title: b.meta.title, time: b.meta.time, videos, docs,
         theory: render(file, b, theory), exercises: exercises.map(inline), words,
+        ...(takePart ? { takeaways: render(file, b, textOf(takePart.lines).trim()) } : {}),
+        ...(check.length ? { check } : {}),
+        ...(hints.some(Boolean) ? { hints } : {}),
+        ...(b.meta.notes ? { notes: b.meta.notes } : {}),
       });
       stats.lessons++;
       continue;

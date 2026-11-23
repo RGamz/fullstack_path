@@ -155,7 +155,32 @@ a { color: var(--accent); }
 .ex-list li { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; }
 .ex-list input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--done); flex-shrink: 0; cursor: pointer; }
 .ex-list label { cursor: pointer; }
-.ex-list input:checked + label { color: var(--muted); text-decoration: line-through; }
+.ex-list .ex-text { flex: 1; min-width: 0; }
+.ex-list input:checked + .ex-text > label { color: var(--muted); text-decoration: line-through; }
+
+/* Hints behind a click, under an exercise */
+.hint { margin-top: 4px; font-size: .88rem; }
+.hint > summary { cursor: pointer; color: var(--accent); font-weight: 600; width: fit-content; }
+.hint > div { margin-top: 4px; padding: 8px 12px; background: var(--surface-2); border-radius: 8px; }
+.hint code { font-family: ui-monospace, Consolas, monospace; font-size: .86em; background: var(--surface); padding: 1px 5px; border-radius: 4px; }
+
+/* Takeaways box: Understand / Muscle memory / Look up */
+.takeaways { margin: 22px 0 0; padding: 4px 18px 14px; background: var(--accent-soft); border-left: 4px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0; max-width: 860px; }
+.takeaways p { margin: 12px 0 4px; }
+.takeaways ul { margin: 0; padding-left: 22px; }
+.takeaways li { margin: 3px 0; }
+.takeaways code, .recall code { font-family: ui-monospace, Consolas, monospace; font-size: .86em; background: var(--surface); padding: 1px 5px; border-radius: 4px; }
+
+/* Check your understanding */
+.recall-tip { margin: 0 0 8px; color: var(--muted); font-size: .88rem; }
+.recall { margin: 0; padding-left: 22px; max-width: 860px; }
+.recall > li { margin: 0 0 12px; }
+.recall-q { font-weight: 550; }
+.recall details > summary { cursor: pointer; color: var(--accent); font-size: .88rem; font-weight: 600; width: fit-content; margin-top: 2px; }
+.recall-a { margin-top: 4px; padding: 8px 12px; background: var(--surface-2); border-radius: 8px; }
+
+/* Specific prompt for the notes box */
+.notes-prompt { margin: 0 0 6px; font-weight: 550; }
 .notes {
   width: 100%; min-height: 70px; resize: vertical; padding: 8px 10px; border-radius: 8px;
   border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font: inherit; font-size: .9rem;
