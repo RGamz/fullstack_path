@@ -306,7 +306,11 @@ function buildModule(file) {
         return { q: inline(q.trim()), a: inline(a.trim()) };
       }) : [];
       // Exercises may carry an indented "Hint: …" line, shown behind a click
-      const exerciseItems = listItems(file, exPart.lines, `lesson ${b.meta.id}: exercises`).map((t) => t.split(/\s+Hint:\s+/));
+      const exerciseItems = listItems(file, exPart.lines, `lesson ${b.meta.id}: exercises`).map((t) => {
+        const parts = t.split(/\s+Hint:\s+/);
+        if (parts.length > 2) fail(file, exPart.line, `lesson ${b.meta.id}: an exercise has more than one "Hint:"`);
+        return parts;
+      });
       const exercises = exerciseItems.map(([text]) => text);
       const hints = exerciseItems.map(([, hint]) => (hint ? inline(hint) : ""));
       if (!theory) fail(file, b.line, `lesson ${b.meta.id} has no theory`);
@@ -337,7 +341,7 @@ function buildModule(file) {
         ...(takePart ? { takeaways: render(file, b, textOf(takePart.lines).trim()) } : {}),
         ...(check.length ? { check } : {}),
         ...(hints.some(Boolean) ? { hints } : {}),
-        ...(b.meta.notes ? { notes: b.meta.notes } : {}),
+        ...(b.meta.notes ? { notes: inline(b.meta.notes) } : {}),
       });
       stats.lessons++;
       continue;

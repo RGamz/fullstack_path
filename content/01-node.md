@@ -714,7 +714,7 @@ curl -i -X POST http://localhost:8000/api/stories -H "Content-Type: application/
 ### Check your understanding
 - Why is a route like `GET /deleteBook?id=3` a bad idea?
   Answer: GET must be safe to repeat: browsers, caches and search engines may call it on their own and delete data by accident. Use DELETE.
-- A logged-in user opens someone else's private diary entry. 401 or 403?
+- A logged-in regular user opens `/admin`, a page only admins may see. 401 or 403?
   Answer: 403 Forbidden: the server knows who they are, but they aren't allowed. 401 means "not logged in".
 - Your frontend's `fetch` gets a 404, but no error is thrown. Why?
   Answer: `fetch` only rejects on network failures. A 404 is a normal response, so check `response.ok`.
@@ -968,7 +968,7 @@ const limit = Number(url.searchParams.get("limit")) || 10; // number, default 10
 - `decodeURIComponent` and its `URIError`
 
 ### Check your understanding
-- `?is_open_to_public=false` still returns closed places. What's wrong?
+- You request `?is_open_to_public=false`, but get the open places instead of the closed ones. What's wrong?
   Answer: The value is the string `"false"`, which is truthy. Compare with `=== "true"` to get a real boolean.
 - Should "books by genre" be a path parameter or a query parameter?
   Answer: A query parameter (`/api/books?genre=fantasy`): it filters a list instead of naming one resource.

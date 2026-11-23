@@ -103,7 +103,7 @@
         <h4 class="label">Exercises</h4>
         <ul class="ex-list">${checklist(l.exercises, (i) => exId(l.id, i), l.hints)}</ul>
         <h4 class="label">My notes</h4>
-        ${l.notes ? `<p class="notes-prompt">✍️ ${esc(l.notes)}</p>` : ""}
+        ${l.notes ? `<p class="notes-prompt">✍️ ${l.notes}</p>` : ""}
         <textarea class="notes" data-notes="${l.id}" placeholder="${l.notes ? "Answer in your own words, without looking back at the lesson…" : "What did you learn? What was confusing? Links to your code…"}">${esc(state.notes[l.id] || "")}</textarea>
         <div class="lesson-footer">
           <button type="button" class="btn mark-done ${isDone(l.id) ? "" : "primary"}" data-mark="${l.id}">${markLabel(isDone(l.id))}</button>
@@ -213,6 +213,12 @@
     for (const a of $$("#module-nav a")) a.classList.toggle("active", a.getAttribute("href") === `#m-${id}`);
     if (location.hash !== `#m-${id}`) history.replaceState(null, "", `#m-${id}`);
     try { localStorage.setItem(MODULE_KEY, id); } catch {}
+    // If no part of this module is open yet, open the first part that still has unfinished work.
+    const mod = MODULES.find((m) => m.id === id);
+    if (!mod.sections.some((s) => openSections.has(s.id))) {
+      const next = mod.sections.find((s) => [...s.lessons, ...s.projects].some((x) => !isDone(x.id))) ?? mod.sections[0];
+      $(`[data-section="${CSS.escape(next.id)}"]`).open = true;
+    }
     if (scroll) $(`#m-${CSS.escape(id)}`).scrollIntoView({ block: "start" });
   }
 
