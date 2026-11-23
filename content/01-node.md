@@ -305,10 +305,10 @@ Anyone who clones your project runs `npm install`, and npm rebuilds `node_module
   Answer: They run `npm install`, which reads `package.json` and `package-lock.json` and installs the same versions.
 
 ### Exercises
-- Create a new folder, run `npm init -y`, add `"type": "module"` and `start`/`dev` scripts. Check both work.
+- Create a new folder with an `index.js` that logs something, run `npm init -y`, then add `"type": "module"` and the `start` and `dev` scripts from the lesson to `package.json`. Check that `npm start` runs `index.js` once, and that `npm run dev` restarts it every time you save a change.
 - Create `math.js` exporting `add`, `subtract`, `multiply` and `divide` (throw an error when dividing by zero). Import them in `index.js` and log some results.
   Hint: Throwing is plain JavaScript: `throw new Error("Cannot divide by zero")` inside `divide`, then call it inside `try { … } catch (err) { console.log(err.message) }` to see the message.
-- Install `dayjs` and print how many days are left until New Year. Then uninstall it and look at what changed in `package.json`.
+- Install `dayjs` and, in `index.js`, print how many days are left until New Year. Then uninstall it (`npm uninstall dayjs`) and look at what disappeared from `dependencies` in `package.json`.
   Hint: Look up `diff` in the dayjs docs. One way: `dayjs().endOf("year").diff(dayjs(), "day")`.
 - Add a `.gitignore`, run `git init` and `git status`, and confirm `node_modules` is not listed.
 
@@ -433,7 +433,7 @@ Other useful helpers: `path.extname("photo.png")` gives `".png"` and `path.basen
   Answer: The relative path is resolved from the terminal's current folder. Build it with `path.join(import.meta.dirname, "tasks.json")` instead.
 
 ### Exercises
-- Create `notes.txt` with a few lines. Write a script that reads it and writes `notes-upper.txt` in capitals.
+- Create `notes.txt` with a few lines of text. Write `upper.js` that reads it and writes the same text in capitals to `notes-upper.txt`. Run `node upper.js` and open `notes-upper.txt` to check.
   Hint: Uppercasing is plain JavaScript: `text.toUpperCase()`.
 - Write a script that counts the lines, words and characters in any file passed as an argument: `node count.js notes.txt`.
   Hint: Counting is plain JavaScript you already know: the file content is one long string. Characters: `text.length`. Lines: `text.split("\n").length`. Words: `text.trim().split(/\s+/).length` (and treat an empty file as 0 words).
@@ -606,7 +606,7 @@ Or put it in your `package.json` scripts as `"dev": "node --watch server.js"` an
   Answer: With `text/plain` the browser shows the tags as text; with `text/html` it renders them as a page.
 
 ### Exercises
-- Build a server on port 8000 that replies with plain text: `Hello from my server`.
+- Create a folder `destinations-api` (you'll keep growing this server through lessons 1.4–1.9 and finish it in this part's project). In it, write `server.js`: a server on port 8000 that replies with the plain text `Hello from my server`. Run it and open `http://localhost:8000`.
 - Change it to reply with an HTML page containing a heading and a paragraph about you. Try it once with `text/plain` and once with `text/html` and compare.
 - Log `req.method` and `req.url` for every request. Visit three different URLs and explain where the `/favicon.ico` request comes from.
 - Return status 418 with the text `I'm a teapot` and check the status in DevTools → Network.
@@ -847,8 +847,8 @@ Before writing code, list your routes in a small table. It's what professional A
   Answer: `req.url` includes the query string. The next lesson parses the URL so you can match only the path.
 
 ### Exercises
-- Create `data.js` exporting an array of at least 8 destinations with the fields shown above.
-- Make `GET /api` return all destinations as JSON with the correct `Content-Type` and status 200.
+- In your `destinations-api` folder, create `data.js` exporting an array of at least 8 destinations, each with the fields shown in "The data module" above (`uuid`, `name`, `location`, `country`, `continent`, `is_open_to_public`, `details`).
+- In `server.js`, import the array and make `GET /api` return all destinations as JSON with the correct `Content-Type` and status 200. Open `http://localhost:8000/api` to check.
 - Return a 404 JSON error for every other URL. Test with the browser and curl.
 - Add `GET /api/count` returning `{ "count": 8 }` (computed, not hard-coded). Think about where it must go relative to the 404 fallback.
   Hint: Count with the array's `.length`, and remember the order rule from this lesson.
@@ -976,7 +976,7 @@ const limit = Number(url.searchParams.get("limit")) || 10; // number, default 10
   Answer: The path still contains `%20` instead of a space, so the comparison with `"new zealand"` fails.
 
 ### Exercises
-- Switch your router to use `url.pathname` and confirm `/api?anything=1` still returns all destinations.
+- In `server.js`, parse the URL with `new URL(...)` and change your route checks to compare `url.pathname` instead of `req.url`. Confirm that `/api?anything=1` still returns all destinations.
 - Add `GET /api/continent/:continent` and `GET /api/country/:country` (case-insensitive). Unknown values should return an empty array, not a 404.
 - Make `GET /api` support `continent`, `country` and `is_open_to_public` query parameters, combined.
 - Add `?limit=3` support. Make sure `limit=abc` doesn't break anything.
@@ -1244,10 +1244,10 @@ Seeing the error and the fix with your own eyes makes it stick.
   Answer: An answer to the OPTIONS preflight request, listing the allowed methods and headers.
 
 ### Exercises
-- Reproduce the CORS error: serve an `index.html` from another port (Live Server) that fetches your API.
+- Reproduce the CORS error: in a separate folder, create an `index.html` with a `<script>` that runs `fetch("http://localhost:8000/api")` and logs the result. Open it with Live Server (another port), keep your API running, and read the red error in DevTools → Console.
   Hint: VS Code's Live Server extension serves a folder on port 5500, which is a different origin from your API on port 8000. Any other static server works too, for example `npx serve`.
 - Add `Access-Control-Allow-Origin: *` in `sendJSONResponse` and confirm the page now shows the data.
-- Add OPTIONS handling, then send a POST with a JSON body from the page and find the preflight request in DevTools → Network.
+- Add OPTIONS handling, then send a POST with a JSON body from the page and find the preflight (`OPTIONS`) request in DevTools → Network. The POST itself will get a 404, because your API has no POST route yet. That's expected: you're only looking at the preflight request that comes before it.
 - Change the allowed origin to an exact URL that is *not* your page's origin and observe the error message change.
 
 ---project
@@ -1270,7 +1270,7 @@ A travel website needs a backend that returns destinations as JSON, with filteri
 
 ### Steps
 1. **Warm-up from memory (10 minutes).** In a blank file, write a server that answers `GET /api` with a JSON array and every other URL with a 404 JSON error, without looking. Then compare with lessons 1.4–1.6.
-2. Create the project (`npm init -y`, `"type": "module"`, a `dev` script with `node --watch`). Write `data/data.js` with real places you'd like to visit. Generate uuids with `crypto.randomUUID()` in the REPL and paste them in.
+2. Continue in your `destinations-api` folder from lessons 1.4–1.9: you've already built much of this project there, so treat the steps below as a checklist and add only what's missing. Make sure it has a `package.json` with `"type": "module"` and a `dev` script with `node --watch`. Move your data to `data/data.js` with at least 12 real places you'd like to visit. Generate uuids with `crypto.randomUUID()` in the REPL and paste them in.
 3. Create `server.js` that returns the whole array for `GET /api` and a 404 JSON for everything else. Test both with the browser and curl.
 4. Parse URLs with `new URL(...)` and add the `/api/continent/:continent` and `/api/country/:country` routes.
 5. Add query-parameter filtering to `/api`, converting `is_open_to_public` to a boolean.
@@ -1472,7 +1472,7 @@ Why `PUBLIC_DIR + path.sep` and not just `PUBLIC_DIR`? If your folder is `C:\app
   Answer: Without the separator, a sibling folder like `public-secret` also "starts with" `public`.
 
 ### Exercises
-- Create `public/index.html`, `styles.css` and `index.js` (logging "loaded"), and serve them with `serveStatic`. Check all three arrive with the right `Content-Type` in DevTools.
+- Start a new folder `story-board` for this part's project (the Live Story Board). In it, create `public/index.html`, `public/styles.css` and `public/index.js` (logging "loaded"), and a `server.js` that serves them with `serveStatic`. Open `http://localhost:8000` and check in DevTools → Network that all three arrive with the right `Content-Type`.
 - Add an image and display it on the page.
 - Create a custom `public/404.html` and send it (with status 404) for missing files.
 - Temporarily remove the path-traversal check and run `curl "http://localhost:8000/..%2Fpackage.json"`: your server leaks `package.json`. Put the check back and run it again to get a 403.
@@ -1787,8 +1787,8 @@ SSE is **one-way** (server to browser) over normal HTTP, and very simple. **WebS
   Answer: When the browser also needs to send a stream of messages to the server (two-way), like games or chats with typing indicators.
 
 ### Exercises
-- Create an EventEmitter, register two listeners for `"greet"`, emit it with a name and see both run.
-- Build `GET /api/time` that streams the current time every 2 seconds via SSE (`setInterval`, cleared on close). Show it live on a page.
+- In a small separate script, `events-test.js`, create an EventEmitter, register two listeners for `"greet"`, emit it with a name, and run `node events-test.js` to see both listeners run.
+- In your `story-board` server, build `GET /api/time` that streams the current time every 2 seconds via SSE. Show it live: add a `<p id="time">` to `public/index.html` and update it from `new EventSource("/api/time")`.
   Hint: Start a timer with `const timer = setInterval(() => res.write(…), 2000)` and stop it with `res.on("close", () => clearInterval(timer))`.
 - Emit `"story-added"` in your POST route and push new stories to all connected browsers. Test with two windows.
 - Log `storyEvents.listenerCount("story-added")` every time a browser connects or disconnects. Open 12 tabs (see the warning without `setMaxListeners`), then close them all and check the count goes back to 0.
@@ -1924,7 +1924,7 @@ If you ever push a real key to GitHub, consider it stolen: bots scan GitHub for 
 - Move your server's port into `.env` and load it with `--env-file`. Change the port and confirm it's used.
 - Create `.gitignore` (with `node_modules` and `.env`) and `.env.example`. Run `git status` to check `.env` isn't tracked.
 - Write `config.js` with a `required()` helper and make the server exit with a helpful message when `ADMIN_PASSWORD` is missing.
-- Add a `GET /api/info` route returning `SITE_NAME` from the config (never return secrets!).
+- Add `SITE_NAME` to `.env` and a `siteName` value (with a default) to `config.js`, then add a `GET /api/info` route that returns `{ siteName }`. Never return secrets from an API!
 
 ---project
 id: node-p2
@@ -1945,7 +1945,7 @@ Build a small community website where visitors post short, anonymous stories (up
 
 ### Steps
 1. **Warm-up from memory (10 minutes).** In a blank file, write `parseJSONBody(req)` (byte chunks in, object out, with a size limit) without looking. Then compare with lesson 1.11.
-2. Set up the project and `public/` with a static `index.html` (form + empty list). Write `serveStatic` and route everything that isn't `/api` to it. Check the page, CSS and JS load.
+2. Continue in your `story-board` folder from lessons 1.10–1.13: much of this project already exists there, so treat the steps below as a checklist and add only what's missing. Make sure `public/` has a static `index.html` (form + empty list). Write `serveStatic` and route everything that isn't `/api` to it. Check the page, CSS and JS load.
 3. Create `data/stories.json` with 3 example stories. Build `GET /api/stories` and render the list in `index.js` with `fetch` and `textContent`.
 4. Write `parseJSONBody` and `POST /api/stories` with validation. Test it with Thunder Client/Postman before touching the frontend.
 5. Connect the form: prevent the default submit, POST with fetch, clear the form on success, and show the server's error message on failure.
