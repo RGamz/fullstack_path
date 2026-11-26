@@ -498,7 +498,7 @@ time: 1h
 notes: Describe step by step what happens between typing localhost:8000 in the browser and seeing your text on the page.
 video: Programming with Mosh — HTTP Module in Node.js | https://www.youtube.com/watch?v=VLXAzzRjQws
 docs: http module docs | https://nodejs.org/api/http.html
-docs: Anatomy of an HTTP transaction | https://nodejs.org/en/learn/http/anatomy-of-an-http-transaction
+docs: Anatomy of an HTTP transaction | https://nodejs.org/learn/http/anatomy-of-an-http-transaction
 ---
 A **server** is just a program that waits for requests and sends back responses. Every website and API you've ever used is one. Node can create a server in about five lines with its built-in `http` module, and building one by hand (before using Express) shows you exactly what happens on every request.
 
@@ -528,7 +528,7 @@ Run `node server.js` and open `http://localhost:8000` in your browser. You'll se
 - `res.end(body)` sends the response and finishes it.
 - `server.listen(PORT)` starts listening. The program keeps running (it doesn't exit like your scripts did) until you stop it with `Ctrl + C`.
 
-`localhost` means "this computer" and `8000` is the **port**: a number that identifies which program on your computer should receive the request. Use ports like 3000, 5000 or 8000 for development.
+`localhost` means "this computer" and `8000` is the **port**: a number that identifies which program on your computer should receive the request. Use ports like 3000, 8000 or 8080 for development (port 5000 is often occupied on macOS by AirPlay Receiver).
 
 ## Looking at the request
 
@@ -561,7 +561,7 @@ res.end("<h1>Welcome</h1><p>This HTML came from Node.</p>");
 
 With `text/plain` the browser would show the tags as text; with `text/html` it renders them. For APIs you'll use `application/json` in a couple of lessons.
 
-You can also set the status and headers in one call: `res.writeHead(200, { "Content-Type": "text/html" })`.
+You can also set the status and headers in one call: `res.writeHead(200, { "Content-Type": "text/html" })`. Because `writeHead` sends the headers immediately, always call `setHeader` and `statusCode` before `writeHead` or `end`, never after.
 
 ## Restarting automatically
 
@@ -577,7 +577,8 @@ Or put it in your `package.json` scripts as `"dev": "node --watch server.js"` an
 
 - **Forgetting `res.end()`.** The browser spins forever because the response never finishes. Every path through your code must end the response exactly once.
 - **`EADDRINUSE: address already in use`.** Another program (often your server running in another terminal) already uses that port. Stop the other one or choose a different port.
-- **Calling `res.end()` twice.** You'll get `ERR_STREAM_WRITE_AFTER_END`. Use `return res.end(...)` so the function stops after responding.
+- **Calling `res.end()` twice (or calling `setHeader` after `res.end()`).** You'll get `ERR_STREAM_WRITE_AFTER_END` or `ERR_HTTP_HEADERS_SENT`. Use `return res.end(...)` so the function stops after responding.
+- **Visiting `https://localhost:8000` instead of `http://`.** Your Node server speaks plain HTTP, not HTTPS, so `https://` triggers a browser SSL/connection error.
 - **Editing code but seeing old output**: you forgot to restart (use `--watch`).
 
 ### Takeaways
@@ -606,10 +607,10 @@ Or put it in your `package.json` scripts as `"dev": "node --watch server.js"` an
   Answer: With `text/plain` the browser shows the tags as text; with `text/html` it renders them as a page.
 
 ### Exercises
-- Create a folder `destinations-api` (you'll keep growing this server through lessons 1.4–1.9 and finish it in this part's project). In it, write `server.js`: a server on port 8000 that replies with the plain text `Hello from my server`. Run it and open `http://localhost:8000`.
+- Create a folder `destinations-api` (you'll keep growing this server through lessons 1.4–1.9 and finish it in this part's project). Inside it, run `npm init -y`, add `"type": "module"` and `"dev": "node --watch server.js"` to `package.json`, and write `server.js`: a server on port 8000 that replies with the plain text `Hello from my server`. Run it with `npm run dev` and open `http://localhost:8000`.
 - Change it to reply with an HTML page containing a heading and a paragraph about you. Try it once with `text/plain` and once with `text/html` and compare.
 - Log `req.method` and `req.url` for every request. Visit three different URLs and explain where the `/favicon.ico` request comes from.
-- Return status 418 with the text `I'm a teapot` and check the status in DevTools → Network.
+- Temporarily return status 418 with the text `I'm a teapot`. Open DevTools → Network first, then reload `http://localhost:8000` and check the status (restore your normal response afterwards).
 
 ---lesson
 id: node-4
@@ -617,9 +618,9 @@ title: HTTP and the request/response cycle
 time: 1h
 notes: Pick one request from DevTools on a site you use and explain each part: method, path, one header, the status and what the body contained.
 video: Traversy Media — HTTP Crash Course & Exploration | https://www.youtube.com/watch?v=iYM2zFP3Zn0
-docs: MDN: An overview of HTTP | https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview
-docs: MDN: HTTP status codes | https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
-docs: MDN: HTTP request methods | https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
+docs: MDN: An overview of HTTP | https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview
+docs: MDN: HTTP status codes | https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
+docs: MDN: HTTP request methods | https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods
 ---
 Before building an API, you need to know the language your server and its clients speak: **HTTP**. Every time a browser loads a page or your frontend calls `fetch`, the same cycle happens: the client sends a **request**, and the server answers with a **response**. Once you can read both, debugging becomes much easier.
 
@@ -679,14 +680,21 @@ You already have a great HTTP inspector: your browser's DevTools.
 1. Open any website, press `F12`, go to the **Network** tab and reload.
 2. Click a request. **Headers** shows the method, URL, status and all headers. **Response** shows the body.
 
-To send requests yourself (including POST with a body), use **curl** in the terminal or a GUI tool like **Thunder Client** (a VS Code extension) or **Postman**:
+To send requests yourself (including POST with a body), use **curl** in the terminal, VS Code's **REST Client** extension (`requests.http`), **Bruno**, **Postman** or **Thunder Client**:
 
 ```bash
 curl -i http://localhost:8000
 curl -i -X POST http://localhost:8000/api/stories -H "Content-Type: application/json" -d "{\"title\":\"Hi\"}"
 ```
 
-`-i` includes the response headers in the output, `-X` sets the method, `-H` adds a header and `-d` sends a body. (The escaped quotes are needed in Windows terminals.)
+`-i` includes the response headers in the output, `-X` sets the method, `-H` adds a header and `-d` sends a body. (The escaped quotes are needed in Windows `cmd`.)
+
+> **Tip:** In Windows PowerShell 5.1, `curl` is an alias for `Invoke-WebRequest`, so `curl -i` will fail. Type `curl.exe` instead to get the real curl (or use Git Bash / VS Code's REST Client). For a JSON body, also wrap it in **single** quotes: with double quotes, PowerShell breaks the body apart before curl sees it.
+
+```powershell
+curl.exe -i http://localhost:8000
+curl.exe -i -X POST http://localhost:8000/api/stories -H "Content-Type: application/json" -d '{\"title\":\"Hi\"}'
+```
 
 ## Common mistakes
 
@@ -704,7 +712,7 @@ curl -i -X POST http://localhost:8000/api/stories -H "Content-Type: application/
 
 **Muscle memory (no need to cram: it sticks by using it)**
 - The common codes: 200, 201, 204, 400, 401, 403, 404, 500
-- `curl -i URL` to see a response with its headers
+- `curl -i URL` (or `curl.exe -i URL` in Windows PowerShell) to see a response with its headers
 
 **Look up when needed**
 - Rarer status codes (301 vs 302, 409, 429…)
@@ -722,9 +730,9 @@ curl -i -X POST http://localhost:8000/api/stories -H "Content-Type: application/
 ### Exercises
 - Open a website you use daily, open DevTools → Network, and write down three requests with their method, status code and `Content-Type`.
   Hint: In DevTools → Network, click a request: the Headers tab shows the method, status and `Content-Type`.
-- Run `curl -i http://localhost:8000` against your server from the last lesson and identify the status line, the headers and the body.
-- Install Thunder Client or Postman and send a POST request to your server. What status does it return, and why does the server not care that it was a POST?
-- For each situation, pick the status code: a user submits a form with an invalid email; a book was created; a page doesn't exist; the database crashed; a user opens someone else's private diary entry.
+- Run `curl -i http://localhost:8000` (or `curl.exe -i http://localhost:8000` in PowerShell) against your server from the last lesson and identify the status line, the headers and the body.
+- Use VS Code's REST Client (`requests.http`), Bruno, Postman or Thunder Client to send a POST request to your server. What status does it return, and why does the server not care that it was a POST?
+- For each situation, pick the status code: a user submits a form with an invalid email; a book was created; a page doesn't exist; the database crashed; a logged-in user opens someone else's private diary entry.
 
 ---lesson
 id: node-5
@@ -732,8 +740,8 @@ title: Routing and serving JSON
 time: 1.5h
 notes: From memory, write the route table of your API (method, path, what it returns), then compare it with your code.
 video: Traversy Media — Vanilla Node.js REST API (No Framework) | https://www.youtube.com/watch?v=_1xa8Bsho6A
-docs: MDN: Working with JSON | https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/JSON
-docs: Anatomy of an HTTP transaction | https://nodejs.org/en/learn/http/anatomy-of-an-http-transaction
+docs: MDN: Working with JSON | https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/JSON
+docs: Anatomy of an HTTP transaction | https://nodejs.org/learn/http/anatomy-of-an-http-transaction
 ---
 Right now your server answers every URL with the same thing. A real API returns different data depending on what was asked: `/api/books` gives you books, `/api/authors` gives you authors. Deciding which code runs for which request is called **routing**. And because APIs are consumed by code (your frontend), they answer in **JSON** rather than HTML.
 
@@ -816,11 +824,13 @@ Before writing code, list your routes in a small table. It's what professional A
 | GET | `/api/continent/:continent` | destinations on that continent |
 | anything else | | 404 + JSON error |
 
+Names starting with a colon like `:continent` are **placeholders** in documentation, not literal text in the URL: a real request looks like `/api/continent/europe`.
+
 ## Common mistakes
 
 - **Sending an object without stringifying it.** `res.end(destinations)` throws `ERR_INVALID_ARG_TYPE`.
-- **Forgetting `return`** after answering a route, so the 404 code also runs and you get "write after end".
-- **Exact matches break with a trailing slash or query string.** `req.url === "/api"` is false for `/api/` and `/api?x=1`. The next lesson parses URLs properly.
+- **Forgetting `return`** after answering a route, so the 404 code also runs and calls `res.setHeader` / `res.end` a second time, throwing `ERR_HTTP_HEADERS_SENT` ("Cannot set headers after they are sent to the client") or `ERR_STREAM_WRITE_AFTER_END`.
+- **Exact matches break with a trailing slash or query string.** `req.url === "/api"` is false for `/api/` and `/api?x=1`. The next lesson parses URLs and splits path segments properly.
 - **Inconsistent error formats.** Pick one shape (e.g. `{ error, message }`) and use it everywhere.
 
 ### Takeaways
@@ -847,7 +857,7 @@ Before writing code, list your routes in a small table. It's what professional A
   Answer: `req.url` includes the query string. The next lesson parses the URL so you can match only the path.
 
 ### Exercises
-- In your `destinations-api` folder, create `data.js` exporting an array of at least 8 destinations, each with the fields shown in "The data module" above (`uuid`, `name`, `location`, `country`, `continent`, `is_open_to_public`, `details`).
+- In your `destinations-api` folder, create `data.js` exporting an array of at least 8 destinations, each with the fields shown in "The data module" above (`uuid`, `name`, `location`, `country`, `continent`, `is_open_to_public`, `details`). Generate each `uuid` with `crypto.randomUUID()` in the Node REPL (run `node` and call `crypto.randomUUID()`).
 - In `server.js`, import the array and make `GET /api` return all destinations as JSON with the correct `Content-Type` and status 200. Open `http://localhost:8000/api` to check.
 - Return a 404 JSON error for every other URL. Test with the browser and curl.
 - Add `GET /api/count` returning `{ "count": 8 }` (computed, not hard-coded). Think about where it must go relative to the 404 fallback.
@@ -886,12 +896,27 @@ console.log(url.searchParams); // URLSearchParams { 'country' => 'italy' }
 
 ## Reading path parameters
 
-Split the path into segments:
+Split the path into non-empty segments and check the exact shape:
 
 ```js
-// GET /api/continent/europe
-if (url.pathname.startsWith("/api/continent/") && req.method === "GET") {
-  const continent = decodeURIComponent(url.pathname.split("/").pop()); // "europe"
+const segments = url.pathname.split("/").filter(Boolean);
+// "/api"                   → ["api"]
+// "/api/"                  → ["api"]
+// "/api/continent/europe"  → ["api", "continent", "europe"]
+// "/api/continent/europe/" → ["api", "continent", "europe"]
+
+if (segments.length === 1 && segments[0] === "api" && req.method === "GET") {
+  // ...handle GET /api (works with or without a trailing slash)
+}
+
+// GET /api/continent/:continent
+if (
+  segments.length === 3 &&
+  segments[0] === "api" &&
+  segments[1] === "continent" &&
+  req.method === "GET"
+) {
+  const continent = decodeURIComponent(segments[2]); // "europe"
   const result = destinations.filter(
     (d) => d.continent.toLowerCase() === continent.toLowerCase()
   );
@@ -900,9 +925,11 @@ if (url.pathname.startsWith("/api/continent/") && req.method === "GET") {
 }
 ```
 
-`"/api/continent/europe".split("/")` gives `["", "api", "continent", "europe"]`, and `.pop()` takes the last piece. Comparing in lowercase makes `/api/continent/Europe` and `/api/continent/europe` both work.
+Using `.split("/").filter(Boolean)` instead of `startsWith("/api/continent/")` + `.pop()` avoids three bugs at once: trailing slashes (`/api/` or `/api/continent/europe/`) still work, empty `/api/continent/` falls through to `404`, and extra segments like `/api/continent/europe/extra` don't match by accident. Comparing in lowercase makes both `/api/continent/Europe` and `/api/continent/europe` work.
 
-**`decodeURIComponent` matters for names with spaces.** Browsers send `/api/continent/north america` as `/api/continent/north%20america`, and `url.pathname` keeps the `%20`. Decoding turns it back into `"north america"`. (A broken sequence like `%E0%A4%A` makes `decodeURIComponent` throw a `URIError`; you'll learn to catch unexpected errors in the next lesson.)
+Notice that an unknown continent like `/api/continent/atlantis` returns `200` with `[]`, not a `404`. Filtering a list naturally produces an empty list when nothing matches; you only return `404` when looking up a **single** item by ID (which you'll add for `/api/:uuid` in this part's project).
+
+**`decodeURIComponent` matters for names with spaces.** Browsers send `/api/continent/north america` as `/api/continent/north%20america`, and `url.pathname` keeps the `%20`. Decoding turns it back into `"north america"`. (A broken sequence like `%E0%A4%A` makes `decodeURIComponent` throw a `URIError`, which should answer `400 Bad Request`; you'll add error handling for that in the next lesson.)
 
 ## Reading query parameters
 
@@ -915,7 +942,10 @@ const queryObj = Object.fromEntries(url.searchParams);
 Then filter by every parameter that's present:
 
 ```js
-function filterByQuery(data, { continent, country, is_open_to_public }) {
+export function getDataByQueryParams(
+  data,
+  { continent, country, is_open_to_public } = {}
+) {
   let result = data;
   if (continent) {
     result = result.filter((d) => d.continent.toLowerCase() === continent.toLowerCase());
@@ -923,45 +953,47 @@ function filterByQuery(data, { continent, country, is_open_to_public }) {
   if (country) {
     result = result.filter((d) => d.country.toLowerCase() === country.toLowerCase());
   }
-  if (is_open_to_public) {
-    const wanted = is_open_to_public === "true";
+  if (is_open_to_public !== undefined && is_open_to_public !== "") {
+    const wanted = String(is_open_to_public).toLowerCase() === "true";
     result = result.filter((d) => d.is_open_to_public === wanted);
   }
   return result;
 }
 ```
 
-Each `if` narrows the list further, so `?continent=europe&is_open_to_public=true` applies both filters. If no query parameters are given, the full list comes back.
+Each `if` narrows the list further, so `?continent=europe&is_open_to_public=true` applies both filters. If no query parameters are given (or an empty object `{}` is passed), the full list comes back. Checking `is_open_to_public !== undefined && is_open_to_public !== ""` with `.toLowerCase() === "true"` handles `?is_open_to_public=false`, uppercase `TRUE`, and empty `?is_open_to_public=`. (An unrecognised value like `?is_open_to_public=yes` currently resolves to `false`; in the Express module you'll reject invalid query values with a schema validator.)
 
 ## Query values are always strings
 
 This is the number one bug with query parameters. `?is_open_to_public=false` gives you the **string** `"false"`, and the string `"false"` is truthy! Convert explicitly:
 
 ```js
-const wanted = is_open_to_public === "true";  // boolean
-const limit = Number(url.searchParams.get("limit")) || 10; // number, default 10
+const wanted = String(is_open_to_public).toLowerCase() === "true"; // boolean
+const rawLimit = Number(url.searchParams.get("limit"));
+const limit = Number.isInteger(rawLimit) && rawLimit > 0 ? rawLimit : 10; // default 10
 ```
 
-`searchParams.get(name)` returns a single value (or `null` if it's missing).
+`searchParams.get(name)` returns a single value (or `null` if it's missing). Checking `Number.isInteger(rawLimit) && rawLimit > 0` protects against `?limit=abc`, `?limit=0` and negative numbers like `?limit=-2` (which `Number(...) || 10` lets through, causing `array.slice(0, -2)` to drop items from the end).
 
 ## Common mistakes
 
 - **Matching `req.url` instead of `url.pathname`**, so routes break as soon as a query string is added.
-- **Comparing `"true"` with `true`.** Always convert query values.
+- **Using `startsWith` + `.pop()` for path routes**, which breaks on trailing slashes (`/api/continent/europe/`) and extra segments (`/api/continent/europe/foo`). Split with `.split("/").filter(Boolean)` and check exact segment length.
+- **Comparing `"true"` with `true`** (or forgetting case-insensitivity on `"TRUE"`). Always convert query values.
 - **Case-sensitive comparisons**: users type `Italy`, `italy` and `ITALY`.
 - **Forgetting URL encoding.** A path like `/api/country/new%20zealand` contains `%20`; decode path segments with `decodeURIComponent`. (`searchParams` already decodes query values for you.)
 
 ### Takeaways
 **Understand**
 - Path parameters identify which resource (`/api/books/42`); query parameters filter or sort a list (`?genre=fantasy`).
-- Parse URLs with the `URL` class instead of splitting strings by hand.
-- Query values are always strings: convert `"true"` and `"5"` yourself.
+- Parse URLs with the `URL` class instead of splitting strings by hand, and split `url.pathname` into clean segments to avoid trailing-slash bugs.
+- Query values are always strings: convert `"true"` and `"5"` yourself and guard against invalid or negative numbers.
 - Path segments keep their URL encoding (`%20`), so decode them; `searchParams` decodes for you.
 
 **Muscle memory (no need to cram: it sticks by using it)**
 - ``new URL(req.url, `http://${req.headers.host}`)``
 - `url.pathname`, `url.searchParams.get("limit")`, `Object.fromEntries(url.searchParams)`
-- `url.pathname.split("/").pop()`
+- `url.pathname.split("/").filter(Boolean)`
 
 **Look up when needed**
 - Other `URLSearchParams` methods (`getAll`, `has`, …)
@@ -969,17 +1001,17 @@ const limit = Number(url.searchParams.get("limit")) || 10; // number, default 10
 
 ### Check your understanding
 - You request `?is_open_to_public=false`, but get the open places instead of the closed ones. What's wrong?
-  Answer: The value is the string `"false"`, which is truthy. Compare with `=== "true"` to get a real boolean.
+  Answer: The value is the string `"false"`, which is truthy. Compare with `.toLowerCase() === "true"` to get a real boolean.
 - Should "books by genre" be a path parameter or a query parameter?
   Answer: A query parameter (`/api/books?genre=fantasy`): it filters a list instead of naming one resource.
 - Why does `/api/country/new%20zealand` find nothing without `decodeURIComponent`?
   Answer: The path still contains `%20` instead of a space, so the comparison with `"new zealand"` fails.
 
 ### Exercises
-- In `server.js`, parse the URL with `new URL(...)` and change your route checks to compare `url.pathname` instead of `req.url`. Confirm that `/api?anything=1` still returns all destinations.
-- Add `GET /api/continent/:continent` and `GET /api/country/:country` (case-insensitive). Unknown values should return an empty array, not a 404.
-- Make `GET /api` support `continent`, `country` and `is_open_to_public` query parameters, combined.
-- Add `?limit=3` support. Make sure `limit=abc` doesn't break anything.
+- In `server.js`, parse the URL with `new URL(...)` and switch your route checks to `url.pathname.split("/").filter(Boolean)`. Confirm that `/api?anything=1` and `/api/` (with a trailing slash) both return all destinations.
+- Add `GET /api/continent/:continent` and `GET /api/country/:country` (case-insensitive). Unknown values should return an empty array, not a 404, while extra segments like `/api/continent/europe/extra` should return 404.
+- Write `getDataByQueryParams` and make `GET /api` support `continent`, `country` and `is_open_to_public` query parameters, combined (all case-insensitive).
+- Add `?limit=3` support. Make sure `limit=abc`, `limit=0` and `limit=-2` don't break anything or slice from the end.
   Hint: `Number("abc")` is `NaN`. Only apply the limit when `Number.isInteger(limit) && limit > 0`, then use `array.slice(0, limit)`.
 
 ---lesson
@@ -1017,7 +1049,7 @@ Every route now ends with one readable line: `return sendJSONResponse(res, 200, 
 
 ## A data-access layer
 
-Instead of importing the array directly into the server, wrap it in an `async` function:
+Move your `data.js` into a `data/` folder (`data/data.js`), then wrap data access in an `async` function:
 
 ```js
 // database/db.js
@@ -1032,7 +1064,7 @@ Why `async` when the data is already in memory? Because when you replace the arr
 
 ## Filters as pure functions
 
-Move filtering logic into its own files:
+Move both filtering helpers into their own files under `utils/`:
 
 ```js
 // utils/getDataByPathParams.js
@@ -1043,7 +1075,7 @@ export function getDataByPathParams(data, locationType, value) {
 }
 ```
 
-This is a **pure function**: it only uses its inputs and returns a result, without touching `req`, `res` or files. Pure functions are the easiest code to reuse and to test.
+And move `getDataByQueryParams` from the last lesson into `utils/getDataByQueryParams.js` (keeping its export and no imports, so it stays standalone and easy to unit-test later). Both are **pure functions**: they only use their inputs and return a result, without touching `req`, `res` or files. Pure functions are the easiest code to reuse and to test.
 
 ## The result: a thin server
 
@@ -1058,17 +1090,24 @@ import { getDataByQueryParams } from "./utils/getDataByQueryParams.js";
 const PORT = 8000;
 
 async function handleRequest(req, res) {
-  const destinations = await getDataFromDB();
   const url = new URL(req.url, `http://${req.headers.host}`);
+  const segments = url.pathname.split("/").filter(Boolean);
 
-  if (url.pathname === "/api" && req.method === "GET") {
+  if (segments.length === 1 && segments[0] === "api" && req.method === "GET") {
+    const destinations = await getDataFromDB();
     const queryObj = Object.fromEntries(url.searchParams);
     return sendJSONResponse(res, 200, getDataByQueryParams(destinations, queryObj));
   }
 
-  if (url.pathname.startsWith("/api/continent/") && req.method === "GET") {
-    const continent = decodeURIComponent(url.pathname.split("/").pop());
-    return sendJSONResponse(res, 200, getDataByPathParams(destinations, "continent", continent));
+  if (
+    segments.length === 3 &&
+    segments[0] === "api" &&
+    (segments[1] === "continent" || segments[1] === "country") &&
+    req.method === "GET"
+  ) {
+    const destinations = await getDataFromDB();
+    const value = decodeURIComponent(segments[2]);
+    return sendJSONResponse(res, 200, getDataByPathParams(destinations, segments[1], value));
   }
 
   return sendJSONResponse(res, 404, { error: "not found", message: "The requested route does not exist" });
@@ -1078,6 +1117,9 @@ const server = http.createServer(async (req, res) => {
   try {
     await handleRequest(req, res);
   } catch (err) {
+    if (err instanceof URIError && !res.headersSent) {
+      return sendJSONResponse(res, 400, { error: "bad request", message: "Malformed URL" });
+    }
     console.error(err);
     if (!res.headersSent) {
       sendJSONResponse(res, 500, { error: "server error", message: "Something went wrong" });
@@ -1090,11 +1132,11 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 ```
 
-Read `handleRequest` top to bottom: it now *describes* the API instead of implementing every detail.
+Read `handleRequest` top to bottom: it now *describes* the API instead of implementing every detail, and `getDataFromDB()` only runs on routes that actually need data (not on 404s or `/favicon.ico`). Notice too how `getDataByPathParams(destinations, segments[1], value)` handles both `"continent"` and `"country"` with one route check.
 
 ## Catching unexpected errors
 
-Notice the `try/catch` around `handleRequest`. The `http` module doesn't know your callback is `async`, so if anything inside it throws (a bug, a broken data file, a malformed `%` sequence in `decodeURIComponent`), the rejected promise isn't handled by anyone. Node then either **crashes the whole server** ("unhandled promise rejection") or leaves the request hanging. The wrapper turns any unexpected error into a `500` response and logs the details for you. `res.headersSent` checks whether a response had already started, because you can't send a new status code after that. (Express 5, which you'll learn next, does this for you automatically.)
+Notice the `try/catch` around `handleRequest`. The `http` module doesn't know your callback is `async`, so if anything inside it throws (a bug, a broken data file, a malformed `%` sequence in `decodeURIComponent`), the rejected promise isn't handled by anyone. Node then either **crashes the whole server** ("unhandled promise rejection") or leaves the request hanging. Here, a malformed URL (`URIError`) becomes a `400` because it's the client's mistake, while any unexpected error becomes a `500` response and logs the details for you. `res.headersSent` checks whether a response had already started, because you can't send a new status code after that. (Express 5, which you'll learn next, does async error catching for you automatically.)
 
 The folder structure:
 
@@ -1116,7 +1158,7 @@ Refactoring means changing the structure **without** changing the behaviour. Do 
 
 ## Common mistakes
 
-- **Wrong relative import paths** after moving files. From `utils/` the data file is `../data/data.js`. Read the error message: it prints the path it tried.
+- **Wrong relative import paths** after moving files. From `database/`, the data file is `../data/data.js` (keep `utils/` pure: pass data in as an argument instead of importing it there). Read the error message: it prints the path it tried.
 - **Forgetting `await`** on `getDataFromDB()`, so you filter a Promise and get `data.filter is not a function`.
 - **No `try/catch` around an `async` request handler.** One unexpected error then crashes the server for every user.
 - **Over-splitting**: one file per three-line function isn't always better. Group by responsibility.
@@ -1127,7 +1169,7 @@ Refactoring means changing the structure **without** changing the behaviour. Do 
 - Repeated code is a signal to extract a helper (like `sendJSONResponse`).
 - A data-access layer hides where data comes from; making it `async` now means callers won't change when a database arrives.
 - Pure functions (arguments in, result out, no `req`/`res`) are the easiest to reuse and test.
-- The `http` module doesn't catch errors from `async` handlers: wrap your handler in `try/catch` and answer 500.
+- The `http` module doesn't catch errors from `async` handlers: wrap your handler in `try/catch` and answer 500 (or 400 for malformed URLs).
 - Refactor in small steps: change the structure, re-test, commit.
 
 **Muscle memory (no need to cram: it sticks by using it)**
@@ -1148,8 +1190,8 @@ Refactoring means changing the structure **without** changing the behaviour. Do 
 
 ### Exercises
 - Write `utils/sendJSONResponse.js` and replace every repeated response block with it.
-- Move data access into `database/db.js` with an async `getDataFromDB()`.
-- Move filtering into `utils/getDataByPathParams.js` and `utils/getDataByQueryParams.js`. After each move, re-test all routes.
+- Move `data.js` into `data/data.js`, then move data access into `database/db.js` with an async `getDataFromDB()` and update `server.js`.
+- Move filtering into `utils/getDataByPathParams.js` and `utils/getDataByQueryParams.js` (keep `?limit=` working in `server.js` or as a helper). After each move, re-test all routes.
 - Compare the old and new `server.js`: write down how many lines each has and which one you'd rather debug in six months.
 
 ---lesson
@@ -1158,7 +1200,7 @@ title: CORS
 time: 45m
 notes: Explain CORS to someone who just saw the red error: whose rule is it, who has to fix it, and why does Postman not complain?
 video: Fireship — CORS in 100 Seconds | https://www.youtube.com/watch?v=4KHiSt0oLJ0
-docs: MDN: CORS | https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+docs: MDN: CORS | https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS
 ---
 Sooner or later you'll see this red error in the browser console: *"has been blocked by CORS policy"*. It confuses almost everyone the first time, because the same request works perfectly in Postman or curl. This lesson explains why, and how to fix it on the server, which is the only place it can be fixed.
 
@@ -1190,20 +1232,20 @@ CORS is enforced **by the browser**, to protect the browser's user. curl, Postma
 
 ## Preflight requests
 
-For "simple" requests (a GET with no special headers), the browser sends the request and then checks the response headers. For anything else, such as a POST with `Content-Type: application/json`, a PUT or a DELETE, it first sends an automatic **preflight** request with the `OPTIONS` method, asking "may I?". Your server must answer it:
+For "simple" requests (a GET with no special headers), the browser sends the request and then checks the response headers. For anything else, such as a POST with `Content-Type: application/json`, a PUT, a PATCH or a DELETE, it first sends an automatic **preflight** request with the `OPTIONS` method, asking "may I?". Your server must answer it:
 
 ```js
 if (req.method === "OPTIONS") {
   res.writeHead(204, {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE",
     "Access-Control-Allow-Headers": "Content-Type",
   });
   return res.end();
 }
 ```
 
-Put this at the top of your request handler. `204 No Content` means "OK, nothing to send". You'll see these OPTIONS requests in DevTools → Network.
+Put this at the very top of `handleRequest` — **before** routing or any `getDataFromDB()` calls — so preflight checks answer immediately without touching your data. `204 No Content` means "OK, nothing to send". You'll see these `OPTIONS` requests in DevTools → Network.
 
 ## Reproducing the error (worth doing once)
 
@@ -1226,7 +1268,7 @@ Seeing the error and the fix with your own eyes makes it stick.
 - An origin is protocol + domain + port: `localhost:5173` and `localhost:8000` are different origins.
 - Browsers block a page from reading another origin's responses unless that server allows it with CORS headers.
 - CORS is enforced by the browser to protect its user: curl and Postman ignore it, and the fix is always on the server.
-- Non-simple requests (JSON POST, PUT, DELETE) send an OPTIONS "preflight" first, which the server must answer.
+- Non-simple requests (JSON POST, PUT, PATCH, DELETE) send an OPTIONS "preflight" first, which the server must answer.
 
 **Muscle memory (no need to cram: it sticks by using it)**
 - `res.setHeader("Access-Control-Allow-Origin", "*")` for public data
@@ -1245,7 +1287,7 @@ Seeing the error and the fix with your own eyes makes it stick.
 
 ### Exercises
 - Reproduce the CORS error: in a separate folder, create an `index.html` with a `<script>` that runs `fetch("http://localhost:8000/api")` and logs the result. Open it with Live Server (another port), keep your API running, and read the red error in DevTools → Console.
-  Hint: VS Code's Live Server extension serves a folder on port 5500, which is a different origin from your API on port 8000. Any other static server works too, for example `npx serve`.
+  Hint: VS Code's Live Server extension serves a folder on port 5500, which is a different origin from your API on port 8000. Any other static server works too, for example `npx serve`. Don't double-click `index.html` directly (`file://` has origin `"null"` and breaks testing an exact origin later).
 - Add `Access-Control-Allow-Origin: *` in `sendJSONResponse` and confirm the page now shows the data.
 - Add OPTIONS handling, then send a POST with a JSON body from the page and find the preflight (`OPTIONS`) request in DevTools → Network. The POST itself will get a 404, because your API has no POST route yet. That's expected: you're only looking at the preflight request that comes before it.
 - Change the allowed origin to an exact URL that is *not* your page's origin and observe the error message change.
@@ -1263,31 +1305,30 @@ A travel website needs a backend that returns destinations as JSON, with filteri
 - `GET /api` returns all destinations
 - `GET /api?continent=europe&country=italy&is_open_to_public=true` returns only destinations matching **all** given filters (case-insensitive); no query = everything
 - `GET /api/continent/:continent` and `GET /api/country/:country` filter by path parameter
-- `GET /api/:uuid` returns one destination, or a 404 if the uuid doesn't exist
+- `GET /api/:uuid` returns one destination object (using `.find()`), or a `404` JSON error (`{ "error": "not found", "message": "Destination not found" }`) if the uuid doesn't exist
 - Any other route returns `404` with `{ "error": "not found", "message": "The requested route does not exist" }`
-- Every response has `Content-Type: application/json` and `Access-Control-Allow-Origin: *`; OPTIONS requests get a 204
+- Every JSON response has `Content-Type: application/json` and `Access-Control-Allow-Origin: *`; `OPTIONS` preflight requests return `204` with CORS headers and no body
 - Code split into `server.js`, `database/`, `utils/` and `data/`
 
 ### Steps
 1. **Warm-up from memory (10 minutes).** In a blank file, write a server that answers `GET /api` with a JSON array and every other URL with a 404 JSON error, without looking. Then compare with lessons 1.4–1.6.
-2. Continue in your `destinations-api` folder from lessons 1.4–1.9: you've already built much of this project there, so treat the steps below as a checklist and add only what's missing. Make sure it has a `package.json` with `"type": "module"` and a `dev` script with `node --watch`. Move your data to `data/data.js` with at least 12 real places you'd like to visit. Generate uuids with `crypto.randomUUID()` in the REPL and paste them in.
-3. Create `server.js` that returns the whole array for `GET /api` and a 404 JSON for everything else. Test both with the browser and curl.
-4. Parse URLs with `new URL(...)` and add the `/api/continent/:continent` and `/api/country/:country` routes.
-5. Add query-parameter filtering to `/api`, converting `is_open_to_public` to a boolean.
-6. Add `GET /api/:uuid`. Think about route order: why must it come after the continent/country routes?
-7. Refactor into `utils/sendJSONResponse.js`, `database/db.js` and the two filter modules. Re-test every route after each step.
-8. Add CORS headers and OPTIONS handling. Build a tiny `index.html` (served from another port) with a dropdown of continents that fetches and lists matching destinations.
-9. Write a README: a table of all endpoints with an example request and response for each. Push to GitHub.
+2. **Audit your `destinations-api` setup.** Continue in your `destinations-api` folder from lessons 1.4–1.9: confirm `package.json` has `"type": "module"` and `"dev": "node --watch server.js"`, keep your data in `data/data.js`, and expand it to at least 12 real places you'd like to visit, each with a real UUID generated via `crypto.randomUUID()` in the Node REPL.
+3. **Verify base routing and query filtering.** Confirm `GET /api` (including `/api/`), the 404 fallback, and combined case-insensitive query filtering (`continent`, `country`, `is_open_to_public`) all work. Test edge cases like `?is_open_to_public=TRUE`, `?is_open_to_public=false`, and trailing slashes.
+4. **Verify path routes.** Confirm `GET /api/continent/:continent` and `GET /api/country/:country` return `200 []` for unknown values (an empty filter result is normal), and `404` if extra segments are added.
+5. **Add `GET /api/:uuid` (new).** Add a single-resource lookup using `.find()` returning one destination object, or `404` when no match exists (unlike collection filters, a missing specific ID is a `404`). Check exact segment length (`segments.length === 2`) and keep specific routes like `/api/count` (if you kept it from 1.6) *before* `/api/:uuid`.
+6. **Verify your module split and error handling.** Confirm `server.js` only parses URLs and routes, while `utils/sendJSONResponse.js`, `database/db.js`, `utils/getDataByPathParams.js` and `utils/getDataByQueryParams.js` handle responses, data access and filtering, and malformed `%` URLs return `400` instead of crashing.
+7. **Build a tiny frontend demo (new).** Confirm CORS headers and `OPTIONS` preflight handling (placed above `getDataFromDB()`). In a separate folder outside your backend folders (e.g. `client/`), build a tiny `index.html` served on another port (Live Server or `npx serve`) with a continent dropdown that fetches and lists matching destinations.
+8. **Document and publish.** Write a README with setup steps and a table of all endpoints (method, path, example request and response for each), commit `requests.http` if you made one, and push to GitHub.
 
 ### Hints
-- Write your test URLs in a `requests.http` file (REST Client extension) or a Postman collection, so re-testing after each step takes seconds.
-- `url.pathname.split("/")` for `/api/country/italy` is `["", "api", "country", "italy"]`. Check the *length* to tell `/api/:uuid` apart from longer paths.
-- If something returns nothing, log `url.pathname` and your parsed parameters before filtering.
+- Write your test URLs in a `requests.http` file (REST Client extension) or a Postman/Bruno collection, so re-testing after each step takes seconds.
+- `url.pathname.split("/").filter(Boolean)` turns `/api/country/italy` into `["api", "country", "italy"]` (length 3) and `/api/<uuid>` into `["api", "<uuid>"]` (length 2). Checking exact length prevents trailing slashes or longer paths from matching the wrong route.
+- If something returns nothing, log `url.pathname`, `segments` and your parsed parameters before filtering.
 
 ### Stretch goals
 - `?limit=5&page=2` pagination, returning `{ data, page, total }`.
 - `?search=lake` matching the name or description.
-- Deploy it to Render (free) and use the live URL in your frontend page.
+- Deploy it to Render (free) and use the live URL in your frontend page. Note: hosts pass the port in `process.env.PORT` (covered in Lesson 1.13) and run `npm start`, so add `"start": "node server.js"` to `package.json` and use `const PORT = process.env.PORT || 8000`.
 
 ### Done when
 - All routes in "What it must do" return the correct data and status codes
