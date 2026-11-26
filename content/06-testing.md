@@ -99,7 +99,8 @@ Tests also act as **documentation**: a list of test names like "returns 404 when
 - Test behaviour that users rely on, especially edge cases and invalid input, not internal details.
 
 ### Exercises
-- Write `slugify.check.js` using `node:assert/strict` for a simple `slugify` function and run it with `node`. Break `slugify` on purpose and read the error.
+- Create a folder `testing-practice` for the small exercises in lessons 6.1–6.4 (`npm init -y`, then add `"type": "module"` to `package.json`). In it, write `slugify.js` exporting a simple `slugify(text)`, plus `slugify.check.js` from the lesson. Run `node slugify.check.js` until it prints `All checks passed`, then break `slugify` on purpose and read the error.
+  Hint: For the two checks in the lesson this is enough: `return text.trim().toLowerCase().replace(/\s+/g, "-");`
 - List 5 things in your Books API that could break. Label each one unit, integration or E2E, and write one sentence on how you'd test it.
 - For a `cartTotal(items)` function, write down 6 test cases (input → expected output): at least two edge cases and one invalid input.
 - Write in your own words what "test behaviour, not implementation" means, with an example from one of your own projects.
@@ -256,10 +257,11 @@ This prints a table showing what percentage of lines and branches your tests exe
 - `await` async results; use `it.each` for tables of examples; `--coverage` shows untested lines.
 
 ### Exercises
-- Set up Vitest in a new folder and write tests for `add` and `divide` above. Run both `npm test` and `npm run test:watch`.
-- Write tests for a `slugify(title)` function: spaces, uppercase, punctuation, accents, empty string. Use `it.each` for the simple cases.
-- Copy your `getDataByQueryParams` filter from the Node module and test it with at least 4 cases, including "no filters" and "no matches".
-- Make one test fail on purpose (change an expected value) and explain each part of the error output in your own words. Then run coverage and find one uncovered line.
+- In `testing-practice`, install Vitest, add the `test` and `test:watch` scripts, and create `math.js` and `math.test.js` from the lesson. `npm test` should show 3 passing tests. Then run `npm run test:watch`, change something in `math.test.js`, save, and watch the tests rerun (press `q` to quit).
+- In `testing-practice/slugify.test.js`, test your `slugify` from lesson 6.1 with spaces, uppercase, punctuation, accents and an empty string, using `it.each` for the simple cases. Some tests will fail at first: improve `slugify` until `npm test` is all green.
+  Hint: `text.normalize("NFD").replace(/[̀-ͯ]/g, "")` turns `"Café"` into `"Cafe"`; `.replace(/[^a-z0-9]+/g, "-")` turns every group of other characters into one `-`, and `.replace(/^-|-$/g, "")` removes a `-` at the start or end.
+- Copy `utils/getDataByQueryParams.js` from your `destinations-api` (Module 1) into `testing-practice`. In `getDataByQueryParams.test.js`, call it with a small array of 3–4 destinations written in the test and query objects like `{ continent: "europe" }`. Write at least 4 tests, including "no filters" (`{}` returns everything) and "no matches" (returns `[]`).
+- In `testing-practice`, make one test fail on purpose (change an expected value) and explain each part of the error output in your own words. Then install coverage as shown above, run `npx vitest run --coverage`, and find one uncovered line in `coverage/index.html` (if everything is covered, delete one test and look again).
 
 ---lesson
 id: test-3
@@ -382,10 +384,10 @@ TDD shines for logic with clear inputs and outputs: formatting, calculations, va
 - Use TDD for logic with clear inputs and outputs; practise with katas.
 
 ### Exercises
-- Follow the `formatDuration` example yourself, then continue with TDD to support hours (`3725` → `"1:02:05"`).
-- Do the String Calculator kata (steps 1–5) with TDD. Commit after each green step and look at your git log afterwards.
-- Build `validatePassword(password)` TDD-style. It returns an array of error messages (empty when valid): at least 8 characters, contains a number, contains an uppercase letter.
-- Do the String Calculator kata again from scratch a few days later and compare how long it took.
+- In `testing-practice`, follow the `formatDuration` example yourself (`duration.js` and `duration.test.js`, with `npm run test:watch` running), then continue with TDD to support hours (`3725` → `"1:02:05"`).
+- Do the String Calculator kata (steps 1–5 on the "Kata: String Calculator" page linked above) with TDD, in a new folder `string-calculator` with Vitest and `git init`. Commit after each green step, then run `git log --oneline`: you should see one commit per step.
+- In `testing-practice`, build `validatePassword(password)` TDD-style in `password.js` and `password.test.js`. It returns an array of error messages (`[]` when valid) for these rules: at least 8 characters, contains a number, contains an uppercase letter. Decide the exact message texts in your tests first.
+- A few days later, do the String Calculator kata again from scratch in a new folder (for example `string-calculator-2`) and compare how long it took.
 
 ---lesson
 id: test-4
@@ -540,10 +542,12 @@ Fake the things at the **edge** of your program: network, clock, randomness, ema
 - Mock at the boundaries, or pass dependencies in as arguments.
 
 ### Exercises
-- Write `forEachEven` and test it with `vi.fn()`, including a test that the callback is never called for `[1, 3, 5]`.
-- Test a `getWeather(city)` function by mocking `fetch`: success, a 404 response, and a network error (`mockRejectedValue`).
-- Write a `debounce(fn, ms)` function and test it with fake timers: one call, many quick calls, and two calls further apart than `ms`.
-- Write `timeAgo(date)` returning `"just now"`, `"5 minutes ago"`, `"2 days ago"`, and test it with `vi.setSystemTime`.
+- In `testing-practice`, write `forEachEven` (from the lesson) in `forEachEven.js` and test it with `vi.fn()` in `forEachEven.test.js`, including a test that the callback is never called for `[1, 3, 5]`.
+- In `testing-practice`, copy `weather.js` and `weather.test.js` from the lesson (they already test success and a 500). Add two tests for `getTemperature`: a 404 response, and a network error (`mockRejectedValue(new Error("offline"))`). `npm test` should show all 4 passing, without any real network request.
+- In `testing-practice`, write `debounce(fn, ms)` in `debounce.js` and test it with fake timers: one call, many quick calls, and two calls further apart than `ms`.
+  Hint: `debounce` returns a new function that remembers a timer: `let timer; return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };`
+- In `testing-practice`, write `timeAgo(date)` in `timeAgo.js`: `"just now"` under a minute, `"5 minutes ago"` under an hour, `"3 hours ago"` under a day, otherwise `"2 days ago"`. Test each case with `vi.setSystemTime` (fake timers on in `beforeEach`, off in `afterEach`).
+  Hint: `Math.floor((Date.now() - date.getTime()) / 60000)` gives the number of whole minutes since `date`; divide by 60 for hours and by 24 again for days.
 
 ---project
 id: test-p2
@@ -566,7 +570,7 @@ Build a small, genuinely useful JavaScript library entirely test-first: no line 
 - A README with installation and a usage example for every function.
 
 ### Steps
-1. **Setup.** Create the folder, `npm init -y`, add `"type": "module"`, install Vitest, add `test`, `test:watch` and `coverage` scripts. Write one throwaway test (`expect(1 + 1).toBe(2)`), see it pass, delete it. Run `git init` with a `.gitignore` (`node_modules`, `coverage`). Commit.
+1. **Setup.** Create a new folder `tdd-utils` (you'll convert it to TypeScript in Module 7), `npm init -y`, add `"type": "module"`, install Vitest, add `test`, `test:watch` and `coverage` scripts. Write one throwaway test (`expect(1 + 1).toBe(2)`), see it pass, delete it. Run `git init` with a `.gitignore` (`node_modules`, `coverage`). Commit.
 2. **Plan.** Write `TODO.md`: one heading per function and, under it, a list of behaviours written like test names ("truncate leaves short text unchanged", "truncate adds … when cutting"). This is your to-do list for the whole project.
 3. **First function, TDD.** Pick the simplest function. Take one behaviour from `TODO.md`, write the test, see red, make it green with minimal code, refactor, commit. Repeat until that function's list is done. Tick items off as you go.
 4. **The other core functions.** Same cycle for each remaining function. When you have many input → output examples for one behaviour, use `it.each`.
@@ -807,10 +811,11 @@ The `services` block starts a temporary Postgres for the job, with the same URL 
 - A GitHub Actions workflow with a Postgres service runs everything on every push.
 
 ### Exercises
-- Check that your Books API is split into `app.js` (with `export default app`) and `server.js`, and that `npm start` still works. If it isn't split yet, do it now.
-- Start the Docker test database (or create one on Neon), then add the setup file and a single Supertest test for `GET /api/books`. Make it pass.
-- Write tests for `GET /api/books/:id`: an existing book (200), a missing id (404) and a non-numeric id (400 or 404, whatever your API promises).
-- Add the GitHub Actions workflow, push, and get a green tick. Then break a test on purpose, push, and look at the failed run's log.
+- In your `books-api` folder (you'll finish its test suite in this section's project), check that the code is split into `app.js` (with `export default app`) and `server.js`, and that `npm start` still works. If it isn't split yet, do it now.
+- In `books-api`, start the Docker test database (`docker compose up -d --wait`, or create `books_test` on Neon), install `vitest` and `supertest`, and add `.env.test`, `test/setup.js`, `vitest.config.js` and a `"test": "vitest run"` script. Then write `test/books.test.js` with the `GET /api/books` test from Step 2. `npm test` should show 1 passing test.
+- In `books-api`, add `test/helpers.js` with `resetDb()` from Step 4 (call it in `beforeEach`, and `pool.end()` in `afterAll`), so book 1 always exists. Then add tests to `test/books.test.js` for `GET /api/books/:id`: book 1 (200), a missing id like `999` (404) and a non-numeric id like `abc` (400 or 404, whatever your API promises).
+- In `books-api`, add `.github/workflows/test.yml` from Step 5 and a `db:migrate` script, push to GitHub, and get a green tick in the Actions tab. Then break a test on purpose, push, and read the failed run's log.
+  Hint: `db:migrate` can be a tiny script `db/migrate.js` that reads `db/migrations/001_init.sql` with `fs.readFileSync(..., "utf8")`, runs it with `pool.query(sql)` and then calls `pool.end()`. Add `"db:migrate": "node db/migrate.js"` to `package.json`.
 
 ---project
 id: test-p1
@@ -830,7 +835,7 @@ Add a professional test suite to your Book Library API (Express + PostgreSQL, fr
 - A GitHub Actions workflow runs the tests (with a Postgres service container) on every push and pull request, and the README shows a status badge.
 
 ### Steps
-1. **Check app and server.** You split them in the Express module: `app.js` ends with `export default app` and `server.js` imports it and calls `listen()`. If yours isn't split yet, do it now and update the `start`/`dev` scripts. Check the API still runs. Commit.
+1. **Check app and server.** Continue in your `books-api` folder from lesson 6.5: you've already done part of this project there, so treat the steps below as a checklist and add only what's missing. You split app and server in the Express module: `app.js` ends with `export default app` and `server.js` imports it and calls `listen()`. If yours isn't split yet, do it now and update the `start`/`dev` scripts. Check the API still runs. Commit.
 2. **Create the test database.** Start the `db-test` service from your `compose.yaml` (`docker compose up -d --wait`); it already has your tables. Add `.env.test` with `DATABASE_URL=postgresql://postgres:testpass@localhost:5433/books_test`. No Docker? Create a `books_test` database on Neon and use its URL instead. Add a `db:migrate` script that runs your schema file against `DATABASE_URL`; CI (and a fresh Neon database) will need it.
 3. **Set up Vitest.** Install `vitest`, `supertest` and `@vitest/coverage-v8`. Create `vitest.config.js` (setup file, `fileParallelism: false`) and `test/setup.js` (loads `.env.test`, refuses to run if the URL doesn't contain "test"). Write one smoke test: `GET /api/books` returns 200. Make it pass.
 4. **Fixtures and reset.** Write `resetDb()` that truncates all tables and inserts a small, known set of data (2 authors, 3 books, 2 tags). Call it in `beforeEach`, close the pool in `afterAll`. Run the smoke test several times: always the same result.
@@ -1025,10 +1030,10 @@ Add `vi` to the import from `"vitest"` and restore mocks in `afterEach`. Test th
 - Mock `fetch` for components that load data and test loading, success and error states.
 
 ### Exercises
-- Set up RTL in a Vite React app and test the `Counter` above: starts at 0, increments, decrements, can't go below 0.
-- Test a login form: submitting it empty shows "Email is required"; typing an email (`await user.type(input, "a@b.co")`) and submitting removes the error.
-- Test a component that fetches a list: loading state, list shown, empty list message, and error message when `fetch` rejects.
-- Find one element in an old project that you can't query by role or label. Fix the component's accessibility so you can.
+- Create a practice app with `npm create vite@latest rtl-practice -- --template react` and set up RTL in it as in the lesson. Add `src/Counter.jsx` and `src/Counter.test.jsx` and test: starts at 0, increments, decrements, can't go below 0. `npm test` should show 4 passing tests.
+- In `rtl-practice`, write a small `src/LoginForm.jsx` (an input with the label "Email" and a "Log in" button) that shows "Email is required" when submitted empty. In `src/LoginForm.test.jsx`, test that submitting it empty shows the message, and that typing an email (`await user.type(input, "a@b.co")`) and submitting again removes it.
+- In `rtl-practice`, write `src/BookList.jsx` that fetches a list of books and shows "Loading…", then the titles, "No books yet" for an empty list, or an error message. In `src/BookList.test.jsx`, mock `fetch` as in "Components that fetch data" and test all four states (the error one with `mockRejectedValue`).
+- Look through your `memory-game` and `recipe-finder` for one element you couldn't find with `getByRole` or `getByLabelText` (for example a clickable `<div>`, an icon-only button, or an input without a `<label>`). Fix the component with a real `<button>`, a `<label>` or an `aria-label`; you'll test it in this section's project.
 
 ---lesson
 id: test-7
@@ -1164,10 +1169,11 @@ E2E tests are slow (seconds each, not milliseconds) and depend on everything wor
 - `webServer` in the config starts your app(s); keep E2E tests for a few critical journeys.
 
 ### Exercises
-- Install Playwright in one of your React projects and write a test that opens the home page and checks the main heading is visible.
-- Use `npx playwright codegen` to record a journey in your app, then clean up the generated code so it uses roles and labels.
-- Write an E2E test for your Journal app: register, log in, create an entry, see it listed. Use a unique email per run.
-- Run your tests in UI mode (`npx playwright test --ui`) and break one on purpose to see how the failure is shown.
+- In your `books-frontend` folder (this section's project continues there), run `npm init playwright@latest` (JavaScript, tests in `e2e`) and set `testDir`, `baseURL` and `webServer` as in "Starting your app automatically". If the project already uses Vitest, add the `exclude` line too. Write `e2e/home.spec.js` that opens `/` and checks your main heading is visible; `npx playwright test` should pass.
+- With `books-api` running (and `npm run dev` in `books-frontend`), run `npx playwright codegen http://localhost:5173` and record adding a book. Paste the code into `books-frontend/e2e/add-book.spec.js`, replace any CSS selectors with `getByRole` / `getByLabel`, and use a unique title (`Date.now()`) so `npx playwright test` passes every time.
+- Write an E2E test for your Private Journal app from the Express module: register (which logs you in), log out, log in again, create an entry and see it listed. Its pages are served by Express, not Vite, so run `npm init playwright@latest` in that project's folder and use `http://localhost:3000` as `baseURL`. Use a unique email per run, built with `Date.now()` like the unique book title in the lesson.
+  Hint: If you keep the server running between test runs, the auth rate limiter (5 register/login requests per 15 minutes) starts answering 429 on the third run. Stop the server so Playwright's `webServer` starts a fresh one (the limiter lives in memory), or raise the limit when `NODE_ENV` is `test`.
+- In `books-frontend`, run your tests in UI mode (`npx playwright test --ui`) and break one on purpose to see how the failure is shown.
 
 ---project
 id: test-p3
@@ -1200,7 +1206,7 @@ Go back to the React apps you built in the React Fundamentals module and give th
 4. **Memory game: CI.** Add `.github/workflows/test.yml` (checkout → setup-node → `npm ci` → `npm test`), push, get it green, add the badge.
 5. **Recipe Finder: setup and fixtures.** Same setup as step 1. Save a small, realistic API response in `src/test/fixtures/meals.json` (copy 2–3 meals from a real TheMealDB response). Write a helper that mocks `fetch` to return it.
 6. **Recipe Finder: search states.** Test loading → results, the empty state (`{ meals: null }`, which is what TheMealDB returns for no results), and the error state. Then test favourites, and add the CI workflow.
-7. **Books frontend: Playwright.** Run `npm init playwright@latest`, then add `exclude: [...configDefaults.exclude, "e2e/**"]` to the `test` block of `vite.config.js` (as in the lesson) so `npm test` doesn't pick up the Playwright files. Keep your API repo in a folder next to the frontend. Start the Docker test database and run the API's seed script against it, so the Author dropdown has options. To point the seed at the test database, set `DATABASE_URL` in the terminal first; a variable that's already set wins over the value in `.env` (in PowerShell: `$env:DATABASE_URL="postgresql://postgres:testpass@localhost:5433/books_test"; npm run db:seed`). Configure `webServer` as an array: your API (`cwd: "../books-api"`, `DATABASE_URL` set to the test database) and the Vite dev server (with `VITE_API_URL` pointing at the local API). Write the test: list → add book (pick the author with `selectOption`) → see it.
+7. **Books frontend: Playwright.** Continue in your `books-frontend` folder from lesson 6.7: Playwright may already be installed there, so treat this step as a checklist and add only what's missing. Run `npm init playwright@latest` if you haven't yet, then add `exclude: [...configDefaults.exclude, "e2e/**"]` to the `test` block of `vite.config.js` (as in the lesson) so `npm test` doesn't pick up the Playwright files. Keep your API repo in a folder next to the frontend. Start the Docker test database and run the API's seed script against it, so the Author dropdown has options. To point the seed at the test database, set `DATABASE_URL` in the terminal first; a variable that's already set wins over the value in `.env` (in PowerShell: `$env:DATABASE_URL="postgresql://postgres:testpass@localhost:5433/books_test"; npm run db:seed`). Configure `webServer` as an array: your API (`cwd: "../books-api"`, `DATABASE_URL` set to the test database) and the Vite dev server (with `VITE_API_URL` pointing at the local API). Write the test: list → add book (pick the author with `selectOption`) → see it.
 8. **Books frontend: CI.** In the workflow, start a Postgres service, check out both repos (the second `actions/checkout` step with `repository:` and `path:`), install both, run the API's migration and seed, install Playwright browsers and run `npx playwright test`. If you only test in Chromium, `npx playwright install --with-deps chromium` is much faster than installing all browsers. Upload the HTML report as an artifact so you can inspect failures.
 
 ### Hints

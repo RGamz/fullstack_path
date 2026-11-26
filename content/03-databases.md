@@ -130,7 +130,7 @@ SELECT 'Hello, database!' AS greeting, 6 * 7 AS answer;
 ### Exercises
 - Install DB Browser for SQLite (or open sqliteonline.com), create `playground.db` and run `SELECT 'Hello, database!' AS greeting, 6 * 7 AS answer;`.
 - Sketch (on paper) tables for a library: books, authors, members and loans. Write the columns of each table and mark the primary keys and foreign keys. Which table connects members to books?
-- Write 3–5 sentences comparing the JSON file from your Express projects with a database. Describe one concrete thing that could go wrong with the file if 100 people used your API at the same time.
+- Write 3–5 sentences comparing the `links.json` file of your URL Shortener (Express module) with a database. Describe one concrete thing that could go wrong with the file if 100 people created or clicked links at the same time.
 - Pick an app you use every day (a music app, a shop, a chat app). List three tables it probably has and how they link to each other.
 
 ---lesson
@@ -293,8 +293,8 @@ You *write* `SELECT … FROM … WHERE … ORDER BY … LIMIT`, but the database
 
 ### Exercises
 - Complete SQLBolt lessons 1–5.
-- Using the practice table, write queries for: all fantasy books ordered by pages; books with "the" in the title; books without a rating; the 3 longest books.
-- Show page 2 of the books sorted by title, 3 books per page. Then write down the `LIMIT`/`OFFSET` values for page 5 with 20 books per page.
+- In `playground.db`, using the `books` table from "Set up a practice table", write queries for: all fantasy books ordered by pages; books with "the" in the title; books without a rating; the 3 longest books. You should get 2, 3, 1 and 3 rows.
+- Show page 2 of the books sorted by title, 3 books per page (it should start with `Project Hail Mary`). Then write down the `LIMIT`/`OFFSET` values for page 5 with 20 books per page.
 - List all books that are *not* sci-fi with `WHERE genre <> 'sci-fi'`. Does `Untitled Draft` appear? Explain why not, then change the query so it does.
 
 ---lesson
@@ -430,9 +430,10 @@ These errors are good news: the database just stopped bad data. Later, your Expr
 
 ### Exercises
 - Complete SQLBolt lessons 13–18.
-- In a new database, create `authors` and `books` with a foreign key and `CHECK (year > 0)`. Insert 3 authors and 6 books using multi-row `INSERT`s.
-- Try to break each constraint on purpose (`NOT NULL`, `UNIQUE`, `CHECK` and `FOREIGN KEY`) and write the error messages down. Then turn foreign keys off and see which insert suddenly succeeds.
-- Add a `rating` column with `ALTER TABLE`, give three books a rating with `UPDATE`, then delete all books published before 1900. Check each `WHERE` with a `SELECT` first.
+- Create a new database `constraints.db` (your `playground.db` already has a different `books` table). Create `authors` and `books` as in this lesson, with the foreign key and `CHECK (year > 0)`, and insert 3 authors and 6 books (at least one published before 1900) using multi-row `INSERT`s. Check with `SELECT * FROM books;`.
+- In `constraints.db`, try to break each constraint on purpose (`NOT NULL`, `UNIQUE`, `CHECK` and `FOREIGN KEY`) and write the error messages down. Then turn foreign keys off and see which insert suddenly succeeds.
+  Hint: Run `PRAGMA foreign_keys = OFF;`, then retry the book with an `author_id` that doesn't exist. If DB Browser asks whether to commit first, say yes: this setting can't change in the middle of a transaction.
+- In `constraints.db`, add a `rating` column with `ALTER TABLE`, give three books a rating with `UPDATE`, then delete all books published before 1900. Check each `WHERE` with a `SELECT` first.
 
 ---lesson
 id: db-4
@@ -588,10 +589,10 @@ When a query gets confusing, build it in that order: pick the table, filter rows
 
 ### Exercises
 - Complete SQLBolt lessons 10–12 (skip any exercise that needs a `JOIN`; you'll learn those next section).
-- Show the number of books and the average number of pages per genre, but only for genres with at least 2 books.
+- In `playground.db`, show the number of books and the average number of pages per genre, but only for genres with at least 2 books. You should get 2 rows: fantasy and sci-fi.
 - Count books per decade for books published after 1900, and show the decade as text like `2010s` (hint: in SQLite, `||` joins text together).
-- Using the `sales` table, find the best month by revenue and the average sale amount per month.
-- Find the author with the highest average rating, ignoring authors without any rated book.
+- In `playground.db`, create the `sales` table from "Grouping by month" (if you haven't run that script yet). Find the best month by revenue (it should be `2026-10`) and the average sale amount per month.
+- Find the author with the highest average rating, ignoring authors without any rated book. You should get Patrick Rothfuss (4.6).
 
 ---project
 id: db-p3
@@ -836,8 +837,8 @@ WHERE NOT EXISTS (SELECT 1 FROM books AS b WHERE b.author_id = a.id);
 
 ### Exercises
 - Complete SQLBolt lessons 6–9, plus any exercises you skipped earlier because they needed a `JOIN`.
-- List every book with its author's name and year, newest first.
-- Add the tag `romance`, link it to Pride and Prejudice, and add a tag `fantasy` that no book uses. Then list all tags with their number of books, including tags with zero books.
+- In `library.db` (from "Practice data" above), list every book with its author's name and year, newest first. `Project Hail Mary` should be the first row.
+- In `library.db`, add the tag `romance`, link it to Pride and Prejudice, and add a tag `fantasy` that no book uses. Then list all tags with their number of books, including tags with zero books (`fantasy` should show 0).
 - Find all books tagged both `sci-fi` and `space`. (Hint: filter on both tag names with `IN`, group by book, and keep groups with `HAVING COUNT(*) = 2`.)
 
 ---lesson
@@ -972,8 +973,9 @@ Table recipes {
 ### Exercises
 - A school keeps this spreadsheet: `student_name, student_email, course_titles, teacher_name, teacher_room`. List three problems with it and the tables you'd split it into.
 - Design a blog schema in dbdiagram.io: users, posts, comments and tags (posts have many tags). Mark every relationship type and export the diagram.
-- Write the `CREATE TABLE` statements for your blog in SQLite, with constraints and a deliberate `ON DELETE` choice for each foreign key. Insert some data, delete a user, and check what happened to their posts and comments.
-- Write a query that shows each post with its author's name, its number of comments and its tags.
+- In a new SQLite database `blog.db`, write the `CREATE TABLE` statements for your blog, with constraints and a deliberate `ON DELETE` choice for each foreign key. Start the script with `PRAGMA foreign_keys = ON;`, or SQLite ignores the `ON DELETE` rules. Insert some data, delete a user, and check with `SELECT`s what happened to their posts and comments.
+- In `blog.db`, write a query that shows each post with its author's name, its number of comments and its tags (posts without comments or tags must appear too).
+  Hint: Joining comments and tags in the same query multiplies the rows (2 comments × 3 tags = 6 rows), so the counts come out too high. Use `LEFT JOIN`s, `COUNT(DISTINCT c.id)` and `group_concat(DISTINCT t.name)`.
 
 ---lesson
 id: db-10
@@ -1109,10 +1111,10 @@ Don't first `SELECT` the stock and then `UPDATE` it in a separate step: another 
 - Check stock with a `CHECK` constraint or a conditional `UPDATE`, never with a separate `SELECT` first.
 
 ### Exercises
-- Create `big_books` with 100,000 rows. Run `SELECT * FROM big_books WHERE author_id = 42;` and note the time and the query plan. Add an index, then compare.
+- In `playground.db`, create `big_books` with 100,000 rows using the script above. Run `SELECT * FROM big_books WHERE author_id = 42;` and note the time and the query plan (`SCAN`). Add the index, then compare (`SEARCH … USING INDEX`).
 - Run `EXPLAIN QUERY PLAN SELECT * FROM big_books WHERE author_id = 42 ORDER BY year;`. You'll see a step for sorting (`USE TEMP B-TREE FOR ORDER BY`). Create a composite index that removes it.
-- Create the `accounts` table and transfer more money than Mia has inside a transaction. Read the error, roll back, and confirm both balances are unchanged.
-- Create a small `products` table and write "place an order" as a transaction using the conditional `UPDATE`. Run it once with enough stock and once without, and check the stock after each.
+- In `playground.db`, create the `accounts` table from the lesson and, inside a transaction, transfer more money than Mia has (for example 150). Read the error, run `ROLLBACK`, and confirm with `SELECT * FROM accounts;` that both balances are unchanged (100 and 20).
+- In `playground.db`, create a small `products` table (`id`, `name`, `stock`) and an `orders` table (`id`, `product_id`, `quantity`). Write "place an order" as a transaction: `BEGIN`, insert the order, run the conditional `UPDATE`, then `COMMIT` if your tool reports 1 row changed or `ROLLBACK` if it reports 0. Run it once with enough stock and once without, and check both tables after each.
 
 ---project
 id: db-p4
@@ -1366,10 +1368,11 @@ If any tag id is invalid, the foreign key error jumps to `catch`, the book inser
 - Use `BEGIN`/`COMMIT`/`ROLLBACK` in `try`/`catch` for multi-step changes.
 
 ### Exercises
-- Write `db/init.js` that creates your tables and inserts sample data. Make it safe to run twice (use `IF NOT EXISTS`, and delete the old rows before seeding).
-- Replace the in-memory array in your Book Library API's `data/books.js` with SQLite: `findAll` (with `search`), `findById`, `create`, `update` and `remove`. When no row was found (`changes` is 0), return `undefined` or `false` as before, so the controllers still answer 404.
-- In a scratch file, write a deliberately vulnerable search query, exploit it with `' OR '1'='1`, then fix it with placeholders and show that the attack no longer works.
-- Add `?sort=` and `?order=` to your list endpoint using a whitelist. Try `?sort=year;DROP TABLE books` and confirm it's simply ignored.
+- In your `books-api` folder (the Book Library API from the Express module), create `db.js` as in the lesson, but give the `books` table all your book fields: `title`, `author`, `year`, `genre`, `pages` and `read` (an `INTEGER`, 0 or 1). Add `*.db` to `.gitignore`. Then write `db/init.js` that imports `../db.js`, deletes all rows and inserts about 10 sample books. Run `node db/init.js` twice and open `library.db` in DB Browser: there should be 10 books, not 20.
+- Replace the in-memory array in `books-api/data/books.js` with SQLite: `findAll` (with `search` and pagination), `findById`, `create`, `update` and `remove`. When no row was found (`changes` is 0), return `undefined` or `false` as before, so the controllers still answer 404. Re-run your `requests.http`, then restart the server: books you created are still there.
+  Hint: `node:sqlite` can't store `true`/`false`, so save `read ? 1 : 0` and turn it back with `read: row.read === 1`. For `update`, the simplest way is plain JavaScript: get the existing row with `findById`, merge `{ ...existing, ...changes }`, then run one `UPDATE books SET title = ?, author = ?, … WHERE id = ?` with every column.
+- In `books-api`, create a scratch file `injection-demo.js` that imports `db.js` and runs the BAD query from the lesson with `title` set to `' OR '1'='1`: it prints every book. Then rewrite it with a `?` placeholder and show that it now prints an empty array. Run it with `node injection-demo.js`.
+- Add `?sort=` and `?order=` to `GET /api/books` using a whitelist in `data/books.js`. `ListQuerySchema` removes keys it doesn't know, so first add `sort` and `order` to it as optional strings and pass them from `listBooks` to `findAll`. Check that `?sort=year&order=desc` shows the newest book first, and that `?sort=year;DROP TABLE books` is simply ignored (sorted by id, and the table still exists).
 
 ---lesson
 id: db-8
@@ -1531,11 +1534,12 @@ If you validate `:id` with `IdParamSchema` as in the Express module, `22P02` sho
 - Transactions use one client from `pool.connect()`, released in `finally`.
 
 ### Exercises
-- Create a free Neon or Supabase project. In its SQL editor, create the `books` table above and insert 3 rows.
-- Write `test-db.js` that connects with a pool, prints `SELECT now()` and then all books.
-- Switch your Book Library API's `data/books.js` from SQLite to Postgres (with `db/pool.js`). Your controllers already `await` the data layer, so don't touch them: check that every endpoint still works.
-- Add a `UNIQUE` constraint on book titles and make a duplicate `POST` return 409 by checking `err.code` in your error middleware.
-- Deploy the API with `DATABASE_URL` set as an environment variable on your hosting platform.
+- Create a free Neon or Supabase project. In its SQL editor, create a `books` table like the one above, but with the same columns as your `books-api` books (`title`, `author`, `year`, `genre`, `pages`, `read BOOLEAN`, `created_at`). Insert 3 rows and check them with `SELECT * FROM books;`.
+- In `books-api`, run `npm install pg`, put `DATABASE_URL` in `.env`, and create `db/pool.js` and `test-db.js` as in the lesson. Make `test-db.js` print `SELECT now()` and then all books. Run `node --env-file=.env test-db.js`: you should see the time and your 3 books.
+- Switch `books-api/data/books.js` from SQLite to Postgres (using `db/pool.js`), and make sure the `dev` script includes `--env-file=.env`. Your controllers already `await` the data layer, so don't touch them. Re-run every request in `requests.http`: each should give the same status as before.
+- In the SQL editor, add a `UNIQUE` constraint on book titles, then make a duplicate `POST /api/books` return 409 by checking `err.code` in `middleware/errorHandler.js`. Send the same POST twice: 201, then 409.
+  Hint: `ALTER TABLE books ADD CONSTRAINT books_title_key UNIQUE (title);` adds it. In the error handler, before the 500 part: `if (err.code === "23505") return res.status(409).json({ error: "A book with this title already exists" });`.
+- On Render, add `DATABASE_URL` (your Neon/Supabase connection string) to the environment variables of the `books-api` service you deployed in the Express module, push your code, and check that the live `/api/books` returns the books from your hosted database.
 
 ---lesson
 id: db-12
@@ -1686,8 +1690,8 @@ Your `.env` points at the development database, and your tests use `postgresql:/
 ### Exercises
 - Install Docker Desktop and run `docker run hello-world`.
 - Start Postgres 17 with `docker run` (with a volume), connect with `docker exec -it books-db psql -U postgres -d books`, create a table and insert a row. Delete the container with `docker rm -f books-db`, start a new one with the same volume, and check the row is still there.
-- Create `compose.yaml` with the `db` and `db-test` services and your `db/migrations/001_init.sql`. Run `docker compose up -d --wait` and confirm both databases have your tables.
-- Point your Book Library API's `.env` at the local database and check every endpoint works without internet. Then run `docker compose down -v` and `up` again, and run your seed script to restore the data.
+- In `books-api`, save the `CREATE TABLE books …` you ran in the Neon/Supabase SQL editor as `db/migrations/001_init.sql` (the file must exist before you start Compose). Remove the `books-db` container, create `compose.yaml` with the `db` and `db-test` services, and run `docker compose up -d --wait`. Confirm both databases have your table: `docker compose exec db psql -U postgres -d books -c "\dt"`, and the same with `db-test` and `books_test`.
+- Point `books-api/.env` at the local database (keep the hosted URL as a comment), add a few books with a POST from `requests.http`, and check every endpoint works with your Wi-Fi turned off. Then run `docker compose down -v` and `docker compose up -d --wait`: the table is back (the init script ran again) but empty. In the project you'll write a seed script (`npm run db:seed`) that refills it in one command.
 
 ---lesson
 id: db-9
@@ -1841,10 +1845,13 @@ Both are popular and either is a good choice. Drizzle stays close to SQL, so you
 - Prisma: `schema.prisma`, `prisma migrate dev`, object-style queries.
 
 ### Exercises
-- On a new git branch of your Book Library API, set up Drizzle (or Prisma). Model `Author` and `Book`, generate the first migration, read the generated SQL, then apply it.
-- Add a `Tag` model and a book–tag join table, and create a second migration. Check that both migration files are committed.
-- Rewrite `findAll` and `findById` in `data/books.js` (including the author's name) with the ORM. Compare them with your raw SQL versions and write 3 sentences about which you prefer and why.
-- Turn on query logging, load the books list, and find the exact SQL the ORM ran.
+- In `books-api`, create a new git branch and set up Drizzle (or Prisma) on it. Point `DATABASE_URL` at an empty database, because your `books` database already has a `books` table and the migration would fail: in your local Docker database (`docker compose exec db psql -U postgres`) run `CREATE DATABASE books_orm;` and change the end of the URL to `/books_orm`. Model `Author` and `Book`, generate the first migration, read the generated SQL, then apply it.
+  Hint: `git switch -c orm` creates the branch `orm` and moves to it; `git switch main` takes you back to your raw SQL version (commit first).
+- On the same branch, add a `Tag` model and a book–tag join table, and create a second migration. Check with `git status` and `git log` that both migration files are committed.
+  Hint: In Drizzle, a composite primary key goes in a third argument of `pgTable`: `(t) => [primaryKey({ columns: [t.bookId, t.tagId] })]`, with `primaryKey` imported from `drizzle-orm/pg-core`.
+- Insert 2 authors and 3 books (with `db.insert` or in psql), then rewrite `findAll` and `findById` in `data/books.js` with the ORM, including the author's name. Check `/api/books` in the browser. Compare them with your raw SQL versions and write 3 sentences about which you prefer and why.
+- Turn on query logging, load `/api/books`, and find the exact SQL the ORM ran in the terminal where the server runs.
+  Hint: Drizzle: `drizzle({ connection: process.env.DATABASE_URL, logger: true })`. Prisma: `new PrismaClient({ log: ["query"] })`.
 
 ---lesson
 id: db-11
@@ -1971,9 +1978,10 @@ Choose **MongoDB** when your data is naturally a tree of nested documents, the s
 - Relational is the better default for related data; MongoDB fits document-shaped data.
 
 ### Exercises
-- Create a free Atlas cluster and connect to it from a small Node script with Mongoose. Log "connected" and disconnect.
-- Create the `Note` model and store 5 notes with embedded comments. Query the notes tagged `db`, newest first.
-- Find all notes with more than 2 comments. (Hint: look up how to check whether an array element at a certain position exists, or the `$size` operator, in the MongoDB manual.)
+- Create a free Atlas cluster. In a new folder `mongo-practice` (`npm init -y`, `"type": "module"`, `npm install mongoose`, `MONGODB_URI` in `.env`), write `connect.js` that connects with Mongoose, logs "connected" and disconnects with `await mongoose.disconnect()`. Run `node --env-file=.env connect.js`.
+- In `mongo-practice`, create `models/note.js` with the `Note` model, and a script `notes.js` that stores 5 notes with embedded comments (some tagged `db`) and then prints the notes tagged `db`, newest first. Check the notes also appear in Atlas under *Browse Collections*.
+- Find all notes with more than 2 comments.
+  Hint: `$size` only matches an exact length. Instead, check that a third comment exists: `{ "comments.2": { $exists: true } }` (positions start at 0).
 - Write a short comparison (5–8 sentences) of how you'd store your Book Library's books, authors and tags in MongoDB versus PostgreSQL, and which you'd pick.
 
 ---project
@@ -1997,7 +2005,7 @@ Your Book Library API from the Express module keeps its books in an array, so ev
 - Hosted on Neon or Supabase, with `DATABASE_URL` in `.env` locally and as an environment variable in production
 
 ### Steps
-1. Draw the ER diagram on dbdiagram.io and add the image to the README. Create a Neon or Supabase project (for development you can use your local Docker database from "Running Postgres locally with Docker" instead), put `DATABASE_URL` in `.env`, add `db/pool.js` (or your ORM setup), and check the connection with a `SELECT now()` script.
+1. Continue in your `books-api` folder (on your main branch, not the ORM branch) from lessons 3.8–3.10: much of this project already exists there, so treat the steps below as a checklist and add only what's missing. Draw the ER diagram on dbdiagram.io and add the image to the README. Create a Neon or Supabase project (for development you can use your local Docker database from "Running Postgres locally with Docker" instead), put `DATABASE_URL` in `.env`, add `db/pool.js` (or your ORM setup), and check the connection with a `SELECT now()` script.
 2. Write the schema: either `db/migrations/001_init.sql`, run in the SQL editor (on Docker: run `docker compose down -v` and `up -d --wait` so the init script creates the tables), or ORM schema + first migration. Include the constraints and the two indexes. Check the tables exist.
 3. Write `db/seed.js` and add `"db:seed": "node --env-file=.env db/seed.js"` to `package.json`. Empty the tables first so the script can run again, then insert authors, tags, books and links. Run it twice and check the counts.
 4. Rewrite the read functions in `data/books.js`: `findById` (with author and tags), then `findAll` with search, filters and pagination, still returning `{ data, total }`. Test with your saved Thunder Client/Postman requests.

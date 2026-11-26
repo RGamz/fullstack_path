@@ -129,10 +129,11 @@ Run `npm run build` regularly. It type-checks the whole project and prints a tab
 - Pages render on the server by default: check with View Page Source.
 
 ### Exercises
-- Create a project with `create-next-app`, run it, and replace the starter home page with a short welcome text of your own.
-- Add About and Contact pages. Open each in the browser and check with View Page Source that the text is in the HTML.
-- Add a `console.log` to a page component and find out where the message appears. Then run `npm run build` followed by `npm start` and read the route table the build prints.
-- Start the official Learn Next.js course and do chapters 1–4 alongside this module.
+- Create a practice app for this part's exercises: `npx create-next-app@latest next-playground` (with the recommended defaults above). Run `npm run dev`, open http://localhost:3000 and replace the starter content of `app/page.tsx` with a short welcome text of your own. (You'll build the real portfolio as a separate, clean project at the end of this part.)
+- In `next-playground`, add `app/about/page.tsx` and `app/contact/page.tsx`. Open `/about` and `/contact` in the browser and check with View Page Source that your text is in the HTML.
+- In `next-playground`, add a `console.log` to the About page component and find out where the message appears. Then stop the dev server, run `npm run build` followed by `npm start`, and read the route table the build prints: which routes are static?
+  Hint: In development, the browser console may also show a copy of the message marked "Server". That's only a copy: the code itself ran on the server, which is why the real message is in your terminal.
+- Start the official Learn Next.js course (linked above) and do chapters 1–4 alongside this module. The course has its own starter project; keep it separate from `next-playground`.
 
 ---lesson
 id: next-2
@@ -299,10 +300,10 @@ The font is downloaded at **build time** and served from your own site. The user
 - `next/image` and `next/font` optimise images and fonts with almost no effort.
 
 ### Exercises
-- Add a shared header with navigation and a footer to the root layout, and create three pages that use it.
-- Build the `NavLink` component so the current page's link is highlighted.
-- Create a `/dashboard` section with its own sidebar layout and two sub-pages. Put an `<input>` in the sidebar, type something, then navigate between the sub-pages: does the text stay? Explain why.
-- Add a profile photo with `next/image` and a Google font with `next/font`. Run Lighthouse in Chrome DevTools on the production build (`npm run build && npm start`) and note your performance score.
+- In `next-playground`, add a shared header and a footer to the root layout (`app/layout.tsx`). The header has `<Link>`s to your three pages: Home, About and Contact. Check that all three pages show the header and footer.
+- In `next-playground`, build the `NavLink` component in `app/_components/nav-link.tsx` and use it in the header, so the current page's link is highlighted.
+- In `next-playground`, create a `/dashboard` section: `app/dashboard/layout.tsx` with a sidebar, plus two sub-pages (`app/dashboard/page.tsx` and `app/dashboard/settings/page.tsx`). Put an `<input>` in the sidebar, type something, then navigate between the sub-pages: does the text stay? Explain why.
+- In `next-playground`, add a profile photo with `next/image` (any image file in your project) and a Google font with `next/font` in the root layout. Then run `npm run build`, then `npm start`, open http://localhost:3000, run Lighthouse in Chrome DevTools, and note your performance score.
 
 ---lesson
 id: next-3
@@ -449,10 +450,11 @@ For extra safety, install the `server-only` package and add `import "server-only
 - Only `NEXT_PUBLIC_` env variables reach the browser; use `server-only` to protect server modules.
 
 ### Exercises
-- Build an async Server Component page that fetches users from JSONPlaceholder and renders them.
-- Add the `LikeButton` client component next to each user. Put a `console.log` in both the page and the button: where does each message appear?
-- Add `useState` to the page component itself, read the error message, and fix it by moving the stateful part into its own component.
-- Build the `Collapsible` component and pass it a Server Component child that fetches and shows the number of posts from `https://jsonplaceholder.typicode.com/posts`.
+- In `next-playground`, build `app/users/page.tsx`: an async Server Component that fetches users from `https://jsonplaceholder.typicode.com/users` and shows their names and emails. If you see an error about uncached data outside `<Suspense>`, add the `loading.tsx` from the tip above.
+- In `next-playground`, create the `LikeButton` client component in `app/_components/like-button.tsx` and show it next to each user. Put a `console.log` in both the page and the button: where does each message appear?
+  Hint: Client Components are also rendered once on the server, so the button's message appears in the terminal *and* in the browser console. The page's message appears only in the terminal (the browser may show a copy marked "Server").
+- In `next-playground`, add `useState` to the users page component itself (for example a counter button), read the error message, and fix it by moving the stateful part into its own `"use client"` component.
+- In `next-playground`, build the `Collapsible` component in `app/_components/collapsible.tsx`. On the users page, pass it an async Server Component child, `PostCount`, that fetches `https://jsonplaceholder.typicode.com/posts` and shows how many posts there are (wrap it in `<Suspense>` as in the lesson). Check: clicking the button shows "100 posts".
 
 ---lesson
 id: next-5
@@ -628,10 +630,10 @@ MDX is Markdown that can contain React components, for example an interactive de
 - `generateMetadata` gives each page its own title, description and Open Graph tags; wrap shared loaders in `cache`.
 
 ### Exercises
-- Create `app/posts/[slug]/page.tsx` that shows the slug. Try several URLs.
-- Add three Markdown posts in `content/posts/`, a `/posts` list page and the post page rendered with `react-markdown`. An unknown slug must show your custom 404 page.
-- Add `generateMetadata` and a title template. Check the browser tab title and the `<meta>` tags with View Page Source.
-- Add `generateStaticParams`, run `npm run build`, and find your pre-rendered posts in the route table.
+- In `next-playground`, create `app/posts/[slug]/page.tsx` that shows the slug. Try several URLs, like `/posts/hello` and `/posts/my-first-api`. If you see an error about uncached data outside `<Suspense>`, add `app/posts/[slug]/loading.tsx`, as in the tip in lesson 9.3 (lesson 9.5 explains why).
+- In `next-playground`, add three Markdown posts in `content/posts/` (in the project root, next to `app/`), the `lib/posts.ts` loader from the lesson, a list page `app/posts/page.tsx` that links to each post, and the post page rendered with `react-markdown`. Create `app/not-found.tsx`: an unknown slug like `/posts/nope` must show it.
+- In `next-playground`, add `generateMetadata` to the post page and a title template to the root layout. Check the browser tab title, and the `<title>` and `<meta name="description">` tags with View Page Source.
+- In `next-playground`, add `generateStaticParams` to the post page, run `npm run build`, and find your pre-rendered posts in the route table.
 
 ---project
 id: next-p3
@@ -653,13 +655,13 @@ Build the professional portfolio website you'll show to employers. Project case 
 
 ### Steps
 1. **Write the content first.** Your pitch, an About text and 2–4 case studies (problem → your solution → tech decisions → what you learned). Sketch the layout on paper or in Figma using what you learned in the UI Design module.
-2. **Create the project** with `create-next-app` (TypeScript, Tailwind, ESLint, App Router). Build the root layout with header and footer, a `next/font` font and a title template. Create the Home and About pages with your real text. Commit.
+2. **Create the project** with `npx create-next-app@latest portfolio` (TypeScript, Tailwind, ESLint, App Router). This is a new, clean project, not your `next-playground`, but you can copy code you wrote there. Build the root layout with header and footer, a `next/font` font and a title template. Create the Home and About pages with your real text. Commit.
 3. **Navigation.** Build the `NavLink` client component that highlights the current page and use it in the header. Make the header work on a phone (wrap the links, or add a simple menu button).
 4. **Content loader.** Create `lib/projects.ts` with `getAllProjects()` (sorted by `order`) and `getProject(slug)` (synchronous file reads like in the lesson, wrapped in `cache`, with slug validation). Define a `Project` type. Test it by rendering the project titles as a plain list on `/projects`.
 5. **Projects page.** Replace the list with responsive cards: screenshot via `next/image` (files in `public/projects/`), summary, tech tags, and live/GitHub links. Show your top two projects on the home page too.
 6. **Case study pages.** Create `app/projects/[slug]/page.tsx`: await `params`, load the project, call `notFound()` if missing, render the Markdown with `react-markdown` and the typography plugin. Add `generateStaticParams`, `generateMetadata` and `app/not-found.tsx`.
 7. **Dark mode.** Add `dark:` variants to your colours and check the site with your system set to dark. Then add a toggle button (a client component) using the `next-themes` package.
-8. **Production check.** Run `npm run build && npm start`, then Lighthouse in an incognito window. Fix what it reports (missing `alt` text, colour contrast, heading order, oversized images). Add an `opengraph-image.png` to `app/`.
+8. **Production check.** Run `npm run build`, then `npm start`, then Lighthouse in an incognito window. Fix what it reports (missing `alt` text, colour contrast, heading order, oversized images). Add an `opengraph-image.png` to `app/`.
 9. **Test the loader.** Set up Vitest (as in the Testing module) and write a test for `lib/projects.ts`: `getAllProjects()` returns the projects sorted by `order`, and `getProject()` returns `null` for an unknown or invalid slug. Make it run with `npm test`.
 10. **Publish the code.** Write a README (what it is, the tech used, how to add a project) and push to GitHub. You'll deploy it after the "Deploying to Vercel" lesson in the last section of this module, then add the live link to the README.
 
@@ -851,10 +853,11 @@ Remember that `fetch` does **not** throw on a 404 or 500 response. Check it your
 - `error.tsx` (a Client Component) catches failures and offers a retry.
 
 ### Exercises
-- Build a `/users` page that fetches from JSONPlaceholder with a 2-second fake delay, and add a skeleton `loading.tsx`.
-- Add `error.tsx`, then break the fetch URL on purpose and check that your `res.ok` check leads to your error page. Test the "Try again" button.
-- Make a page with a static heading and two slow components (1 second and 3 seconds), each in its own `<Suspense>`. Watch them appear one after another.
-- Create a component that shows the current time. Make one version cached with `"use cache"` and one per-request version with `await connection()` inside `<Suspense>`. Run `npm run build && npm start`, reload a few times and explain the difference. (No Cache Components in your project? Compare a page with and without `await connection()` instead.)
+- In `next-playground`, give your `/users` page from lesson 9.3 a 2-second fake delay (`await new Promise((r) => setTimeout(r, 2000));` at the top) and add a skeleton `app/users/loading.tsx` (or improve the one you have). Reload `/users`: the skeleton shows for 2 seconds, then the list.
+- In `next-playground`, add `app/users/error.tsx` and a `res.ok` check to the users page. Break the fetch URL on purpose (for example `/usersx`, which returns a 404) and check that your error page appears. Then fix the URL and test the "Try again" button.
+- In `next-playground`, make a page `app/slow/page.tsx` with a static heading and two async components: one waits 1 second and one waits 3 seconds before returning a line of text. Wrap each in its own `<Suspense>`, reload the page and watch them appear one after another.
+- In `next-playground`, make a page `app/time/page.tsx` with two components that show the current time: one cached with `"use cache"`, and one per-request version with `await connection()` inside `<Suspense>`. Run `npm run build`, then `npm start`, reload a few times and explain the difference. (No `cacheComponents: true` in your `next.config.ts`? Then compare a page with and without `await connection()` instead.)
+  Hint: A component can be cached like a function: put `"use cache";` as the first line inside `async function CachedTime() { … }`. The other one is `async function LiveTime() { await connection(); return <p>{new Date().toLocaleTimeString()}</p>; }`.
 
 ---lesson
 id: next-6
@@ -1047,10 +1050,11 @@ export async function deleteMessage(id: number) {
 - Use `bind` for extra arguments; call `redirect` outside `try/catch`.
 
 ### Exercises
-- Build the basic guestbook: a form with a Server Action that adds a message, and a list that updates after submitting.
-- Add the Zod schema and `useActionState`. Show field errors, and add a 1-second fake delay to the action so you can see the pending state on the button.
-- Add a delete button to each message using `bind`.
-- Keep the typed values when validation fails, by returning them in the state and using `defaultValue`.
+- Create a new app for the guestbook, which you'll keep growing through lessons 9.6–9.10: `npx create-next-app@latest guestbook`. Build the basic guestbook from the lesson (`lib/messages.ts`, `app/guestbook/actions.ts` and `app/guestbook/page.tsx`). Open `/guestbook`, sign it twice and check that both messages appear without reloading the page.
+- In `guestbook`, run `npm install zod`, add the schema in `lib/schemas.ts`, change the action to the `useActionState` version, and use `MessageForm` (`app/guestbook/message-form.tsx`) in the page instead of the plain form. Submit an empty form to see the field errors. Add a 1-second fake delay at the start of the action so you can see "Signing…" on the button.
+- In `guestbook`, add a delete button to each message using `bind`, with a `deleteMessage` action and a `removeMessage(id)` function in `lib/messages.ts`.
+  Hint: In `removeMessage`, find the index with `messages.findIndex((m) => m.id === id)`. If it's `-1`, return `false`; otherwise remove it with `messages.splice(index, 1)` and return `true` (the API in lesson 9.7 uses that `true`/`false`).
+- In `guestbook`, keep the typed values when validation fails, by returning them in the state and using `defaultValue`. Check: fill in only the name and submit; the error appears and your name is still in the field.
 
 ---lesson
 id: next-7
@@ -1188,10 +1192,11 @@ When does a `GET` handler run? If it reads the request (query string, headers, c
 - Server Actions for your own UI; route handlers for everyone else.
 
 ### Exercises
-- Add `GET /api/messages` to your guestbook and open it in the browser and in Postman (or with curl).
-- Support `?limit=` with validation: `?limit=abc` and `?limit=500` must return a 400 with a helpful message.
-- Add `POST /api/messages` with Zod validation, sharing the schema with your Server Action. Test valid and invalid bodies with curl.
-- Add `DELETE /api/messages/[id]` returning 404 or 204. Then call `GET /api/messages` from a plain HTML page served on another port (for example with VS Code's Live Server): read the CORS error in the console, and fix it by adding an `Access-Control-Allow-Origin` header to the GET response.
+- In your `guestbook` app, add `GET /api/messages` (`app/api/messages/route.ts`) and open http://localhost:3000/api/messages in the browser and in Postman (or with curl). The messages live in memory, so sign the guestbook first if you only see `[]`.
+- In `guestbook`, support `?limit=` with validation: `?limit=abc` and `?limit=500` must return a 400 with a helpful message, and `?limit=1` returns only the newest message.
+- In `guestbook`, add `POST /api/messages` with Zod validation, sharing `MessageSchema` from `lib/schemas.ts` with your Server Action. Test with curl (or Postman): a valid body returns 201, and an empty name returns 400 with field errors.
+- In `guestbook`, add `DELETE /api/messages/[id]` returning 404 or 204, and test both. Then, in a separate folder outside the app, create an `index.html` whose script calls `fetch("http://localhost:3000/api/messages")` and logs the result. Open it with VS Code's Live Server (another port), read the CORS error in the console, and fix it by adding an `Access-Control-Allow-Origin` header to the GET response.
+  Hint: `Response.json` takes headers in its second argument: `Response.json(data, { headers: { "Access-Control-Allow-Origin": "*" } })`.
 
 ---lesson
 id: next-8
@@ -1374,10 +1379,11 @@ Prisma's documentation recommends the same pattern for `PrismaClient`. In produc
 - Reuse one client on `globalThis` in development; use a pooled connection string in production.
 
 ### Exercises
-- Create a Postgres database on Neon, set up Drizzle (or Prisma) and migrate the `messages` table.
-- Move the guestbook to Postgres. Restart the dev server and confirm the messages survive.
-- Make your route handlers from the previous lesson use the same data functions, so the API and the page always agree.
-- Write a seed script (`db/seed.ts`, run with `npx tsx db/seed.ts`) that inserts ten messages. Then finish the database and mutation chapters of the official Learn Next.js course.
+- For your `guestbook` app, create a Postgres database on Neon and put its connection string in `.env.local`. Set up Drizzle (or Prisma) as in the lesson (`db/schema.ts`, `db/index.ts`, `drizzle.config.ts`) and migrate the `messages` table. Check in Neon's Tables view that the table exists.
+- Move the guestbook to Postgres: create `lib/data/messages.ts` and use it in `app/guestbook/page.tsx` and in your create and delete actions, and add `app/guestbook/loading.tsx`. Restart the dev server and confirm the messages survive.
+- In `guestbook`, make your route handlers from lesson 9.7 use the same functions from `lib/data/messages.ts` (they're async now, so `await` them), so the API and the page always agree. Then delete the old in-memory `lib/messages.ts`. Check: a message you POST with curl appears on `/guestbook`.
+- In `guestbook`, write a seed script `db/seed.ts` that inserts ten messages, and run it. Then finish the database and mutation chapters of the official Learn Next.js course.
+  Hint: The script runs outside Next.js, so `.env.local` isn't loaded automatically: run it with `npx tsx --env-file=.env.local db/seed.ts`. Import `db` from `./index` (not from `lib/data/`, whose `server-only` import fails outside Next.js), and end with `process.exit(0)` so the open database connection doesn't keep the script running.
 
 ---project
 id: next-p4
@@ -1400,7 +1406,7 @@ While learning you find great articles, videos and docs every day, and browser b
 - No sign-in yet: one user, you
 
 ### Steps
-1. **Setup.** Create the project with `create-next-app`, add Drizzle (or Prisma), create a Neon database, put `DATABASE_URL` in `.env.local`, define the `bookmarks` table and migrate. Write a seed script that inserts 5 bookmarks with a mix of tags, and run it. Commit.
+1. **Setup.** Create a new project with `npx create-next-app@latest bookmarks`, add Drizzle (or Prisma), create a Neon database, put `DATABASE_URL` in `.env.local`, define the `bookmarks` table and migrate. Write a seed script that inserts 5 bookmarks with a mix of tags, and run it. Commit.
 2. **Data layer.** Create `lib/data/bookmarks.ts` (with `import "server-only"`) containing `listBookmarks({ tag })`, `getBookmark(id)`, `createBookmark(data)`, `updateBookmark(id, data)` and `deleteBookmark(id)`. Check it works by rendering `JSON.stringify(await listBookmarks({}))` in a temporary page.
 3. **List page.** Build `app/bookmarks/page.tsx`: await `searchParams`, read `tag`, call `listBookmarks`, and render cards. Tag chips are links to `"/bookmarks?tag=" + encodeURIComponent(tag)`. Add the filter header with a "Clear filter" link, and an empty state ("No bookmarks yet. Add your first one!").
 4. **Loading and error states.** Add `loading.tsx` with a skeleton and `error.tsx` with a retry button. Test them with a temporary 2-second delay and a temporary `throw` in the page, then remove both.
@@ -1632,10 +1638,12 @@ This only checks that a session cookie *exists*, not that it's valid, so it is n
 - `proxy.ts` gives a fast optimistic redirect, never your only check.
 
 ### Exercises
-- Add Better Auth with GitHub sign-in to your guestbook. Show "Signed in as …" and a sign-out button in the header (inside `<Suspense>`).
-- Only signed-in users can post. Add a `userId` column to `messages`, fill it from the session, and show the author's name from their account.
-- Users can delete only their own messages. Prove it: temporarily show the delete button on every message, sign in with a second account (email and password), and check that deleting someone else's message does nothing.
-- Add `proxy.ts` that redirects signed-out visitors away from `/dashboard`. Sign out, visit `/dashboard`, and check where you land.
+- Add Better Auth with GitHub sign-in to your `guestbook` app, following all the setup steps above (including the generated auth tables and a migration). Put the `SignInButton` on a `/sign-in` page (`app/sign-in/page.tsx`), which is where `requireUser()` sends signed-out users, and change its `callbackURL` to `"/guestbook"` (the guestbook has no `/dashboard` yet). In a header in the root layout, show "Signed in as …" and a sign-out button, or a link to `/sign-in` when signed out, inside `<Suspense>`.
+- In `guestbook`, only signed-in users can post: start `createMessage` with `const user = await requireUser()`. Add a `userId` column to `messages`, migrate, save `user.id` with each new message, and show the author's name from their account instead of a typed name (remove the name field from the form and the schema).
+  Hint: Your existing messages have no user, so make the column nullable (`text("user_id").references(() => user.id)`) or empty the table first in Neon's SQL editor. To get the names, join the `user` table in `getMessages()`, for example with `.leftJoin(user, eq(messages.userId, user.id))`, and select `user.name`.
+- In `guestbook`, users can delete only their own messages: change `deleteMessage` as shown above. Prove it: temporarily show the delete button on every message, sign in with a second account (email and password) in a private window, and check that deleting someone else's message does nothing.
+  Hint: The lesson only shows GitHub sign-in. For the second account, add a small client form on `/sign-in` that calls `authClient.signUp.email({ name, email, password })` once, and `authClient.signIn.email({ email, password })` after that.
+- In `guestbook`, add a protected page `app/dashboard/page.tsx` that calls `requireUser()` and shows "Hello, name" (with a `loading.tsx`). Then add `proxy.ts` that redirects signed-out visitors away from `/dashboard`. Sign out, visit `/dashboard`, and check that you land on `/sign-in`.
 
 ---lesson
 id: next-10
@@ -1729,17 +1737,18 @@ Vercel isn't the only option. Any server with Node.js can run `npm run build && 
 
 ## In short
 
-- Run `npm run build && npm start` locally before deploying.
+- Run `npm run build`, then `npm start`, locally before deploying.
 - Import the GitHub repo on Vercel: `main` deploys to production, other branches and pull requests get preview URLs.
 - Add environment variables per environment and redeploy after changes.
 - Use a separate, migrated production database with a pooled connection string, and a production OAuth app.
 - Read build logs and runtime logs; check env vars, migrations and file name case first.
 
 ### Exercises
-- Deploy your guestbook (with database and auth) to Vercel, including a production database and a production GitHub OAuth app.
-- Create a branch, change a heading, open a pull request, and open its preview URL. Merge it and watch production update.
-- Break it on purpose: remove `DATABASE_URL` from the Production variables and redeploy. Find the error in the logs, then fix it.
-- Deploy your portfolio site from the first section and add the live URL to its README and your GitHub profile.
+- Deploy your `guestbook` app (with database and auth) to Vercel: push it to GitHub, create a separate production database and run the migrations against it, create a production GitHub OAuth app, add the environment variables on Vercel, and deploy. Check: on the live URL you can sign in and post a message.
+- In `guestbook`, create a branch, change a heading, push the branch, open a pull request on GitHub, and open its preview URL (Vercel adds a link to the pull request). Merge it and watch production update.
+  Hint: `git switch -c new-heading`, commit, then `git push -u origin new-heading`. GitHub then shows a "Compare & pull request" button on the repository page.
+- Break the deployed `guestbook` on purpose: remove `DATABASE_URL` from the Production variables and redeploy. Find the error in the build logs or the runtime logs (Logs tab), then add the variable back and redeploy.
+- Deploy your `portfolio` from the first part of this module and add the live URL to its README and to your GitHub profile.
 
 ---project
 id: next-p1
@@ -1763,7 +1772,7 @@ Build a blog with two sides: a public side where anyone can read published posts
 - Deployed on Vercel with a production database and working GitHub sign-in
 
 ### Steps
-1. **Setup.** Create the project, connect Drizzle (or Prisma) to a Neon database, define `posts`, `tags` and `post_tags`, migrate, and write a seed script with 3 posts (one of them a draft). Commit.
+1. **Setup.** Create a new project with `npx create-next-app@latest blog`, connect Drizzle (or Prisma) to a Neon database, define `posts`, `tags` and `post_tags`, migrate, and write a seed script with 3 posts (one of them a draft). Commit.
 2. **Public pages.** Write data functions that only return published posts: `getPublishedPosts()`, `getPublishedPostBySlug(slug)`, `getPublishedPostsByTag(tag)`. Build the home, post and tag pages (Markdown with `react-markdown`, `notFound()` for missing or draft posts), each with a `loading.tsx`. Add `generateMetadata` and a title template.
 3. **Authentication.** Add Better Auth with GitHub sign-in and a `/sign-in` page. Write `requireAdmin()` in `lib/session.ts`: it gets the session and checks the email against `ADMIN_EMAIL`, otherwise redirects (or calls `notFound()`). Add `proxy.ts` for `/admin` as a first gate.
 4. **Admin list.** Build `/admin` with a table of all posts (drafts too), their status and dates, and "Edit" links. Call `requireAdmin()` at the top.
@@ -1818,7 +1827,7 @@ Build a small SaaS-style app where anyone can sign up, track daily habits ("read
 - Mobile-first layout; deployed on Vercel
 
 ### Steps
-1. **Plan and set up.** Sketch the three main screens (Today, Habit detail, Manage habits) and the schema. Create the project with the database and Better Auth (GitHub). Build the landing page; signed-in users are redirected to `/today`. Commit.
+1. **Plan and set up.** Sketch the three main screens (Today, Habit detail, Manage habits) and the schema. Create a new project with `npx create-next-app@latest habit-tracker`, then add the database and Better Auth (GitHub). Build the landing page; signed-in users are redirected to `/today`. Commit.
 2. **User-scoped data layer.** In `lib/data/habits.ts`, write every function with the user id as its first parameter: `listHabits(userId)`, `getHabit(userId, habitId)`, `createHabit(userId, data)`, `toggleCheckIn(userId, habitId, date)`… Each query filters on `user_id` (check-ins through a join with `habits`). Write these before any UI.
 3. **Manage habits.** Build `/habits` with a create form (Server Action, Zod, `<input type="color">` for the colour), plus edit and archive. Every action starts with `requireUser()` and passes `user.id` to the data layer.
 4. **Today view.** Build `/today`: active habits with a big check button each. The toggle action inserts or deletes the check-in for today's date and calls `revalidatePath("/today")`.

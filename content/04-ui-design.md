@@ -111,9 +111,9 @@ Primary is filled, secondary is outlined, tertiary looks like a link. Destructiv
 
 ### Exercises
 - Take a screenshot of one of your old projects, do the squint test, and write down 3 hierarchy problems you see.
-- Build a "stat card" row (3 stats such as followers, posts, likes) where the values are clearly louder than the labels.
-- Build a product card (image, title, brand, price, rating, button) twice: first with everything bold and the same size, then with clear hierarchy. Put them side by side and compare.
-- Create `.btn-primary`, `.btn-secondary` and `.btn-tertiary` classes and use them in a dialog with "Delete", "Cancel" and "Learn more".
+- Create a folder `ui-practice` for this section's small exercises (one HTML file per exercise, CSS in a `<style>` tag). In `ui-practice/stats.html`, build a row of 3 stat cards (followers, posts, likes) where the values are clearly louder than the labels. Squint test: you should see the three numbers first.
+- In `ui-practice/card.html`, build a product card (image, title, brand, price, rating, button) twice, side by side: first with everything bold and the same size, then with clear hierarchy. Squint at both: only the second one should have one clear starting point.
+- In `ui-practice/buttons.html`, create the `.btn-primary`, `.btn-secondary` and `.btn-tertiary` classes and use them in a "Delete this book?" confirmation box (a simple `div` is enough). Here "Delete" is the main action, so it's the primary button (make it red); "Cancel" is secondary and "Learn more" is tertiary.
 
 ---lesson
 id: ui-2
@@ -222,10 +222,12 @@ The h1 is never smaller than 2rem or larger than 3.5rem, and in between it grows
 - Use `rem` for sizes and `clamp()` for big fluid headings.
 
 ### Exercises
-- Define a type scale (ratio 1.25) as CSS custom properties and apply it to `h1`–`h3`, body text and a `.caption` class.
-- Take a long article (copy a Wikipedia page's text into an HTML file) and make it comfortable to read: font, line height, line length, heading sizes and spacing.
-- Make the article's h1 fluid with `clamp()` and check it at 360px and 1440px wide in DevTools' device toolbar.
-- Change your browser's default font size to "Large" and check the page still works. Find any `px` font sizes and convert them to `rem`.
+- In `ui-practice`, create `tokens.css` with a type scale (ratio 1.25) as CSS custom properties, like the lesson's. You'll add colours and spacing to this file in the next lessons and reuse it in this section's landing page. Create `ui-practice/type.html` that links it and shows an `h1`, `h2`, `h3`, a paragraph and a `.caption`, sized only with the scale.
+- Copy the text of a long Wikipedia article into `ui-practice/article.html` (linking `tokens.css`) and make it comfortable to read: font, line height, line length (`max-width: 65ch` on a `.prose` wrapper), heading sizes and spacing. On a wide screen, the lines should stop at about 65 characters.
+  Hint: 5–6 paragraphs and 2–3 headings are enough. Pasting text doesn't add HTML tags, so wrap each paragraph in `<p>` and each heading in `<h2>` yourself.
+- Make the h1 in `article.html` fluid with `clamp()` (like the lesson's example) and check it at 360px and 1440px wide in DevTools' device toolbar (Ctrl+Shift+M). With the lesson's values, DevTools → Computed shows a font size of 32px at 360px and 56px at 1440px.
+- Change your browser's default font size to "Large" and reload `article.html`: all the text should get bigger. Any text that doesn't grow uses `px`: convert those font sizes to `rem`.
+  Hint: In Chrome it's Settings → Appearance → Font size. Set it back to "Medium (Recommended)" when you're done.
 
 ---lesson
 id: ui-3
@@ -371,10 +373,11 @@ The lighter `#60a5fa` blue is easy to see on a dark background, but white text o
 - Never use colour as the only signal, and always show focus.
 
 ### Exercises
-- Build a palette as CSS variables: one brand colour and greys with 5 shades each, plus success, warning and danger. Display them as swatches on a page.
-- Add a semantic token layer on top (`--color-bg`, `--color-text`, `--color-primary`…) and restyle a small component using only those tokens.
+- Add a palette to `ui-practice/tokens.css`: one brand colour and greys with 5 shades each (like `--blue-50` … `--blue-700`), plus success, warning and danger colours. Show them as swatches in `ui-practice/colors.html`: one coloured square per variable, with its name under it.
+- Add a semantic token layer on top in `tokens.css` (`--color-bg`, `--color-text`, `--color-primary`…). Link `tokens.css` in `ui-practice/card.html` and restyle the clear-hierarchy product card from lesson 4.1 using only those tokens: no hex codes should be left in its CSS.
 - Check every text/background pair in one of your existing projects with the WebAIM checker or DevTools. Fix every failure and note the before/after ratios.
-- Add dark mode to the same component with `prefers-color-scheme`, changing only token values. Test it with DevTools' "Emulate CSS prefers-color-scheme" option.
+- Add dark mode to the product card from exercise 2 with `prefers-color-scheme`, changing only token values in `tokens.css`. Test it with DevTools' "Emulate CSS prefers-color-scheme: dark" option: the card turns dark and its text still passes contrast.
+  Hint: In Chrome DevTools, press Ctrl+Shift+P, type "dark" and choose "Emulate CSS prefers-color-scheme: dark". The same option is in ⋮ → More tools → Rendering.
 
 ---lesson
 id: ui-4
@@ -496,10 +499,11 @@ Pick a few vertical lines and line things up on them. Text in a card should star
 - Constrain content width with a container, and build mobile first.
 
 ### Exercises
-- Add spacing tokens to one existing project and replace every hard-coded margin, padding and gap with a token.
-- Build a sign-up form with five fields where proximity makes it obvious which label belongs to which input.
-- Build a responsive card grid with `repeat(auto-fit, minmax(…, 1fr))` and check it at 360px, 768px and 1280px wide.
-- Build a dashboard layout with Grid: a header across the top, a sidebar on the left (hidden or moved to the top on mobile) and a main area with a grid of cards.
+- Add the lesson's spacing scale to `ui-practice/tokens.css`, then replace every hard-coded margin, padding and gap in your `ui-practice` pages (or in one older project) with a token. Afterwards, every `margin`, `padding` and `gap` in their CSS should use a `var(--space-…)` value.
+- In `ui-practice/signup.html`, build a sign-up form with five fields (for example name, email, password, repeat password, birthday) where proximity makes it obvious which label belongs to which input. Squint test: you should see five separate groups, each label close to its own input.
+- In `ui-practice/grid.html`, build a responsive grid of 8 cards with `repeat(auto-fit, minmax(…, 1fr))` inside a `.container`, and check it at 360px, 768px and 1280px wide in the device toolbar. With the lesson's values (`16rem` columns, `--space-6` gap) you get 1, 2 and 4 columns.
+- In `ui-practice/dashboard.html`, build a dashboard layout with Grid: a header across the top, a sidebar on the left (moved to the top on mobile) and a main area with a grid of cards (reuse your grid from exercise 3). Build it mobile first and check it at 360px and 1280px wide.
+  Hint: On mobile, one column is enough: header, sidebar and main simply stack. Inside `@media (min-width: 48rem)`, use `grid-template-columns: 16rem 1fr` like the lesson, and give the header `grid-column: 1 / -1` so it spans both columns.
 
 ---project
 id: ui-p2
@@ -521,8 +525,8 @@ Design and build a one-page marketing site for an imaginary product, such as a h
 ### Steps
 1. Write the copy first in a plain text file: product name, a headline that says what the user *gets*, a one-sentence subtext, 3–6 features with short descriptions, two or three testimonials, pricing tiers and 5 FAQ questions. Design is much easier with real text.
 2. Sketch the page on paper: one box per section, for mobile and for desktop. Decide which section has the strongest call to action and what the one primary button says.
-3. Create `index.html` with all sections in semantic HTML and no CSS. Read it top to bottom in the browser: it should already make sense as a document.
-4. Create `tokens.css` with your type scale, palette (check your text/background pairs in the WebAIM checker now) and spacing scale. Add base styles: font, body colours, `line-height`, `max-width: 65ch` for paragraphs and a `.container`.
+3. Create a `landing-page` folder with an `index.html` containing all sections in semantic HTML and no CSS. Read it top to bottom in the browser: it should already make sense as a document.
+4. Create `tokens.css` (start from a copy of your `ui-practice/tokens.css` from lessons 4.2–4.4) with your type scale, palette (check your text/background pairs in the WebAIM checker now) and spacing scale. Add base styles: font, body colours, `line-height`, `max-width: 65ch` for paragraphs and a `.container`.
 5. Style the sections mobile first, one at a time: navbar, hero, features, testimonials, pricing, FAQ, footer. Use Flexbox for rows of items and Grid for the features and pricing cards. Open the page at 360px wide in DevTools after each section.
 6. Add `min-width` media queries for tablet and desktop: wider hero layout, multi-column features and pricing, and a fluid `clamp()` headline.
 7. Build the FAQ with `<details>` and `<summary>` elements: they open and close with no JavaScript and work with the keyboard. Style the open state with `details[open]`.
@@ -644,10 +648,12 @@ Don't aim for pixel-perfect art. For a developer, Figma is a thinking tool.
 - Styles and variables are your design tokens; inspect layers to read the values you need.
 
 ### Exercises
-- Create a free Figma account and a file. Recreate a simple hero section (heading, paragraph, two buttons, image placeholder) using auto layout only.
-- Create colour and spacing variables named like your CSS tokens and apply them to the hero.
-- Create a Button component with variants `primary` / `secondary` and `default` / `disabled`, then use instances in the hero.
-- Find a free community design file (search "landing page" in the Figma Community), inspect it, and write the CSS for one of its cards using the values you read from the panel.
+- Create a free Figma account and a design file called "UI practice". In it, recreate a simple hero section (heading, paragraph, two buttons, image placeholder) using auto layout only. Check: when you make the heading text longer, the hero frame grows with it.
+- In the same file, create colour and spacing variables named like the tokens in your `ui-practice/tokens.css` (for example `color/primary`, `space/4`) and apply them to the hero's fills, gaps and padding.
+  Hint: Click an empty spot of the canvas: the right panel shows a "Variables" (or "Local variables") section where you create them. To apply one, hover a fill, gap or padding field and click the small variable icon that appears.
+- Create a Button component with two variant properties: `type` (`primary` / `secondary`) and `state` (`default` / `disabled`), so 4 variants. Replace the hero's two buttons with instances, then switch one instance to `secondary` in the right panel.
+  Hint: Select the component and click "Add variant" in the right panel. Rename the variant properties there; every instance then shows them as dropdowns.
+- Find a free community design file (search "landing page" in the Figma Community), inspect it, and write the HTML and CSS for one of its cards in `ui-practice/figma-card.html` using the values you read from the panel. Compare your page with the design side by side.
 
 ---lesson
 id: ui-6
@@ -782,10 +788,11 @@ Many people use a keyboard instead of a mouse. Test every page by pressing Tab: 
 - Give feedback for every action and test everything with the keyboard.
 
 ### Exercises
-- Pick a list in one of your apps and add a proper empty state (message + action) and an empty-search state.
-- Add a loading state to a form or fetch in one of your projects: disabled button with "Saving…" text, and an error message if it fails.
-- Audit a sign-up form (yours or a real website) against Nielsen's 10 heuristics. Write down three problems and fix them in your own version.
-- Build an accessible form field component in HTML/CSS with label, hint text and an error message connected via `aria-describedby`. Test it by navigating with Tab only.
+- Pick an app of yours that shows a list, for example `story-board` from Module 1. Add a proper empty state for when there's no data (a message plus one action, like a button that jumps to the form). If the app has a search or filter, also add an empty-search state. Check it by temporarily emptying the data (in `story-board`: `[]` in `data/stories.json`).
+- In the same app's form (in `story-board`: the story form in `public/index.js`), add a loading state: a disabled button with "Saving…" text while the request runs, and a clear error message in a `role="status"` element if it fails. To see "Saving…", set DevTools → Network → throttling to a slow preset like "3G"; to see the error, stop the server and submit again.
+- Audit a sign-up form (yours or a real website) against Nielsen's 10 heuristics and write down three problems. Then fix those problems in your own sign-up form, `ui-practice/signup.html` from lesson 4.4.
+- In `ui-practice/field.html`, build an accessible form field in HTML/CSS: a label, a hint text (like "Between 1450 and 2026") and an error message, both connected to the input with `aria-describedby`. Test it with Tab only: you can reach the input and always see the focus.
+  Hint: `aria-describedby` accepts several ids separated by spaces: `aria-describedby="year-hint year-error"`.
 
 ---project
 id: ui-p1

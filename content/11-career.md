@@ -108,8 +108,9 @@ Go through each project with this list:
 - Polish code, secrets, tests and empty states; check live links regularly.
 
 ### Exercises
-- List every project you've built so far and score each from 1–5 on "works live", "README", "code quality" and "uniqueness". Choose your top 3.
-- Write the README for each of the 3 using the template above, including a screenshot or GIF and a demo login.
+- Create a `career/` folder (a private GitHub repo or a notes folder) for this module's notes and checklists. In `career/projects.md`, list every project you've built so far in a table, score each from 1–5 on "works live", "README", "code quality" and "uniqueness", and choose your top 3. Early in the curriculum you may only have one or two: score them anyway, and redo this after each module.
+- Write the README for each of the 3 using the template above, including a screenshot or GIF and (if the app has a login) a demo login.
+  Hint: For a GIF, use a free screen recorder such as ScreenToGif (Windows) or Kap (Mac). Save it in the repo's `docs/` folder and keep it short (under about 10 MB).
 - Go through the polish checklist for one project and fix everything on it. Commit each fix separately with a clear message.
 - Ask a friend to run one project using only the README. Watch without helping, write down where they got stuck, and fix the README.
 
@@ -204,9 +205,10 @@ The green squares show *when* you commit. Regular activity looks good, but don't
 
 ### Exercises
 - Create your GitHub profile README (a repo named exactly like your username) and pin your 6 best repositories, each with a description.
-- Update your Next.js portfolio from the Next.js module with the four sections above, and publish it.
+- Update the site from the Next.js module's "Portfolio site in Next.js" project with the four sections above (hero, projects, about, contact), and deploy it on Vercel. Not at the Next.js module yet? Come back to this exercise (and the next two) after that project.
 - Run Lighthouse on your portfolio and fix issues until performance and accessibility are 90+. Test it at phone width.
-- Write a case study page for your best project: problem, solution, architecture diagram, 2 challenges, next steps.
+- Write a case study page for your best project in your portfolio (a Markdown file in `content/projects/`): problem, solution, architecture diagram, 2 challenges, next steps.
+  Hint: Draw the diagram in a free tool such as Excalidraw or draw.io (boxes for the browser, server, database and external APIs, joined by arrows), export it as a PNG into `public/projects/`, and add it to the Markdown as an image.
 
 ---lesson
 id: car-3
@@ -304,10 +306,10 @@ Never list skills you don't have: interviews will find out.
 - Tailor keywords and project order to each job ad.
 
 ### Exercises
-- Write your master CV using the structure above. Rewrite every bullet with the action + what + technology + result formula.
-- Rewrite three bullets from a previous non-tech job to show transferable skills, with a number in each.
-- Get feedback from at least 2 people (for example in r/cscareerquestions, a developer Discord, or a friend who hires people) and apply it.
-- Find one real job listing and make a tailored version of your CV for it. Highlight the keywords you matched.
+- Write your master CV using the structure above, in Google Docs or Word with a plain single-column layout, and keep it in your `career/` folder. Rewrite every bullet with the action + what + technology + result formula, then export it as `Firstname-Lastname-CV.pdf`.
+- Rewrite three bullets from a previous non-tech job (or your studies or volunteering) to show transferable skills, with a number in each.
+- Get feedback on your CV from at least 2 people (for example in r/cscareerquestions, a developer Discord, or a friend who hires people) and apply it. Before posting it anywhere public, remove your phone number, email and address.
+- Find one real job listing, save a copy of your master CV for it (for example `Firstname-Lastname-CV-Acme`), and tailor it with the 4 steps above. In `career/tailoring.md`, list the ad's keywords you matched and the ones you couldn't.
 
 ---lesson
 id: car-4
@@ -429,12 +431,12 @@ This project has no code. It's the checklist that says you're ready to apply for
 - An application tracker set up, and your first 10 tailored applications sent
 
 ### Steps
-1. **Block the time.** Put 2 hours a week for career tasks in your calendar (for example Saturday morning) and keep a simple `career.md` checklist in a repo or notes app with every item from "What it must do".
-2. **Projects.** Choose your 3 projects with the scoring exercise from Lesson car-1 and polish one per week with the checklist. Each ends with a live demo, a README and a green CI badge.
+1. **Block the time.** Continue in your `career/` folder from lessons 11.1–11.4: some of this may already be done there, so treat the steps below as a checklist and add only what's missing. Put 2 hours a week for career tasks in your calendar (for example Saturday morning) and keep a simple `career/career.md` checklist with every item from "What it must do".
+2. **Projects.** Choose your 3 projects with the scoring exercise from Lesson 11.1 and polish one per week with the checklist. Each ends with a live demo, a README and a green CI badge.
 3. **Portfolio and GitHub.** Update your Next.js portfolio with the 3 project cards and contact details, deploy it, and set up your GitHub profile README and pinned repos.
 4. **CV.** Write your master CV, get feedback from 2 people, apply it, and save it as a PDF with a sensible filename. Click every link in the PDF.
 5. **LinkedIn.** Update your profile and publish your first post about a finished project. Schedule the next 2 posts (one per week).
-6. **Tracker and first applications.** Set up the tracker from Lesson car-5 and send 10 tailored applications (tailored CV, short personal note), at most 3–4 per week so each one gets proper attention.
+6. **Tracker and first applications.** Set up the tracker from Lesson 11.5 and send 10 tailored applications (tailored CV, short personal note), at most 3–4 per week so each one gets proper attention.
 7. **Review.** After 10 applications, look at the tracker: which ones got replies, and what did they have in common? Adjust your CV, targeting or portfolio, and write 3 bullet points about what you'll change.
 
 ### Hints
@@ -508,7 +510,7 @@ Useful status values: `To apply`, `Applied`, `Followed up`, `Interview`, `Take-h
 
 Sending 200 identical applications gets very few replies. A **tailored** application takes 20–30 minutes:
 
-1. Tailor your CV keywords and project order (Lesson car-3).
+1. Tailor your CV keywords and project order (Lesson 11.3).
 2. Write a short, specific note. Many applications don't need a long cover letter, but a few personal sentences help:
 
 ```
@@ -518,7 +520,7 @@ PostgreSQL), and before coding I worked 5 years in healthcare admin, so I know t
 receptionists face. Portfolio: sam.dev. I'd love to talk!
 ```
 
-3. Look for a **warm route** in: someone you know at the company, an alumni of your course, or a developer there you could message (Lesson car-4). A referral can make an interview several times more likely.
+3. Look for a **warm route** in: someone you know at the company, an alumni of your course, or a developer there you could message (Lesson 11.4). A referral can make an interview several times more likely.
 
 ## A weekly routine
 
@@ -527,7 +529,7 @@ Consistency beats intensity. A sustainable week might be:
 - 5–10 tailored applications
 - 2 networking actions (a meetup, a comment, a personal message)
 - 1 LinkedIn post
-- Interview practice (Lessons car-6 and car-7)
+- Interview practice (Lessons 11.6 and car-7)
 - Continued building: a new feature or project keeps your skills and your GitHub active
 
 ## Following up and handling rejection
@@ -560,10 +562,10 @@ Your tracker shows a funnel: applications → replies → interviews → offers.
 - Keep a sustainable weekly routine and measure what you control.
 
 ### Exercises
-- Set up your application tracker with the columns above.
-- Find 10 junior roles in your area or remote, add them to the tracker, and list the skills that appear in at least half of them. Mark the ones you don't have yet.
-- Write 3 short tailored application notes for 3 of those roles.
-- Plan your weekly job-search routine and put it in your calendar for the next 4 weeks.
+- Set up your application tracker as a spreadsheet (Google Sheets or Excel) or a Notion table, with the columns above and the status values listed under it.
+- Find 10 junior roles in your area or remote and add them to the tracker with the status `To apply`. In `career/skills.md`, list the skills that appear in at least half of them, and mark the ones you don't have yet.
+- Write 3 short tailored application notes (3–5 sentences, like the example above) for 3 of those roles, and keep them in the tracker's Notes column or in your `career/` folder. You don't have to send them yet.
+- Plan your weekly job-search routine (see "A weekly routine" above) and put it in your calendar as recurring events for the next 4 weeks.
 
 ---lesson
 id: car-6
@@ -722,10 +724,11 @@ If you're stuck, say what you're thinking ("I'm wondering whether a hash map cou
 - Practise consistently with a structured list, notes and mock interviews.
 
 ### Exercises
-- Solve Two Sum twice: first with a nested loop, then with a `Map`. Write the Big-O of each in a comment.
-- Solve 2 easy problems a week from the arrays & hash maps section of a structured list (NeetCode or the Tech Interview Handbook), writing notes for each.
-- Record yourself solving one problem out loud using the 6-step process. Watch it back and note one thing to improve.
-- Do one mock interview on Pramp or with a friend, then write down what went well and what didn't.
+- Create a GitHub repo `interview-practice` (you'll grow it in this part's project, "Interview practice plan"). In `problems/01-two-sum/solution.js`, solve Two Sum twice: first with a nested loop, then with a `Map`. Write the Big-O of each in a comment, and check that both return `[0, 1]` for `([2, 7, 11, 15], 9)`.
+- For the next 2 weeks, solve 2 easy problems a week (4 in total) from the arrays & hash maps section of a structured list (NeetCode or the Tech Interview Handbook). Put each in its own `problems/NN-name/` folder in `interview-practice`, with a `README.md` note: the problem link, the pattern, the key insight and your mistake.
+- Record yourself solving one problem out loud using the 6-step process. Watch it back and write one thing to improve in `interview-practice/mocks/recording-1.md`.
+  Hint: Your phone propped up next to the screen is enough, or use a free screen recorder that also records your microphone, such as OBS Studio.
+- Do one mock interview on Pramp (or another free mock-interview platform) or with a developer friend, then write what went well and what didn't in `interview-practice/mocks/mock-1.md`.
 
 ---lesson
 id: car-7
@@ -826,10 +829,10 @@ Respect the time limit: spending 20 hours on a 4-hour task often shows in the re
 - Take-homes: read carefully, build the core first, test, commit often, explain decisions in the README.
 
 ### Exercises
-- Write 6 STAR stories from your learning journey and past jobs, one for each category in the story bank. Keep each under 2 minutes when spoken.
-- Write and practise your "tell me about yourself" answer out loud until it takes 60–90 seconds.
-- Write 4 questions you'd ask an interviewer, then research one real company and adapt them to it.
-- Do a practice take-home: build a small API + UI (for example a recipe box) in 4 hours with tests and a README that explains your decisions.
+- In `interview-practice/stories.md`, write 6 STAR stories from your learning journey and past jobs, one for each category in the story bank. Read each one out loud with a timer: each should take under 2 minutes.
+- Write your "tell me about yourself" answer (present, past, future) at the top of `stories.md`, and practise it out loud with a timer until it takes 60–90 seconds.
+- In `interview-practice/questions.md`, write 4 questions you'd ask an interviewer. Then research one real company (its product, customers and tech stack) and add a version of the questions adapted to it.
+- Do a practice take-home in a new repo (for example `recipe-box`): first write a short brief with 3–5 requirements (such as add, list and delete recipes), then set a 4-hour timer and build a small API + UI with the stack you know best, with tests and a README that explains your decisions. Check that it runs from a fresh clone. It can count as the timed take-home in this part's project.
 
 ---project
 id: car-p3
@@ -843,13 +846,13 @@ Interview skills improve with structured practice, not with last-minute cramming
 - A repo `interview-practice` with one folder per problem, for example `problems/01-two-sum/`, containing `solution.js` and a `solution.test.js` (Vitest), or `solution.ts` and `solution.test.ts` if you prefer TypeScript, and a `README.md` with the problem link, your approach, the pattern used, time and space complexity, and the mistake you made
 - 30 easy/medium problems in this order: arrays and hash maps → two pointers and sliding window → stacks and queues → trees and BFS/DFS
 - A root `README.md` with a progress table: number, problem, pattern, difficulty, date, solved alone (yes / with hints)
-- 6 written STAR stories in `stories.md`, one per story-bank category from Lesson car-7
+- 6 written STAR stories in `stories.md`, one per story-bank category from Lesson 11.7
 - 2 mock interviews (on Pramp, another mock-interview platform, or with a developer friend), each followed by a written reflection in `mocks/`
 - 1 timed take-home: a small API + UI built in 4 hours, with tests and a README explaining decisions, in its own repo linked from this one
 
 ### Steps
-1. **Set up (before week 1).** Create the repo with Vitest, the folder structure, a problem `README.md` template, and the progress table. Choose a structured problem list (NeetCode roadmap or the Tech Interview Handbook) and pick your 30 problems in advance.
-2. **Week 1: arrays and hash maps (6 problems).** For example Two Sum, Contains Duplicate, Valid Anagram, Group Anagrams. Use the 6-step process from Lesson car-6, out loud. Write the first 2 STAR stories.
+1. **Set up (before week 1).** Continue in your `interview-practice` repo from lessons 11.6–11.7: some of it already exists there, so treat the steps below as a checklist and add only what's missing. Set up Vitest, the folder structure, a problem `README.md` template, and the progress table. Choose a structured problem list (NeetCode roadmap or the Tech Interview Handbook) and pick your 30 problems in advance.
+2. **Week 1: arrays and hash maps (6 problems).** For example Two Sum, Contains Duplicate, Valid Anagram, Group Anagrams. Use the 6-step process from Lesson 11.6, out loud. Write the first 2 STAR stories.
 3. **Week 2: arrays and hash maps continued + two pointers (5 problems).** For example Top K Frequent Elements, Valid Palindrome, Two Sum II (sorted input). Write STAR stories 3 and 4. Re-solve one week-1 problem from memory.
 4. **Week 3: sliding window (5 problems) + mock interview 1.** For example Best Time to Buy and Sell Stock, Longest Substring Without Repeating Characters. Write STAR stories 5 and 6. Do your first mock interview at the end of the week and write the reflection the same day.
 5. **Week 4: stacks and queues (5 problems) + the take-home.** For example Valid Parentheses, Min Stack, Implement Queue using Stacks. At the weekend, do the timed take-home: choose a brief (or ask a friend to write one), set a 4-hour timer, and build it with tests and a README.

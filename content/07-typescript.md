@@ -124,10 +124,11 @@ VS Code has TypeScript built in. Hover over any variable to see its type, press 
 - Node can strip types from simple `.ts` files itself, without checking them and without support for enums.
 
 ### Exercises
-- Set up a TS project with strict mode, a `typecheck` script and a `dev` script using tsx. Write `src/index.ts` that logs a greeting, and run both scripts.
+- Create a folder `ts-practice` for the small exercises in lessons 7.1–7.6: `npm init -y`, add `"type": "module"`, install `typescript` and `tsx`, and use the `tsconfig.json` and the three scripts from the lesson. Write `src/index.ts` that logs a greeting. `npm run dev` should print it (stop it with Ctrl+C), and `npm run typecheck` should finish with no errors.
 - Paste the `totalPages` example into the TS Playground. Read the error, fix the call, and look at the JavaScript output on the right.
-- Copy a JavaScript utility file from an earlier project into `src/`, rename it to `.ts`, and fix every error `npm run typecheck` reports.
-- Run `npm run build` and compare a `.ts` file in `src/` with its `.js` version in `dist/`. What exactly was removed?
+- Copy one JavaScript file that has no imports from an earlier project (for example `utils/getDataByQueryParams.js` from `destinations-api`, or a function file from `tdd-utils`) into `ts-practice/src/`, rename it to `.ts`, and fix errors until `npm run typecheck` reports none.
+  Hint: Most errors will be "Parameter 'x' implicitly has an 'any' type". Add a type after each parameter, as in `totalPages(books: Book[])`; for objects, write a small `type` first, like `Book` in the lesson.
+- In `ts-practice`, run `npm run build` and compare `src/index.ts` with `dist/index.js` (and your copied file with its `.js` version). What exactly was removed?
 
 ---lesson
 id: ts-2
@@ -268,10 +269,10 @@ Use it only when you really know more than the compiler (like here, where you wr
 - Prefer `unknown` over `any`; use `as` rarely.
 
 ### Exercises
-- Annotate the parameters of 5 functions from earlier projects. Hover over each one to check the inferred return type.
-- Write `average(numbers: number[]): number`. What should it return for an empty array? Make that explicit in the code.
-- Find a case where inference gives a wider type than you want (like `string[]` for a list of statuses) and fix it with `as const`.
-- Parse a JSON string into an `unknown` variable and safely log one property using `typeof` and `in` checks.
+- Copy 5 small functions from earlier projects (for example from `tdd-utils`) into `ts-practice/src/functions.ts` and annotate their parameters. Hover over each function name to check the inferred return type, and make sure `npm run typecheck` reports no errors.
+- In `ts-practice/src/average.ts`, write `average(numbers: number[]): number`. What should it return for an empty array? Make that explicit in the code.
+- In `ts-practice/src/statuses.ts`, write `const statuses = ["todo", "doing", "done"]` and hover over it: it's `string[]`. Add `as const` and hover again to see the exact values.
+- In `ts-practice/src/parse.ts`, parse a JSON string into an `unknown` variable and safely log one property using `typeof` and `in` checks. Run it with `npx tsx src/parse.ts`.
 
 ---lesson
 id: ts-3
@@ -421,8 +422,8 @@ The second call fails because of **excess property checking**: when you write an
 - `Record<K, V>` for lookup objects; TypeScript compares types by shape.
 
 ### Exercises
-- Write types for `Book`, `Author` and `Tag` from your database module, and a `BookWithAuthor` type for what your JOIN query returns.
-- Create a type for an API response: `{ data: Book[]; page: number; total: number }`, and a function that returns the titles from it.
+- In `ts-practice/src/types.ts`, write types `Book`, `Author` and `Tag` that match the columns of your `books`, `authors` and `tags` tables from the Databases module, plus a `BookWithAuthor` type for a book with a nested `author: { id, name }`, the way your `books-api` returns it. `npm run typecheck` should pass.
+- In `ts-practice/src/types.ts`, add a `BooksResponse` type for an API response: `{ data: Book[]; page: number; total: number }`. Then write `getTitles(response: BooksResponse): string[]` that returns the titles.
 - Rewrite `User` and `Admin` above with `type` and `&` instead of `interface` and `extends`.
 - Write a `Record<string, number>` that counts how many books each author has, built from an array of `Book`.
 
@@ -580,7 +581,7 @@ const books = items.filter(isBook); // type: Book[]
 ### Exercises
 - Write `type Status = "todo" | "doing" | "done"` and a function `nextStatus(s: Status): Status` that moves a task forward (done stays done).
 - Model a fetch state as a discriminated union and write a function that returns a message for each state.
-- Add a `never` check to your `switch`, then add a `"cancelled"` state and watch the compile error appear. Fix it.
+- Add a `never` check to the `switch` from the previous exercise, then add a `{ status: "cancelled" }` variant and run `npm run typecheck`: the error points at the `const unhandled: never` line. Fix it by handling `"cancelled"`.
 - Write `isBook(value: unknown): value is Book` and use it to filter a parsed JSON array.
 
 ---lesson
@@ -737,8 +738,8 @@ Remember that `fetchJSON<T>` only *tells* TypeScript what the data is; it doesn'
 ### Exercises
 - Write a generic `last<T>(items: T[]): T | undefined` and check the inferred types for a number array and a `Book` array.
 - Write a generic `findById<T extends { id: number }>(items: T[], id: number)` and use it with books and authors.
-- Write a typed `fetchJSON<T>(url): Promise<T>` and use it with an `ApiResponse<Book[]>` type against your Books API.
-- Write `groupBy<T>(items: T[], getKey: (item: T) => string): Record<string, T[]>` and group books by genre.
+- In `ts-practice/src/fetch-books.ts`, write a typed `fetchJSON<T>(url): Promise<T>`, import `Book` from `./types.js`, and call it as `fetchJSON<ApiResponse<Book[]>>("http://localhost:3000/api/books")` while your `books-api` is running. Log the first title and run the file with `npx tsx src/fetch-books.ts`. (In Node the URL must be complete: `/api/books` alone only works in a browser.)
+- Write `groupBy<T>(items: T[], getKey: (item: T) => string): Record<string, T[]>` and use it to group an array of books by genre (use `"none"` for books without one).
 
 ---lesson
 id: ts-6
@@ -899,7 +900,7 @@ You get the "every status is present" check, and the object keeps its exact keys
 - `ReturnType`, `Parameters` and `Awaited` read types from functions; `satisfies` checks without widening.
 
 ### Exercises
-- Derive `NewBook` and `BookPatch` from `Book`, and write the signatures of `createBook` and `updateBook` using them.
+- In `ts-practice/src/types.ts`, derive `NewBook` and `BookPatch` from `Book`, and write the types of `createBook` and `updateBook` as function types that use them, for example `type CreateBook = (data: NewBook) => Promise<Book>`.
 - Create `STATUSES` with `as const`, derive the `Status` union from it, and build a `Record<Status, string>` of column titles.
 - Write `getProp<T, K extends keyof T>(obj: T, key: K): T[K]` and check the inferred types for three different keys.
 - Create a typed config object and derive a union of its keys with `keyof typeof`. Then use `satisfies` to check it against `Record<string, string>`.
@@ -923,7 +924,7 @@ Take the utility library you built test-first in the Testing module and convert 
 - `npm run build` runs `tsc` and emits `.js` and `.d.ts` files to `dist/`; `package.json` points `exports` and `types` at them.
 
 ### Steps
-1. **Branch and install.** Create a `typescript` branch. Install `typescript` (and `@types/node` if you use Node APIs). Create `tsconfig.json` with `strict`, `module: "NodeNext"`, `declaration: true`, `outDir: "dist"`, `skipLibCheck`. Move source files into `src/` if they aren't already. Add a `typecheck` script (`tsc --noEmit`). Commit.
+1. **Branch and install.** In your `tdd-utils` folder from the Testing module, create a `typescript` branch. Install `typescript` (and `@types/node` if you use Node APIs). Create `tsconfig.json` with `strict`, `module: "NodeNext"`, `declaration: true`, `outDir: "dist"`, `skipLibCheck`. Move source files into `src/` if they aren't already. Add a `typecheck` script (`tsc --noEmit`). Commit.
 2. **Types first.** Create `src/types.ts` with the types your library is about: currencies, options objects, accepted inputs. Use literal unions and `as const` lists where values are fixed. Commit.
 3. **Convert one file at a time.** Start with the file that has no imports. Rename it to `.ts`, annotate parameters and return types, and fix every error. Run `npm test` (Vitest runs `.ts` files without any setup) and `npm run typecheck`. Commit, then do the next file.
 4. **Remove the weak spots.** Search for `any`, unnecessary `as` and `!`. Replace them with `unknown` plus narrowing, better types, or real checks. Add a generic function or type where it makes the API better.
@@ -1131,10 +1132,10 @@ For data from `localStorage` or an API you don't control, validate it (with Zod 
 - `React.ChangeEvent<HTMLInputElement>` and `React.FormEvent<HTMLFormElement>` for handlers; generic components with `<T>`.
 
 ### Exercises
-- Create a Vite `react-ts` app and build a typed `TodoList` with add, toggle and delete, using `useState<Todo[]>([])`.
-- Type a form's `onChange` and `onSubmit` handlers as separate functions without using `any`.
-- Write a `Button` component that accepts all normal button props plus `variant: "primary" | "ghost"`.
-- Build the generic `List<T>` component and use it for two different item types.
+- Create the `kanban` app as in "Setting up" (you'll turn it into this section's Kanban board project). As practice, build a typed `src/TodoList.tsx` with add, toggle and delete, using `useState<Todo[]>([])`, and show it in `App.tsx`. `npm run build` should pass.
+- In `src/TodoList.tsx`, move the add form's `onChange` and `onSubmit` handlers into separate functions typed with `React.ChangeEvent<HTMLInputElement>` and `React.FormEvent<HTMLFormElement>`, without using `any`. `npm run build` should still pass.
+- In `kanban`, write `src/Button.tsx`: a `Button` component that accepts all normal button props plus `variant: "primary" | "ghost"`. Check that `<Button variant="ghost" disabled>Save</Button>` works and `variant="big"` is a type error.
+- In `kanban`, build the generic `List<T>` component in `src/List.tsx` and use it for two different item types (for example your todos and an array of strings).
 
 ---project
 id: ts-p2
@@ -1154,7 +1155,7 @@ Build a Trello-style board for your own tasks with React and TypeScript. Cards m
 - A generic `List<T>` component renders the cards in each column.
 
 ### Steps
-1. **Project.** `npm create vite@latest` with the `react-ts` template. Remove the demo content and check `npm run build` passes. Commit.
+1. **Project.** Continue in your `kanban` folder from lesson 7.7 (created with the `react-ts` template); treat the steps below as a checklist and add only what's missing. Keep `List.tsx` and `Button.tsx`, remove the demo content and the practice `TodoList`, and check `npm run build` passes. Commit.
 2. **Types first.** Write `src/types.ts`: `STATUSES` and `PRIORITIES` with `as const`, `Status` and `Priority` derived from them, `Card` (`id`, `title`, `description?`, `priority`, `status`, `createdAt`), and `NewCard = Omit<Card, "id" | "createdAt">`. Add `COLUMN_TITLES` with `satisfies Record<Status, string>`.
 3. **Static layout.** Build `Board`, `Column` and `CardView` components with typed props, rendering a hard-coded array of 5 cards. Each column shows only the cards with its status.
 4. **Generic List.** Write `List<T>` (items, `getKey`, `renderItem`, `emptyText`) and use it in `Column`. Check that `renderItem` knows its argument is a `Card`.
@@ -1429,10 +1430,10 @@ Thrown values aren't guaranteed to be `Error`s, so narrow with `instanceof` befo
 - Give database rows explicit types, and narrow errors in the error handler.
 
 ### Exercises
-- Create a small Express + TypeScript project with `dev`, `typecheck`, `build` and `start` scripts and one `GET /health` route. Check that `npm run build && npm start` works.
-- Write a Zod schema for a `NewBook`, derive the type with `z.infer`, and hover over the type to see what Zod produced.
-- Write the typed `validate` middleware and a `POST /api/books` route that uses it. Send valid and invalid bodies with Thunder Client or Postman.
-- Add `npm run typecheck` to a GitHub Actions workflow next to your tests.
+- Create a practice folder `express-ts-practice`: `npm init -y`, add `"type": "module"`, install the packages and create both tsconfig files and the four scripts from the lesson. Add an `.env` file (just `PORT=3000` is fine: `--env-file` stops with an error if the file is missing) and `src/server.ts` with one `GET /health` route that returns `{ status: "ok" }`. Run `npm run build`, then `npm start`, and open `http://localhost:3000/health`.
+- In `express-ts-practice/src/schemas/book.ts`, write a Zod schema for a `NewBook`, derive the type with `z.infer`, and hover over the type to see what Zod produced.
+- In `express-ts-practice`, write the typed `validate` middleware in `src/middleware/validate.ts` and a `POST /api/books` route that uses it and simply answers 201 with the validated `req.body` (no database here; remember `app.use(express.json())`). With Thunder Client or Postman, a valid body should come back with `read: false` added, and an invalid one should get a 400 with `details`.
+- Push `express-ts-practice` to GitHub with a workflow `.github/workflows/ci.yml` (checkout and setup-node as in lesson 6.5, then `npm ci`, `npm run typecheck` and `npm run build`) and get a green tick. (Your `books-api` has no `typecheck` script yet; you'll add these steps to its test workflow in this section's project.)
 
 ---project
 id: ts-p1
@@ -1453,13 +1454,13 @@ Convert your Book Library API (Express + PostgreSQL, with the test suite you wro
 - All existing tests pass, and CI runs typecheck, tests and build.
 
 ### Steps
-1. **Branch and tooling.** Create a `typescript` branch. Install `typescript`, `tsx`, `@types/node`, `@types/express`, `@types/pg` and `@types/supertest`. Create `tsconfig.json` (strict, NodeNext, `outDir: "dist"`, `"include": ["src", "test"]`, no `rootDir`) with `"allowJs": true` so `.js` and `.ts` files can live together during the migration, and `tsconfig.build.json` that extends it with `"rootDir": "src"` and `"include": ["src"]`, as in the lesson. Move the code into `src/` if needed (tests stay in `test/`), set the `dev` script to `tsx watch --env-file=.env src/server.ts`, and check the API still runs. Commit.
+1. **Branch and tooling.** In your `books-api` folder, create a `typescript` branch. Install `typescript`, `tsx`, `@types/node`, `@types/express`, `@types/pg` and `@types/supertest`. Create `tsconfig.json` (strict, NodeNext, `outDir: "dist"`, `"include": ["src", "test"]`, no `rootDir`) with `"allowJs": true` so `.js` and `.ts` files can live together during the migration, and `tsconfig.build.json` that extends it with `"rootDir": "src"` and `"include": ["src"]`, as in the lesson. Move the code into `src/` if needed (tests stay in `test/`), set the `dev` script to `tsx watch --env-file=.env src/server.ts`, and check the API still runs. Commit.
 2. **Utilities first.** Rename the files with the fewest imports (helpers, pagination parsing, `AppError`) to `.ts` and fix the errors. Run `npm run typecheck` and `npm test` after each file. Commit.
 3. **Schemas and types.** Convert the Zod schema files and export `z.infer` types (`NewBook`, `BookPatch`, query types). Delete any hand-written interfaces that duplicate them.
 4. **Database layer.** Convert `db/pool.js` and the data-access files (`data/books.js`, `data/authors.js`, `data/tags.js` become `.ts`). Define the row types (`Book` with `author: { id: number; name: string }` and `tags: string[]`, and `Author` with `id`, `name` and `born`) and use `pool.query<RowType>(...)`. Give every function an explicit return type, for example `findAll(...): Promise<{ data: Book[]; total: number }>`. If you convert `db/seed.js` too, run it with tsx in its script: `tsx --env-file=.env src/db/seed.ts`.
 5. **Middleware and controllers.** Type the `validate` middleware, the error handler and every controller with `Request<Params, ResBody, ReqBody>`. Convert ids from strings with checks, not with `as`.
 6. **App, server and tests.** Convert `app.ts` (still `export default app`), `server.ts`, the test helpers and test files. Remove `"allowJs"` and confirm there are no `.js` files left in `src/`. Search for `any` and remove every one.
-7. **Build and run.** Add the `build` and `start` scripts, run `npm run build && npm start`, and check a few endpoints against the compiled version. Update your hosting's build command (for example `npm ci && npm run build`) and start command.
+7. **Build and run.** Add the `build` and `start` scripts, run `npm run build`, then `npm start`, and check a few endpoints against the compiled version. Update your hosting's build command (for example `npm ci && npm run build`) and start command.
 8. **CI and merge.** Add `npm run typecheck` and `npm run build` steps to your GitHub Actions workflow. Push the branch, open a pull request on GitHub describing what changed and what you learned, wait for green, and merge.
 
 ### Hints
@@ -1477,7 +1478,7 @@ Convert your Book Library API (Express + PostgreSQL, with the test suite you wro
 - Every file in `src/` and the tests is `.ts`, `npm run typecheck` passes in strict mode, and there is no `any`
 - Request body types are derived from Zod schemas with `z.infer`
 - Database functions have explicit row and return types
-- `npm run build && npm start` runs the compiled API and all endpoints work
+- `npm run build`, then `npm start`, runs the compiled API and all endpoints work
 - All tests pass, and CI runs typecheck, tests and build on every push
 - The changes were merged through a pull request with a description
 - `.env.example` lists every environment variable with placeholder values, and `.env` is git-ignored

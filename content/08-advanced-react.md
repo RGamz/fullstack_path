@@ -179,10 +179,11 @@ The parent now controls the layout (buttons on top, at the bottom, with icons) w
 - Compound components share hidden state through context and let the parent arrange the parts.
 
 ### Exercises
-- Build a `Card` with a `title` and `children`, and use it three times with completely different content.
-- Build a reusable `Button` supporting `variant` (`primary`, `secondary`, `danger`), `size`, and every native button prop. Check that `type="submit"` and `disabled` work.
-- Build a `Panel` with `header`, `children` and an optional `footer` slot. Use it once with a link in the footer and once without a footer.
-- Build compound `Accordion` / `AccordionItem` components where only one item can be open at a time. Throw a helpful error if an `AccordionItem` is used outside an `Accordion`.
+- Create the app for this part: `npm create vite@latest dashboard -- --template react-ts`. You'll do most of this part's exercises in this `dashboard` folder and grow it into the Personal dashboard project at the end. In `src/components/Card.tsx`, build a `Card` with a `title` and `children`, and use it three times in `App.tsx` with completely different content (for example a paragraph, a list and a button). Run `npm run dev` and check that each card shows its own content.
+- In `dashboard`, build a reusable `Button` in `src/components/Button.tsx` supporting `variant` (`primary`, `secondary`, `danger`), `size`, and every native button prop, with CSS that makes the variants look different. Check that `type="submit"` and `disabled` work: put two of them in a `<form>` whose `onSubmit` calls `e.preventDefault()` and logs "submitted". The normal one logs it; the `disabled` one can't be clicked.
+- In `dashboard`, build a `Panel` in `src/components/Panel.tsx` with `header`, `children` and an optional `footer` slot. Use it in `App.tsx` once with a link in the footer and once without a footer, and check in DevTools → Elements that the second one has no empty `<footer>`.
+- Create a second, throwaway app for practice exercises that don't belong in the dashboard: `npm create vite@latest react-playground -- --template react-ts`. In it, build compound `Accordion` / `AccordionItem` components (each item has an `id`, a `title` and `children`) where only one item can be open at a time: opening one closes the others. Then render an `AccordionItem` outside an `Accordion` and check that your own helpful error message appears.
+  Hint: Copy the shape of the `Tabs` example above: `Accordion` keeps the open item's id in state and shares it through context, and each `AccordionItem` reads it with a `useAccordion()` hook that throws when the context is `null`.
 
 ---lesson
 id: ar-2
@@ -366,10 +367,10 @@ return (
 - Displayed data belongs in state; timer ids and DOM nodes belong in refs.
 
 ### Exercises
-- Build a search box that is focused automatically when the page loads (use an effect plus a ref) and when the user presses a "Focus" button.
-- Build the stopwatch above, then add a "Lap" button that stores lap times in state.
-- Build a form with three inputs. On submit, if a field is empty, focus the first empty field and show an error message.
-- Build a chat-style list where adding a message scrolls the newest one into view, using a ref on an element after the list and an effect.
+- In `react-playground`, build a `SearchBox` component whose input is focused automatically when the page loads (use an effect plus a ref) and again when the user clicks a "Focus" button. Check: after a reload you can type straight away, without clicking the input.
+- In `react-playground`, build the `Stopwatch` above, then add a "Lap" button that adds the current time to a `laps` array in state and shows the laps as a list under the buttons.
+- In `react-playground`, build a form with three inputs (name, email, message). On submit, if a field is empty, focus the first empty field and show an error message next to it. Check by filling in only the name: the cursor should jump to the email field.
+- In `react-playground`, build a chat-style list: a text input and a "Send" button that add a message to a `messages` array in state. Put the `<ul>` and an empty `<div ref={endRef} />` together inside a box with a fixed height and `overflow-y: auto`, and scroll `endRef` into view in an effect, as in the lesson. Check: after 15 messages, the newest one is still visible every time you send.
 
 ---lesson
 id: ar-3
@@ -515,10 +516,11 @@ Note that `ThemeProvider` receives `children` from its parent. When the theme ch
 - Every reader re-renders when the value changes: keep contexts small and focused.
 
 ### Exercises
-- Create a `ThemeProvider` and `useTheme()` hook. Add a toggle button in a deeply nested component and switch a `data-theme` attribute on the page.
-- Make the theme persist after a page reload, and start with the user's OS preference (`window.matchMedia("(prefers-color-scheme: dark)")`) on the first visit.
-- Build an `AuthProvider` with `user`, `login(name)` and `logout()`. Show "Hi, name" in the header and a login form when logged out.
-- Use a component that calls `useTheme()` *outside* the provider and check that you get your own clear error message.
+- In `dashboard`, create `src/theme/ThemeContext.tsx` with a `ThemeProvider` and a `useTheme()` hook, and wrap `<App />` in `main.tsx`. Put a toggle button in a component nested at least two levels below `App`. Make the theme set a `data-theme` attribute on `<html>`, and add CSS for `[data-theme="dark"]` (for example a dark background). Check: clicking the button changes the page colours, and DevTools → Elements shows `<html data-theme="dark">`.
+  Hint: In `ThemeProvider`, add an effect that runs when `theme` changes: `document.documentElement.dataset.theme = theme;`.
+- In `dashboard`, make the theme persist after a page reload (save it in `localStorage`). On the first visit, when nothing is saved yet, start with the user's OS preference: `window.matchMedia("(prefers-color-scheme: dark)").matches` is `true` when the OS uses dark mode. Check: toggle and reload, and the theme stays. Then delete the saved value in DevTools → Application → Local Storage and reload to get the OS theme again.
+- In `react-playground`, build an `AuthProvider` and a `useAuth()` hook with `user` (a name, or `null`), `login(name)` and `logout()`. It's a fake login with no password and no server: `login` only stores the name in state. Show "Hi, name" and a "Log out" button in a `Header` component, and a login form (one name input) when logged out.
+- In `dashboard`, temporarily render a component that calls `useTheme()` *outside* the `ThemeProvider` (for example next to `<ThemeProvider>` in `main.tsx`) and check that the error shown in the browser is your own clear message. Then undo the change.
 
 ---lesson
 id: ar-4
@@ -672,10 +674,10 @@ Use `useState` for independent, simple values: an input's text, whether a menu i
 - Reducers are easy to unit test, and reducer + context makes a lightweight global store.
 
 ### Exercises
-- Rewrite a counter with `increment`, `decrement`, `reset` and `incrementBy` actions using `useReducer`.
-- Build the to-do app above, then add a "clear completed" action. Write a Vitest test for each action.
-- Build a shopping-cart reducer with `added`, `removed`, `quantityChanged` and `cleared` actions, plus a function that calculates the total. Test it before building any UI.
-- Share the cart through a `CartProvider` and `useCart()` hook, and show the item count in a header component far from the cart page.
+- In `react-playground`, build a counter with `useReducer` and the actions `incremented`, `decremented`, `reset` and `incrementedBy` (which carries an `amount`, for example from a "+5" button). Check every button in the browser.
+- In `dashboard`, build the to-do app above (`src/todos/todosReducer.ts` plus a `TodoApp` component shown in `App.tsx`), then add a `completedCleared` action with a "Clear completed" button. Set up Vitest as in the Testing module and write one test per action in `src/todos/todosReducer.test.ts`. Check: `npm test` passes.
+- In `react-playground`, write a shopping-cart reducer in `src/cart/cartReducer.ts` with `added`, `removed`, `quantityChanged` and `cleared` actions, plus a `getCartTotal(state)` function that adds up price × quantity. Set up Vitest in this app too and test the reducer and the total before building any UI. You can reuse this code in Part 2's online shop.
+- In `react-playground`, share the cart through a `CartProvider` and a `useCart()` hook. Render a `Header` that shows the number of items and, in a different branch of the tree, a `ProductList` of 3–4 hard-coded products with "Add to cart" buttons. Check: clicking a button updates the count in the header, although the two components pass no props to each other.
 
 ---lesson
 id: ar-5
@@ -850,10 +852,11 @@ test("updates only after the delay", () => {
 - Test hooks with `renderHook` and, for timers, Vitest's fake timers.
 
 ### Exercises
-- Write `useLocalStorage(key, initial)` and use it to remember a user's name in an input after reload.
-- Write `useDebounce(value, delay)` and use it so a search only logs its query after 400 ms of no typing. Write the test above for it.
-- Write `useFetch<T>(url)` and use it to show a GitHub user. Then build `useGitHubUser(username)` on top of it.
-- Write `useMediaQuery(query)` that returns `true`/`false` and updates when the window is resized (listen to the `change` event of `window.matchMedia(query)` and clean up). Test it by resizing the browser.
+- In `dashboard`, write `useLocalStorage(key, initial)` in `src/hooks/useLocalStorage.ts` and use it for a "Your name" input above the widgets that shows "Hello, name". Check: type a name, reload the page, and the name is still there.
+- In `dashboard`, write `useDebounce(value, delay)` in `src/hooks/useDebounce.ts`. Add a search input and log its debounced value with `console.log` in an effect, so the query is logged only after 400 ms without typing: typing "react" quickly should give one log, not five. Then add the test above as `src/hooks/useDebounce.test.ts` (with React Testing Library set up as in the Testing module) and check that `npm test` passes.
+- In `dashboard`, write `useFetch<T>(url)` in `src/hooks/useFetch.ts` and use it to show a GitHub user (try your own username): login and number of public repos, with loading and error states. Then build `useGitHubUser(username)` in `src/hooks/useGitHubUser.ts` on top of it and use that instead. Check: a username that doesn't exist shows the 404 error message.
+- In `dashboard`, write `useMediaQuery(query)` in `src/hooks/useMediaQuery.ts` that returns `true`/`false` and updates when the window is resized (listen to the `change` event of `window.matchMedia(query)` and remove the listener in the cleanup). Show "Wide screen" or "Narrow screen" with `useMediaQuery("(min-width: 768px)")` and resize the browser to check that the text switches.
+  Hint: Start with `useState(() => window.matchMedia(query).matches)`. In the effect, create `const mql = window.matchMedia(query)` and a handler `(e: MediaQueryListEvent) => setMatches(e.matches)`, add it with `mql.addEventListener("change", handler)`, and return a cleanup that calls `mql.removeEventListener("change", handler)`.
 
 ---project
 id: ar-p2
@@ -876,7 +879,7 @@ Build a personal start page with widgets you'd actually use every day: a clock, 
 - Tests: the todo and settings reducers, plus at least two custom hooks with `renderHook`
 
 ### Steps
-1. **Scaffold and layout.** Create the project with `npm create vite@latest dashboard -- --template react-ts`, add Vitest and React Testing Library as in the Testing module. Build the `Widget` component and a CSS grid with five placeholder widgets. Run it and check the grid at phone and desktop width.
+1. **Scaffold and layout.** Continue in your `dashboard` folder from lessons 8.1–8.5: you've already built several pieces of this project there (cards, the theme, the todos reducer, the hooks), so treat the steps below as a checklist and add only what's missing. (If you skipped those exercises, create it with `npm create vite@latest dashboard -- --template react-ts`.) Make sure Vitest and React Testing Library are set up as in the Testing module. Build the `Widget` component and a CSS grid with five placeholder widgets. Run it and check the grid at phone and desktop width.
 2. **Clock and todos.** Build the Clock (an interval in an effect, cleaned up). Write `todosReducer` with typed actions and test every action *before* building the Todo widget's UI. Focus the new-todo input when the widget loads, using a ref.
 3. **Persistence.** Write `useLocalStorage` with tests (`renderHook`) and use it for simple values like the theme and the fallback city. Make the todos survive a reload too (a reducer needs a slightly different approach, see the hints).
 4. **GitHub widget.** Write `useFetch<T>`, then `useGitHubUser(username)` on top of it. Show the avatar and stats, a loading state, and a clear message for an unknown username (the API answers 404).
@@ -1106,10 +1109,10 @@ React Router v7 can also run in **data mode** (routes defined as objects with `c
 - A layout route with `<Navigate>` can protect a group of pages.
 
 ### Exercises
-- Build a small app with Home, Books, About and a 404 page, sharing a layout with a navigation bar that highlights the active link.
-- Add `/books/:id` showing one book from a local array, and a "not found" message for an unknown id. Add a "Back" button using `useNavigate`.
-- Add a genre filter and a sort option to the Books page, both stored in search params. Copy the URL into a new tab and check it shows the same view.
-- Add a fake login (a context with `user`, `login`, `logout`) and protect an `/account` page with a `RequireAuth` layout route.
+- Create the app for this part's project, the online shop: `npm create vite@latest online-shop -- --template react-ts`, then `npm install react-router`. You'll grow this `online-shop` folder through lessons 8.6–8.9. Build Home, Products, About and a 404 page, all inside a shared `Layout` with a navigation bar that highlights the active link. Check: clicking a link changes the URL without reloading the page, and a made-up URL like `/xyz` shows your 404 page.
+- In `online-shop`, add `/products/:id` that shows one product from a local array (`src/products.ts`: 6 products with `id`, `title`, `price` and `category`), and link each product on the Products page to it. An unknown id like `/products/999` shows a "Product not found" message. Add a "Back" button that uses `useNavigate`.
+- On the Products page of `online-shop`, add a category filter and a sort option (by price or title), both stored in search params. Copy the URL (for example `/products?category=books&sort=price`) into a new tab and check it shows the same view.
+- In `online-shop`, add a fake login: an `AuthProvider` with `user`, `login(name)` and `logout()` (like the one from lesson 8.3), and a `/login` page with a name input that calls `login` and then navigates to `/account`. Protect an `/account` page with a `RequireAuth` layout route. Check: while logged out, opening `/account` sends you to `/login`. (A full page reload forgets the fake user, so typing `/account` in the address bar also sends you to `/login`.)
 
 ---lesson
 id: ar-7
@@ -1276,10 +1279,10 @@ Add `<ReactQueryDevtools />` (from `@tanstack/react-query-devtools`) inside the 
 - `useMutation` changes data; `invalidateQueries` refreshes what changed.
 
 ### Exercises
-- Set up TanStack Query and show a list of products from `https://dummyjson.com/products` with loading and error states. Break the URL on purpose and check the error message.
-- Add a product detail component with `queryKey: ["product", id]`. Open the Devtools and watch separate cache entries appear.
-- Add pagination with `?limit=10&skip=…`, the page number in the key and `placeholderData: keepPreviousData`.
-- Replace `useFetch` in your Books frontend (or another app talking to your own API) with `useQuery`, and implement add and delete with `useMutation` and `invalidateQueries`.
+- In `online-shop`, set up TanStack Query (`QueryClientProvider` in `main.tsx`) and change the Products page to load products from `https://dummyjson.com/products` with `useQuery` instead of your local array, with loading and error states. Break the URL on purpose (for example `/productz`) and check that your error message appears. TanStack Query retries a failed request 3 times first, so the error takes a few seconds to show.
+- In `online-shop`, change the `/products/:id` page to load one product with `queryKey: ["product", id]` (like `useProduct` above). Install the Devtools, add `<ReactQueryDevtools />`, open two different products and watch a separate cache entry appear for each.
+- Add pagination to the Products page of `online-shop`: 10 products per page with DummyJSON's `?limit=10&skip=…` (`skip` is `(page - 1) * 10`), the page number in the query key, "Previous"/"Next" buttons and `placeholderData: keepPreviousData`. Check with network throttling in DevTools: the old page stays visible while the next one loads, instead of a loading message.
+- In your `books-frontend` app from the React module (start your `books-api` too), set up TanStack Query and replace the `useEffect` + `fetch` code that loads the book list with `useQuery` (put the search, genre and page in the query key). Then do adding and deleting with `useMutation` and `invalidateQueries`. Check: after you add or delete a book, the list updates by itself, without your `refreshKey` trick.
 
 ---lesson
 id: ar-9
@@ -1432,10 +1435,10 @@ A common shape: an `ErrorBoundary` outside a `Suspense`, around each area that l
 - Event-handler and async errors need `try/catch` or `showBoundary`.
 
 ### Exercises
-- Lazy-load every page of your router app. In the Network tab, check that each page's code downloads only when you first visit it.
-- Move the `Suspense` boundary from around the whole app to around the `<Outlet />` in the layout, and compare how navigation feels. Use DevTools' network throttling to slow it down.
-- Wrap two widgets in separate error boundaries and make one throw during rendering on purpose. Check that the other still works and that "Try again" recovers once you remove the bug.
-- Add `resetKeys` with the current path to a page-level boundary, so navigating away clears the error.
+- In `online-shop`, lazy-load every page with `lazy(() => import("./pages/Products"))` and so on (move each page into its own file in `src/pages/` with a default export first, if it isn't already). For now, wrap your `<Routes>` in one `<Suspense fallback={<p>Loading…</p>}>`. In DevTools → Network (filter "JS"), check that each page's code downloads only when you first visit it.
+- In `online-shop`, move that `Suspense` boundary from around `<Routes>` to around the `<Outlet />` in your `Layout`, and compare how navigation feels. Turn on network throttling (for example "Slow 4G") and reload before each try, because each page's code downloads only once. With the boundary in the layout, the header stays visible while a page loads.
+- Back in your `dashboard` from Part 1, install `react-error-boundary` and wrap two widgets in separate error boundaries with a fallback that has a "Try again" button. Make one widget throw during rendering about half of the time: `if (Math.random() < 0.5) throw new Error("Boom")`. Check that the other widget keeps working and that "Try again" brings the broken one back (it may take a few clicks).
+- In `online-shop`, put an `ErrorBoundary` around the `Suspense` in your `Layout`, with `resetKeys={[location.pathname]}` (`location` comes from `useLocation()`). Make the About page throw during rendering, open it, then click another link in the navigation: the new page should appear normally instead of the error.
 
 ---lesson
 id: ar-10
@@ -1585,10 +1588,11 @@ Small helper libraries like `clsx` make conditional classes neater. The `prettie
 - Customise with `@theme`; reuse styles through components; always write complete class names.
 
 ### Exercises
-- Add Tailwind to a Vite + React project and style a card with an image, title, price and button.
-- Build a responsive product grid: 1 column on phones, 2 on tablets, 4 on desktops. Check it with the browser's device toolbar.
-- Build a responsive navbar: links in a row on desktop, a hamburger button that opens and closes a menu on mobile (state + `md:hidden` / `hidden md:flex`).
-- Add a brand colour with `@theme`, a `Button` component with `primary`/`secondary` variants, and a dark mode toggle using `@custom-variant dark`.
+- Add Tailwind to your `online-shop` (setup above) and use it to style a `ProductCard` component on the Products page: the product image (DummyJSON's `thumbnail`), title, price and an "Add to cart" button (not connected yet).
+- On the Products page of `online-shop`, show the cards in a responsive grid: 1 column on phones, 2 on tablets, 4 on desktops. Check it with the device toolbar in Chrome DevTools (Ctrl+Shift+M) at 375px, 768px and 1280px wide.
+- In the `Layout` of `online-shop`, build a responsive navbar: links in a row on desktop, and on mobile a hamburger button that opens and closes the menu (state + `md:hidden` / `hidden md:flex`). Check it at 375px and at desktop width.
+- In `online-shop`, add a brand colour with `@theme` in `src/index.css`, a `Button` component in `src/components/Button.tsx` with `primary`/`secondary` variants, and a dark mode toggle in the header using `@custom-variant dark`. Add a few `dark:` classes (for example `dark:bg-gray-900 dark:text-white` on the layout) so you can see the switch.
+  Hint: Keep `isDark` in state in the header and, in an effect, run `document.documentElement.classList.toggle("dark", isDark)`.
 
 ---project
 id: ar-p1
@@ -1610,7 +1614,7 @@ Build the front end of an online shop using the free DummyJSON products API (`ht
 - Tests for the cart reducer and the total calculation
 
 ### Steps
-1. **Scaffold.** Create a Vite `react-ts` project, install `react-router`, `@tanstack/react-query` and Tailwind (`tailwindcss`, `@tailwindcss/vite`). Add `BrowserRouter` and `QueryClientProvider` in `main.tsx`. Build the layout and all routes with placeholder text, including the 404 page. Click through every link.
+1. **Scaffold.** Continue in your `online-shop` folder from lessons 8.6–8.9: much of this project already exists there, so treat the steps below as a checklist and add only what's missing. Make sure `react-router`, `@tanstack/react-query` and Tailwind (`tailwindcss`, `@tailwindcss/vite`) are installed, and that `BrowserRouter` and `QueryClientProvider` are in `main.tsx`. Build the layout and all routes, with placeholder text for pages you don't have yet, including the 404 page. Click through every link.
 2. **Product list.** Create `src/api.ts` with typed functions (`getProducts`, `getProduct`, `getCategories`) that throw on bad responses. Show products in a responsive grid of `ProductCard`s using `useQuery`, with a skeleton while loading and an error message with a retry button (`refetch`).
 3. **Product page.** Build `/products/:id` with `queryKey: ["product", id]`: images, description, price, rating and an "Add to cart" button (not connected yet). An unknown id shows a friendly "product not found" message.
 4. **Filters in the URL.** Add a category select (from the categories endpoint), a sort select, a search input (debounced with your `useDebounce` hook) and previous/next pagination, all read from and written to `useSearchParams`. Put them in the query key and use `placeholderData: keepPreviousData`.
@@ -1838,10 +1842,10 @@ The outer `div` scrolls; the inner one is as tall as all rows together; only abo
 - `useDeferredValue`/`useTransition` keep the UI responsive; virtualisation makes huge lists cheap.
 
 ### Exercises
-- Turn on "Highlight updates when components render" in React DevTools and use one of your earlier apps. Find one component that re-renders without needing to, and fix it by moving state down.
-- Render a list of 5,000 generated items with a search input. Profile typing, then add `useMemo` for the filtering and `memo` for the rows, and profile again. Write down both numbers.
-- Add `useDeferredValue` to the same search with a "stale" opacity effect. Throttle the CPU 4× and compare how typing feels with and without it.
-- Find one `useMemo` or `useCallback` in your own code that doesn't help (cheap calculation, or a function not passed to a `memo` component), and remove it.
+- Open your `dashboard` from Part 1 (its clock ticks every second), turn on "Highlight updates when components render" in React DevTools, and watch what flashes each second. If more than the clock flashes, fix it by moving the time state down into a `Clock` component. If only the clock flashes, you already did it right: move the time state up into `App` for a moment to see the difference, then move it back.
+- In `react-playground`, create `src/SearchList.tsx` with 5,000 generated items, created at module level (outside the component), for example `Array.from({ length: 5000 }, (_, i) => ({ id: i, name: "Item " + i }))`. Add a search input that filters them by name, and render each one with an `ItemRow` component. Record typing in the Profiler and note the commit duration. Then add `useMemo` for the filtering and `memo` for `ItemRow`, profile again, and write down both numbers.
+- In the same `SearchList`, add `useDeferredValue` with a "stale" opacity effect. Move the list into a `memo` component (`ItemList`) that receives the deferred query, because `useDeferredValue` only helps when the slow child is memoised. Throttle the CPU 4× (Chrome DevTools → Performance → CPU) and compare how typing feels with and without it.
+- Search your `dashboard`, `online-shop` and `react-playground` code for `useMemo` and `useCallback` (Ctrl+Shift+F in VS Code). Find one that doesn't help (a cheap calculation, or a function that isn't passed to a `memo` component or a dependency array), remove it, and check in the Profiler that nothing got slower. If you find none, write down one place in your code where adding one would gain nothing, and why.
 
 ---project
 id: ar-p3
@@ -1862,7 +1866,7 @@ Performance work is a skill you prove with numbers, not opinions. Build a produc
 - A README with a before/after table of timings for each interaction and Profiler screenshots
 
 ### Steps
-1. **Data and logic.** Create a Vite `react-ts` project. Write `generateProducts(count, seed)` in `data.ts` using a small seeded random function (search for "mulberry32") or `@faker-js/faker` with `faker.seed(42)`. Write pure `filterProducts(products, filters)` and `sortProducts(products, sort)` functions and test them with Vitest.
+1. **Data and logic.** Create a new Vite `react-ts` project: `npm create vite@latest slow-table -- --template react-ts`. Write `generateProducts(count, seed)` in `data.ts` using a small seeded random function (search for "mulberry32") or `@faker-js/faker` with `faker.seed(42)`. Write pure `filterProducts(products, filters)` and `sortProducts(products, sort)` functions and test them with Vitest.
 2. **Build the slow version.** Put all state (clock, search, filters, sort) in `App`. Render every row with a `ProductRow` component that does the deliberately expensive work and receives inline arrow functions. Check it works, commit, and run `git tag slow`.
 3. **Measure the baseline.** Install React DevTools, turn on "Record why each component rendered". Record three interactions: typing a five-letter word in the search, clicking a sort header, and one clock tick. Note the commit durations (repeat each three times and take the middle value) and take screenshots. Optionally add 4× CPU throttling in Chrome's Performance tab, and note it in the README.
 4. **Fix 1: move state down.** Move the clock into its own component. Re-measure the clock tick and write the numbers down.

@@ -153,10 +153,11 @@ This is the same ES Modules `import`/`export` you used in Node. CSS works by imp
 - `{ }` inserts any JavaScript expression; keep each component in its own file.
 
 ### Exercises
-- Create a Vite React app, delete the demo content, and build `Header`, `Main` and `Footer` components, each in its own file under `src/components/`.
-- Show today's date and a greeting that depends on the time of day (morning/afternoon/evening), computed with `{ }`.
-- Rebuild a section of an old plain-HTML project (for example your landing page's features section) as React components. Fix every JSX error the console shows.
-- Run `npm run build`, open the `dist/` folder, and look at what Vite produced. Then run `npm run preview` to serve the built version.
+- Create a Vite React app called `bookshelf` (`npm create vite@latest bookshelf -- --template react`): you'll grow it through lessons 5.1–5.3 and finish it in this section's project. Delete the demo content (the counter in `App.jsx` and the styles in `App.css` and `index.css`), then build `Header`, `Main` and `Footer` components, each in its own file under `src/components/`, and render them in `App.jsx`. The page should show all three, with no errors in the console.
+- In `bookshelf/src/components/Header.jsx`, show today's date and a greeting that depends on the time of day (morning/afternoon/evening). Compute both above the `return` and show them with `{ }`.
+  Hint: This is plain JavaScript you already know: `new Date().toLocaleDateString()` gives a readable date, and `new Date().getHours()` gives the hour (0–23) for a ternary like the lesson's.
+- Create a second Vite app, `react-practice`, for the small practice exercises in this module. In it, rebuild the features section of your `landing-page` from the UI module (or any old plain-HTML page) as a `Features` component in `src/components/Features.jsx`, with its CSS copied into `src/App.css`. Fix every JSX error the console (or Vite's red error overlay) shows, until the section looks like the original.
+- In `bookshelf`, run `npm run build`, open the new `dist/` folder and look at what Vite produced. Then run `npm run preview` and open the URL it prints (usually `http://localhost:4173`): the page should look the same as with `npm run dev`.
 
 ---lesson
 id: react-2
@@ -300,10 +301,11 @@ When you look at a design, draw boxes around repeated or self-contained pieces: 
 - `children` is whatever you put between the tags; props are read-only.
 
 ### Exercises
-- Build a `ContactCard` component (name, email, phone, avatar URL) and render four different contacts with props.
-- Build a `Panel` component that uses `children`, and use it three times with different content inside.
-- Build a `Rating` component that takes a number from 0 to 5 and shows stars, for example `★★★☆☆` for 3. Hint: `"★".repeat(n)`.
-- Store three book objects in an array in `App.jsx` and render a `BookCard` for each one by writing `<BookCard {...books[0]} />` three times. (Next lesson you'll replace this with `.map()`.)
+- In `react-practice`, build a `ContactCard` component (name, email, phone, avatar URL; any image URL works) and render four different contacts with props in `App.jsx`.
+- In `react-practice`, build a `Panel` component that uses `children` (like the lesson's), and use it three times in `App.jsx` with different content inside, for example a paragraph, a list and a button.
+- In `bookshelf`, build `src/components/Rating.jsx`: it takes a number from 0 to 5 and shows stars, so `<Rating rating={3} />` shows `★★★☆☆`. You'll reuse it in this section's project.
+  Hint: `"★".repeat(n)` repeats a string n times (plain JavaScript). Add `"☆".repeat(5 - n)` for the empty stars.
+- In `bookshelf`, create `src/components/BookCard.jsx` like the lesson's (title, author, year, pages). Store three book objects in an array in `App.jsx` and render a `BookCard` for each one by writing `<BookCard {...books[0]} />`, then `books[1]` and `books[2]` the same way. (Next lesson you'll replace this with `.map()`.)
 
 ---lesson
 id: react-4
@@ -446,10 +448,11 @@ This also shows the **empty state** from the UI module: when the filtered list i
 - Filter or sort a copy first, then map, and show an empty state when nothing is left.
 
 ### Exercises
-- Create a `data.js` file exporting an array of 8 books (with `id`, `title`, `author`, `isRead`) and render them as a list with `.map()` and keys.
-- Add a "Read" / "Want to read" badge with a ternary, and a "♥" only for favourites with `&&`.
-- Add a `filter` variable (`"all"`, `"read"`, `"unread"`) and render only the matching books, with an empty-state message when none match. Change the variable by hand to test all three.
-- Show the books sorted by title (A–Z) without changing the original array, and display a summary line like "8 books · 5 read".
+- In `bookshelf`, create `src/data.js` exporting an array of 8 books (with `id`, `title`, `author`, `isRead` and `isFavourite`). Import it in `App.jsx` and replace the three hand-written `BookCard`s with `.map()` and `key={book.id}`. Check that the console shows no key warning.
+- In `BookCard.jsx`, add a "Read" / "Want to read" badge with a ternary, and a "♥" only for favourite books (`isFavourite`) with `&&`.
+- In `App.jsx`, add a `filter` variable (`"all"`, `"read"`, `"unread"`) and render only the matching books, with an empty-state message when none match. Change the variable by hand and save to test all three. (To see the empty state, temporarily mark every book as read and choose `"unread"`.)
+- In `App.jsx`, show the books sorted by title (A–Z) without changing the original array, and display a summary line above the list like "8 books · 5 read", computed from the data.
+  Hint: Sorting text is plain JavaScript: `[...books].sort((a, b) => a.title.localeCompare(b.title))`. For the read count, use `books.filter((b) => b.isRead).length`.
 
 ---project
 id: react-p4
@@ -471,7 +474,7 @@ Build a personal bookshelf page: a responsive grid of books you've read or want 
 - Deployed on Netlify or Vercel
 
 ### Steps
-1. Create the project with `npm create vite@latest bookshelf -- --template react`, delete the demo content, and add a `tokens.css` with your type scale, colours and spacing from the UI module.
+1. Continue in your `bookshelf` folder from lessons 5.1–5.3: much of this project already exists there, so treat the steps below as a checklist and add only what's missing. Make sure the demo content is gone, and add a `tokens.css` with your type scale, colours and spacing from the UI module (copy it from your `landing-page` folder).
 2. Write `src/data.js` with 10+ books. Make sure your data includes edge cases: at least two books without a cover, a book with no tags, a very long title and some unread books.
 3. Build `BookCard` with hard-coded props for one book and style it. Then build `Cover`, which returns either the `<img>` or the "No cover" placeholder (early return).
 4. Render all books with `books.map(book => <BookCard key={book.id} {...book} />)` inside `BookGrid`, using a `repeat(auto-fit, minmax(…, 1fr))` grid.
@@ -683,10 +686,11 @@ function handleWin(moves) {
 - Derive what you can; lift shared state to the closest common parent.
 
 ### Exercises
-- Build a counter with +, − and reset, where − never goes below zero.
-- Build a shopping list: add items from a text input, toggle "bought" by clicking an item, delete items, and show "3 of 5 bought" (derived, not stored).
-- Lift state: build a `ColorPicker` and a `Preview` as sibling components that share a selected colour stored in their parent.
-- Go back to your Bookshelf page and add filter buttons (all / read / unread) and a "mark as read" button on each card, using state in `App`.
+- In `react-practice`, build a `Counter` component with +, − and Reset buttons, where − never goes below zero (at 0, clicking − changes nothing).
+- In `react-practice`, build a `ShoppingList` component: add items from a text input, toggle "bought" by clicking an item (show bought items crossed out), delete items, and show "3 of 5 bought" (derived, not stored).
+  Hint: Reading an input is taught properly in the next lesson. For now: `const [text, setText] = useState("")`, `<input value={text} onChange={(e) => setText(e.target.value)} />`, and an Add button that adds `text` to the list and then calls `setText("")`.
+- Lift state: in `react-practice`, build a `ColorPicker` (three or four colour buttons) and a `Preview` (a box filled with the chosen colour) as sibling components. Store the selected colour in their parent and pass it down as props: clicking a button should change the box's colour.
+- Go back to your `bookshelf` app. Put the books from `data.js` into state in `App` (`useState(books)`) so they can change, add filter buttons (all / read / unread) that replace the hard-coded `filter` variable, and add a "Mark as read" button on each card. Clicking it should move the book to the "Read" section and update the stats.
 
 ---lesson
 id: react-5
@@ -843,10 +847,12 @@ Mixing is fine: a form can have an action and one controlled input.
 - `useActionState` keeps the action's result (errors, success) and an `isPending` flag.
 
 ### Exercises
-- Build a live search: a controlled input that filters a list of 20 names as you type, with a "No matches" message.
-- Build a sign-up form (name, email, password, "accept terms" checkbox) with controlled inputs, validated on submit, with error messages next to each field.
-- Rebuild the same form with a form action and `useActionState`: errors come from the returned state, and the button shows "Signing up…" while a fake 1-second request runs.
-- Add an "Add book" form to your Bookshelf page that adds a new book to the list in state, with the title required and the rating limited to 0–5.
+- In `react-practice`, build a `LiveSearch` component: a controlled input that filters an array of 20 names as you type, with a "No matches" message when nothing matches. Ignore upper/lower case: typing "an" should also find "Anna".
+  Hint: Plain JavaScript you already know: `names.filter((name) => name.toLowerCase().includes(query.toLowerCase()))`.
+- In `react-practice`, build a `SignUpForm` with controlled inputs: name, email, password and an "accept terms" checkbox. On submit, check that the name isn't empty, the email contains "@", the password has at least 8 characters and the box is ticked, and show each error message next to its field. An empty form should show 4 errors; a valid one shows "Thanks for signing up!".
+  Hint: Keep all errors in one state object, `const [errors, setErrors] = useState({})`. On submit, build a new object (`{ email: "Enter an email like name@example.com", … }`), call `setErrors(newErrors)`, and only continue if `Object.keys(newErrors).length === 0`.
+- In `react-practice`, rebuild the same form as `SignUpAction` with a form action and `useActionState`: the same checks run in the action, errors come from the returned state, and the button shows "Signing up…" while a fake 1-second request runs. Return the typed values with the errors and use them as `defaultValue`s, so the user doesn't lose their input (as in the lesson).
+- In `bookshelf`, add an "Add book" form that adds a new book to the books state in `App` (from lesson 5.4's last exercise), with the title required and the rating limited to 0–5 (`<input type="number" min="0" max="5">`). The new book should appear in the grid and the stats right away. It disappears when you reload, because state only lives in memory: that's expected.
 
 ---project
 id: react-p2
@@ -867,7 +873,7 @@ Build a memory game: cards lie face down, the player flips two at a time and tri
 - Cards are real `<button>` elements, so the game works with the keyboard
 
 ### Steps
-1. Create the Vite project. Write a pure function `createDeck(pairs)` that picks emojis, duplicates them, shuffles them (Fisher–Yates) and returns `[{ id, value, isFlipped: false, isMatched: false }]`. Log its result to check it.
+1. Create the Vite project `memory-game` (`npm create vite@latest memory-game -- --template react`). Write a pure function `createDeck(pairs)` that picks emojis, duplicates them, shuffles them (Fisher–Yates) and returns `[{ id, value, isFlipped: false, isMatched: false }]`. Log its result to check it.
 2. Build the `StartScreen` form with a form action (or controlled inputs): name and difficulty. In `App`, keep `player`, `difficulty` and a `status` state (`"setup"`, `"playing"`, `"won"`) and show the right screen for each status.
 3. Build `Board` and `Card` components and render the deck in a CSS Grid whose number of columns depends on the difficulty. Show the emoji when `isFlipped || isMatched`, otherwise a card back.
 4. Implement flipping: clicking a card sets its `isFlipped` to `true` using `map` (never mutate). Keep track of the flipped-but-unmatched cards (derive them with `filter` or store their ids).
@@ -1065,10 +1071,10 @@ Too many effects make components hard to follow and cause extra renders. Later, 
 - Debounce searches with `setTimeout` plus cleanup; don't use effects for derived values or click logic.
 
 ### Exercises
-- Build a live clock with `setInterval` and proper cleanup. Add a button that hides and shows it, and check in the console that no interval keeps running when it's hidden.
-- Fetch the list of categories from TheMealDB (`categories.php`) when the component mounts, and show loading, error and success states. Test the error state by misspelling the URL.
-- Add a search input that fetches recipes with a 400 ms debounce and aborts old requests. Watch the Network tab in DevTools while typing fast.
-- Save a list of favourite meal ids to `localStorage` with an effect, and restore it on reload.
+- In `react-practice`, build a `Clock` component with `setInterval` and proper cleanup, plus a Hide/Show button in `App` that removes and adds it. Put `console.log("tick")` inside the interval: when the clock is hidden, the ticks in the console must stop.
+- Create a new Vite app `recipe-finder` (you'll finish it in this section's Recipe Finder project). In `App.jsx`, fetch the categories from `https://www.themealdb.com/api/json/v1/1/categories.php` when the component mounts and list their names (the response is `{ categories: [...] }`, each with `strCategory`), with loading, error and success states. Test the error state by misspelling the domain (for example `themealdbb.com`).
+- In `recipe-finder`, add a search input that fetches recipes from `search.php?s=` with a 400 ms debounce and aborts old requests, like the lesson's `MealSearch`. In DevTools → Network, type "chicken" quickly: you should see one `search.php` request, not seven.
+- In `recipe-finder`, add a heart button to each search result that adds or removes its `idMeal` in a `favourites` array in state. Save the array to `localStorage` with an effect and restore it on reload: after a reload, the same hearts are still filled.
 
 ---lesson
 id: react-7
@@ -1184,10 +1190,12 @@ If you see a CORS error in the browser console, the fix is always on the **serve
 - Routed SPAs need an `index.html` fallback; your API must allow your frontend's origin.
 
 ### Exercises
-- Deploy your shopping list (or Bookshelf) app to Netlify or Vercel from GitHub. Push a small change and watch it redeploy automatically.
-- Add `.env.development` and `.env.production` with a `VITE_GREETING` value, display it on the page, and check that `npm run dev` and `npm run preview` show different values.
-- Create `src/api.js` with a `getBooks()` function that uses `VITE_API_URL`, and display the books from your local Book Library API. Then point it at your deployed API.
-- Open your deployed site, find your `VITE_` value in the built JavaScript using DevTools' Sources panel, and write one sentence in the README explaining why secrets can't go there.
+- Push your `react-practice` app (with the shopping list) to GitHub and deploy it to Netlify or Vercel (your `bookshelf` is already online from its project). Then push a small change and watch the site redeploy automatically: the change is live after a minute or two.
+- In `react-practice`, add `.env.development` and `.env.production`, each with a different `VITE_GREETING` value, and display it on the page. Check that `npm run dev` shows the development value, and that `npm run build` followed by `npm run preview` shows the production one (preview serves the last build, so always build first).
+- Start your `books-api` (`npm run dev`, port 3000) and make sure its `cors()` origins allow `http://localhost:5173`. Create a new Vite app `books-frontend` (you'll finish it in this section's Books frontend project) with `.env.development` containing `VITE_API_URL=http://localhost:3000`, and `src/api.js` with the lesson's `getBooks()`. In `App.jsx`, call it in an effect and list each book's title and author. Then put your deployed API's URL in `.env.production` (you'll test that version when you deploy the project).
+  Hint: `getBooks()` returns the whole response, `{ data, page, limit, total }`, so the books are in `result.data`. The author is an object, so render `book.author.name`, not `book.author`.
+- Commit and push the `.env.production` file from exercise 2, so your deployed `react-practice` site rebuilds with `VITE_GREETING`. Open the live site, find the greeting text in the built JavaScript with DevTools → Sources, and write one sentence in the `react-practice` README explaining why secrets can't go there.
+  Hint: In the Sources panel, press Ctrl+Shift+F to search all loaded files for your greeting text.
 
 ---project
 id: react-p1
@@ -1208,7 +1216,7 @@ Build an app to find recipes by name using the free TheMealDB API (no key needed
 
 ### Steps
 1. Explore the API in your browser first. The base URL is `https://www.themealdb.com/api/json/v1/1/`; try `search.php?s=chicken`, `lookup.php?i=52772`, `categories.php` and `filter.php?c=Seafood`. Note the shape of each response.
-2. Create the Vite app and an `api.js` module with `searchMeals(query, signal)`, `getMeal(id)`, `getCategories()` and `getMealsByCategory(category, signal)`. Fetch and render results for a hard-coded query.
+2. Continue in your `recipe-finder` folder from lesson 5.6: the categories, a debounced search and favourites already exist there, so treat the steps below as a checklist and add only what's missing. Create an `api.js` module with `searchMeals(query, signal)`, `getMeal(id)`, `getCategories()` and `getMealsByCategory(category, signal)`. Fetch and render results for a hard-coded query.
 3. Add the search input (controlled) with a debounced query and an aborting fetch effect. Add the loading, empty and error states.
 4. Build the details view: keep `selectedId` in state, fetch the full meal when it changes, and show it in a section or a `<dialog>`. Add a "Back to results" button.
 5. Write a `getIngredients(meal)` function that turns `strIngredient1…20` and `strMeasure1…20` into an array like `[{ ingredient, measure }]`, skipping empty ones, and render it as a list.
@@ -1255,7 +1263,7 @@ Build the frontend for the Book Library API you built in the Express module and 
 
 ### Steps
 1. Check your API first: is it deployed and working? Test the list, create and validation-error responses in Thunder Client or Postman and write down their exact JSON shape: the list is `{ data, page, limit, total }`, each book looks like `{ id, title, year, genre, pages, read, author: { id, name }, tags: [...] }`, and errors are `{ error, details }`. Make sure CORS allows `http://localhost:5173`.
-2. Create the Vite app, `.env.development` with `VITE_API_URL`, and `src/api.js` with one function per endpoint: `getBooks(params)`, `getBook(id)`, `createBook(data)`, `updateBook(id, data)`, `deleteBook(id)` and `getAuthors()`. Each checks `res.ok` and throws an error that includes the API's error body (`deleteBook` gets a 204 with no body, so don't call `res.json()` there).
+2. Continue in your `books-frontend` folder from lesson 5.7: `.env.development` with `VITE_API_URL` and a first `getBooks()` already exist there, so treat the steps below as a checklist and add only what's missing. Make sure `src/api.js` has one function per endpoint: `getBooks(params)`, `getBook(id)`, `createBook(data)`, `updateBook(id, data)`, `deleteBook(id)` and `getAuthors()`. Each checks `res.ok` and throws an error that includes the API's error body (`deleteBook` gets a 204 with no body, so don't call `res.json()` there).
 3. Build the list: keep `search`, `genre` and `page` in state, fetch with an effect that depends on them (debounce the search, abort old requests), and render the books with loading, empty and error states. Show the author with `{book.author.name}` and map `book.tags` to small chips.
 4. Add pagination controls ("Previous", "Page 2 of 5", "Next") using `total` and `limit` from the response. Reset to page 1 when the search or genre changes.
 5. Build the `BookForm` component with a form action (or controlled inputs): title, year, genre, pages, read, and an author `<select>`. Load the authors once with `getAuthors()` and render one `<option value={author.id}>` per author. Form values are strings, so send `authorId: Number(formData.get("authorId"))` (convert `year` and `pages` too, and a checkbox gives `"on"` or `null`, so use `formData.get("read") === "on"`). Use the form for adding; on a validation error, show each message next to its field and keep the user's input. On success, return to the list and refresh it.

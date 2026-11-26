@@ -153,9 +153,9 @@ curl -i http://localhost:3000/api/books/99
 
 ### Exercises
 - Create the `hello-express` project with `/` and `/api/time`. Visit an unknown URL and look at the default 404 page and its status code in DevTools.
-- Add `GET /health` that returns `{ status: "ok", uptime: process.uptime() }`.
-- Rebuild one route of the API you wrote with the `http` module in the Node module, in Express. Compare the number of lines.
-- Add `GET /api/books` (an array of 5 books, with an optional `?author=` filter) and `GET /api/books/:id` (404 JSON for unknown ids). Test both with `curl -i`.
+- In `hello-express/server.js`, add `GET /health` that returns `{ status: "ok", uptime: process.uptime() }`. Open `http://localhost:3000/health` a few times: `uptime` (seconds since the server started) should grow.
+- Pick one route from your `destinations-api` server from the Node module (for example `GET /api/country/:country`) and rebuild it in `hello-express`: copy its `data.js` across and use `req.params` instead of parsing the URL. Compare the number of lines with the `http` version.
+- Start the Book Library project: create a new folder `books-api` set up like `hello-express` (`npm init -y`, `npm install express`, `"type": "module"`, a `dev` script). You'll grow this folder through lessons 2.1–2.6 and finish it in this section's project. In its `server.js`, add `GET /api/books` (an array of 5 books like `{ id, title, author }`, with an optional `?author=` filter) and `GET /api/books/:id` (404 JSON for unknown ids). Test with `curl -i`: `/api/books/2` gives 200, `/api/books/99` gives 404.
 
 ---lesson
 id: ex-2
@@ -209,7 +209,7 @@ A common way to organise an API is three layers, each with one job:
 - **Data access** (often called a *model* or *repository*) is the only code that knows where the data lives. Today it's an array; in the Databases module it will be PostgreSQL.
 
 ```
-book-api/
+books-api/
   package.json
   server.js                 ← starts the server
   app.js                    ← creates and configures the app
@@ -325,10 +325,11 @@ It does the same as writing separate `router.get(...)` and `router.post(...)` li
 - `app.js` builds the app, `server.js` starts it.
 
 ### Exercises
-- Move your `/api/books` routes from the previous lesson into `routes/books.js` and mount the router at `/api/books`. Check that all URLs still work.
-- Split the logic into `controllers/booksController.js` and `data/books.js` (with `async` functions), so the routes file only contains wiring.
-- Split the app into `app.js` and `server.js`, and add `GET /health`.
-- Add a second resource: give each book an `authorId`, then create `/api/authors` with its own router, controller and data file. Add `GET /api/authors/:id/books` that returns that author's books.
+- In `books-api`, move the two `/api/books` routes from `server.js` into `routes/books.js` and mount the router at `/api/books`. Check that `/api/books`, `/api/books?author=orwell` (use one of your authors) and `/api/books/2` still give the same results.
+- Split the logic: `data/books.js` holds the array and `async` `findAll()` and `findById(id)`; `controllers/booksController.js` holds `listBooks` (keep the `?author=` filter here) and `getBook`; `routes/books.js` only connects URLs to controllers. Re-check the same three URLs.
+- Still in `books-api`, split `server.js` into `app.js` (builds the app) and `server.js` (only `app.listen`), and add `GET /health` in `app.js`. Run `npm run dev` again (it still starts `server.js`) and open `http://localhost:3000/health`.
+- Add a second resource: give each book an `authorId`, and create `data/authors.js` (3 authors like `{ id, name }`), `controllers/authorsController.js` and `routes/authors.js`, mounted at `/api/authors` in `app.js`. Add `GET /api/authors`, `GET /api/authors/:id` and `GET /api/authors/:id/books`, then check that `/api/authors/1/books` returns only that author's books.
+  Hint: In the authors controller, `import * as Books from "../data/books.js"`, get all books with `await Books.findAll()` and keep those with `b.authorId === id`: plain JavaScript (`filter`) you already know.
 
 ---lesson
 id: ex-3
@@ -455,10 +456,10 @@ Because all functions in the chain share the same `req` and `res`, a middleware 
 - Put middleware before a handler (`router.post("/", check, handler)`) to apply it to one route only.
 
 ### Exercises
-- Add a middleware that logs the method and URL. Then move it below one of your routes and observe which requests are no longer logged.
-- Write the `logger` middleware that prints method, URL, status code and duration using `res.on("finish")`.
-- Add `POST /api/echo` with `express.json()`. Send valid JSON, broken JSON, and JSON without the `Content-Type` header. Write down what you get back each time.
-- Write `requireApiKey` (reading `API_KEY` from `.env`) and apply it only to the `POST`, `PATCH` and `DELETE` routes of your books router.
+- In `books-api/app.js`, add a middleware above all routes that logs `req.method` and `req.url`, then open `/health` and `/api/books` and watch the terminal. Move it below `app.get("/health", …)` and open both again: `/health` is no longer logged, `/api/books` still is.
+- Write the `logger` middleware in `books-api/middleware/logger.js`, register it at the top of `app.js` instead of the simple one, and check the terminal shows lines like `GET /api/books/99 404 1.2ms`.
+- In `books-api/app.js`, add `app.use(express.json())` and `POST /api/echo`. In `requests.http`, send valid JSON, broken JSON (delete a quote), and valid JSON without the `Content-Type` line. Write down the status and body you get back each time.
+- Write `middleware/requireApiKey.js`, put `API_KEY=…` in a `.env` file (add `.env` to `.gitignore`) and change the `dev` script to `node --watch --env-file=.env server.js`. Your books router has no write routes yet (they come in lesson 2.4), so protect `POST /api/echo` for now: `app.post("/api/echo", requireApiKey, …)`. Check you get 401 without the `x-api-key` header and 201 with the right key.
 
 ---lesson
 id: ex-4
@@ -627,10 +628,10 @@ It doubles as documentation, and you can re-run everything after each change.
 - Lists support `?search=`, `?page=` and `?limit=`, and return `{ data, page, limit, total }`.
 
 ### Exercises
-- Before coding, write the endpoint table (method, URL, status codes) for a `movies` resource in a README.
-- Implement full CRUD for `/api/books` in memory, using your routes / controllers / data structure.
-- Add `?search=` (title or author) and pagination, returning `{ data, page, limit, total }`. Check what happens with `?page=abc` and `?limit=1000`.
-- Write a `requests.http` file covering every endpoint, including at least one 400 and one 404 case.
+- Design before coding: in a new file `movies-design.md` (in `books-api`; you won't build this API), write the endpoint table for a `movies` resource: method, URL, what it does, and the success and error status codes for list, get one, create, update and delete. Compare it with the table at the top of this lesson.
+- In `books-api`, implement full CRUD for `/api/books` in memory: `create`, `update` and `remove` in `data/books.js`, the three controllers, and `POST /`, `PATCH /:id` and `DELETE /:id` in `routes/books.js` (`express.json()` must be in `app.js`). Check the status codes: POST gives 201, PATCH `/1` gives 200, DELETE `/1` gives 204, and the same DELETE again gives 404.
+- Add `?search=` (title or author) and pagination, returning `{ data, page, limit, total }`; this replaces the `?author=` filter. `?page=abc` should give page 1 and `?limit=1000` should give limit 50. `findAll` now returns `{ data, total }`, so if your authors controller from lesson 2.2 calls it, give `data/books.js` a separate `findByAuthorId(authorId)` for it instead.
+- In `books-api`, extend `requests.http` so it has one request for every endpoint, plus at least one 400 case (a POST without `title`) and one 404 case (an id that doesn't exist).
 
 ---lesson
 id: ex-6
@@ -770,10 +771,10 @@ res.status(status).json({
 - `AppError` carries a status code, so controllers just `throw new AppError("...", 404)`.
 
 ### Exercises
-- Add a route that throws synchronously and an `async` route that awaits something and then throws. Look at Express's default response for both, then add your `errorHandler` and compare.
-- Add `notFound` and `errorHandler` to your books API. Test an unknown URL and a POST with broken JSON.
-- Create `AppError` and replace every inline 404 response in your books controllers with `throw new AppError("Book not found", 404)`.
-- Make the error response include `stack` only when `NODE_ENV` isn't `production`. Test both ways (in PowerShell: `$env:NODE_ENV="production"; npm start`).
+- In `books-api/app.js`, add `GET /boom-sync` (throws an error directly) and `GET /boom-async` (awaits a `setTimeout` promise, then throws, like `/boom` above). Open both in the browser: Express answers with a 500 HTML page and a stack trace. Then add `middleware/errorHandler.js`, register it after all routes, and open them again: now you get JSON with a generic message, and the error is printed in the terminal.
+- Add `middleware/notFound.js` to `books-api`, just before `errorHandler` in `app.js`. Check that an unknown URL like `/nope` gives a 404 JSON error, and that a POST with broken JSON to `/api/books` gives a 400 JSON error instead of an HTML page.
+- Create `utils/AppError.js` and replace every inline 404 response in `controllers/booksController.js` (get, update, delete) with `throw new AppError("Book not found", 404)`. Check that `/api/books/99` still gives 404 with `{ "error": "Book not found" }`.
+- Make the error response include `stack` only when `NODE_ENV` isn't `production`, and open `/boom-async` both ways. To test production, add `"start": "node server.js"` to `package.json` if it's missing and run (in PowerShell) `$env:NODE_ENV="production"; npm start`. The variable stays set in that terminal, so close it afterwards.
 
 ---lesson
 id: ex-7
@@ -952,10 +953,10 @@ Use it the same way in every `:id` route (get, update, delete). `abc`, `1.5`, `0
 - Use `z.coerce` for query strings and `:id` params, and turn `ZodError` into a 400 in the error handler.
 
 ### Exercises
-- Define `BookSchema` (title: non-empty string, author, year: integer from 0 to the current year, tags: optional string array). In a scratch file, run `safeParse` on three valid and three invalid objects and print the issues.
-- Write the `validate(schema)` middleware and use it on POST and PATCH. Send invalid data and check you get a readable 400 response.
-- Add `ListQuerySchema` for `search`, `page` and `limit`. Check that `?page=-1` and `?limit=1000` return 400 and that missing values fall back to the defaults.
-- Extend your error handler so a thrown `ZodError` becomes a 400 with the list of fields.
+- In `books-api`, run `npm install zod` and create `schemas/book.js` with `BookSchema` (title: non-empty string, author, year: integer from 0 to the current year, tags: optional string array). In a scratch file `try-zod.js`, import it, run `safeParse` on three valid and three invalid objects and print the issues. Run it with `node try-zod.js`.
+- Write `middleware/validate.js` and use it in `routes/books.js` on `POST /` (with `BookSchema`) and `PATCH /:id` (with `BookUpdateSchema`). Send `{ "title": "", "year": "1965" }` and check you get a 400 with `details` for `title`, `author` and `year`.
+- Add `ListQuerySchema` for `search`, `page` and `limit` to `schemas/book.js` and use `ListQuerySchema.parse(req.query)` in `listBooks`. Check that `/api/books` with no parameters shows `page: 1` and `limit: 10`, and that `?page=-1` and `?limit=1000` are refused. For now they give a 500, because your error handler doesn't know Zod errors yet; the next exercise fixes that.
+- Extend `middleware/errorHandler.js` so a thrown `ZodError` becomes a 400 with the list of fields, and check `?page=-1` again. Then use `IdParamSchema` in your `:id` controllers, and check that `/api/books/abc` also gives 400.
 
 ---project
 id: ex-p1
@@ -978,7 +979,7 @@ Build the backend for a small online library catalogue. It's your first professi
 - Folder structure: `app.js`, `server.js`, `routes/`, `controllers/`, `middleware/`, `schemas/`, `utils/`, `data/books.js`. Only `data/books.js` touches the array, and all its functions are `async`
 
 ### Steps
-1. **Set up.** `npm init -y`, install Express, set `"type": "module"`, add `dev` (`node --watch server.js`) and `start` scripts. Create `app.js` (exports the app) and `server.js` (listens), plus `GET /health`. Open it in the browser.
+1. **Set up.** Continue in your `books-api` folder from lessons 2.1–2.6: you've already built much of this project there, so treat the steps below as a checklist and add only what's missing. Check that it has Express installed, `"type": "module"`, `dev` (`node --watch server.js`, plus `--env-file=.env` if you use `.env`) and `start` scripts, `app.js` (exports the app) and `server.js` (listens), plus `GET /health`. Open it in the browser.
 2. **Read endpoints.** Create `data/books.js` with about 15 seeded books and async `findAll()` and `findById(id)`. Add `routes/books.js` and `controllers/booksController.js` for `GET /api/books` and `GET /api/books/:id`, and mount the router at `/api/books`. Start your `requests.http` file.
 3. **Errors.** Add `utils/AppError.js`, `middleware/notFound.js` and `middleware/errorHandler.js`. Replace inline 404 responses with `throw new AppError("Book not found", 404)`. Test an unknown id, an unknown URL and an async error.
 4. **Write endpoints.** Add `express.json()`, then `create`, `update` and `remove` in the data layer and the POST, PATCH and DELETE controllers. Add a request for each to `requests.http` and check every status code.
@@ -1176,9 +1177,11 @@ Next.js, at the end of the course, combines both ideas.
 - Forms need `express.urlencoded()`; redirect after a successful POST.
 
 ### Exercises
-- Serve a `public/` folder with `index.html`, `style.css` and `app.js` that lists books from your API using `fetch`.
-- Create an EJS page `/books` that renders the same list on the server. Move the header into `views/partials/header.ejs` and include it on two pages.
-- Add a form to the EJS page that creates a book with Post/Redirect/Get. If validation fails, render the form again with status 400 and the error messages.
+- In `books-api`, create a `public/` folder with `index.html`, `style.css` and `app.js` (like the examples above) and serve it with `express.static` near the top of `app.js`. Open `http://localhost:3000/`: you should see your book titles, fetched from `/api/books`.
+- Still in `books-api`, run `npm install ejs` and add a page `GET /books` that renders `views/books.ejs` with the same list, built on the server. Then move the page's top part (a heading and links to `/books` and `/about`) into `views/partials/header.ejs`, and include it in `books.ejs` and in a new `views/about.ejs` page (route `GET /about`).
+  Hint: In `app.js`, `import * as Books from "./data/books.js"`, then `const { data } = await Books.findAll({ limit: 50 })` and pass `{ books: data }` to `res.render`.
+- Add a form with `title`, `author` and `year` fields to `books.ejs` that POSTs to `/books` (add `express.urlencoded()`), validates with `BookSchema`, creates the book and redirects to `/books` (Post/Redirect/Get). If validation fails, render `books.ejs` again with status 400 and the error messages. Check both cases in the browser.
+  Hint: Form values are strings, so validate `{ ...req.body, year: Number(req.body.year) }`. On failure, `res.status(400).render("books", { books, errors: result.error.issues })` and show each `issue.message` with a `<% for %>` loop. Pass `errors: []` from `GET /books` too, so the template always has the variable.
 - Write two or three sentences: for which kind of page would you choose each approach, and why?
 
 ---lesson
@@ -1272,10 +1275,10 @@ Most deployment problems are visible in the host's logs. Read them first.
 - Free tiers sleep and forget files; when something breaks, read the logs.
 
 ### Exercises
-- Make your Book Library API deploy-ready: `start` script, `process.env.PORT`, `engines`, `.gitignore`. Check locally that it uses a different port when you set one (PowerShell: `$env:PORT=4000; npm start`).
-- Deploy it to Render and run every request in your `requests.http` file against the live URL.
-- Break it on purpose: change the letter case of one import path, push, find the error in the logs, then fix it.
-- Add the live URL to the README, and a "Deployment" section listing the environment variables the app needs.
+- Make your `books-api` deploy-ready: `start` script, `process.env.PORT`, `engines`, and a `.gitignore` with `node_modules` and `.env`. Check locally that it uses a different port when you set one (PowerShell: `$env:PORT=4000; npm start` should print port 4000; close that terminal afterwards so the variable is gone).
+- Push `books-api` to GitHub and deploy it to Render as a Web Service. Open `https://<your-app>.onrender.com/health`, then change `@base` in `requests.http` to the live URL and run every request against it.
+- Break it on purpose: in `app.js`, change `./routes/books.js` to `./Routes/books.js`. It still works on Windows; push it, find the `ERR_MODULE_NOT_FOUND` error in Render's logs, then fix the path and push again.
+- In the `books-api` README, add the live URL and a "Deployment" section listing the environment variables the app needs (for example `NODE_ENV`, and `API_KEY` if you use it).
 
 ---project
 id: ex-p3
@@ -1508,11 +1511,13 @@ The trade-offs: a session can be ended instantly on the server, while a JWT stay
 - JWTs fit mobile apps and server-to-server APIs; for websites, prefer sessions.
 
 ### Exercises
-- In a scratch script, hash the same password twice and print both hashes (they differ). Check that `bcrypt.compare` accepts the password for both.
-- Build `POST /auth/register` with Zod validation (email, password 8–72 characters) and a 409 for duplicate emails. Make sure the hash never appears in a response.
-- Add `POST /auth/login`, `POST /auth/logout` and `GET /auth/me` with express-session. Test the flow in REST Client or Postman (both keep cookies between requests) and look at the cookie in the response headers.
-- Add `requireAuth` and use it to protect the write routes of a copy of your Book Library API. Check you get 401 when logged out.
-- Bonus: implement login with a JWT instead, and write down two advantages and two disadvantages compared to sessions.
+- Create a folder `journal-app`: you'll build this section's project (the Private Journal) in it through lessons 2.9–2.10. Run `npm init -y`, set `"type": "module"` and `npm install bcrypt`. In a scratch file `try-bcrypt.js`, hash the same password twice and print both hashes (they differ). Check that `bcrypt.compare` returns `true` for both.
+- In `journal-app`, `npm install express zod` and copy from `books-api`: `app.js` (keep only `express.json()`, `GET /health`, `notFound` and `errorHandler`), `server.js`, `utils/AppError.js` and the `validate`, `notFound` and `errorHandler` middleware. Then build `data/users.js` (an array with async `findByEmail` and `create`), a Zod schema (email, password 8–72 characters) and `POST /auth/register` in `routes/auth.js`, mounted at `/auth`. Register the same email twice in `requests.http`: the first gives 201 with only `{ id, email }`, the second gives 409.
+- Add express-session (`SESSION_SECRET` in `.env`, `.env` in `.gitignore`, and `--env-file=.env` in the `dev` script), then `POST /auth/login`, `POST /auth/logout` and `GET /auth/me`. Test the flow in REST Client or Postman (both keep cookies between requests): after login the response has a `Set-Cookie: connect.sid=…; HttpOnly` header and `/auth/me` gives 200; after logout, `/auth/me` gives 401.
+  Hint: For `me`, add `findById(id)` to `data/users.js`. If `req.session.userId` is missing, answer 401; otherwise look the user up and send only `{ id, email }`.
+- In `journal-app`, write `middleware/requireAuth.js` and use it on a test route `GET /api/secret` that returns `{ message: "Only for logged-in users" }`. Check: 401 when logged out, 200 after login, 401 again after logout. (In the project you'll put it on all the entries routes.)
+- Bonus: in `journal-app`, `npm install jsonwebtoken` and add `POST /auth/login-jwt` (returns `{ token }`) and `GET /auth/me-jwt` (reads the token from the `Authorization: Bearer <token>` header), keeping the session routes. Write down two advantages and two disadvantages compared to sessions.
+  Hint: Put `JWT_SECRET` in `.env`. Get the token with `req.get("authorization")?.split(" ")[1]`, and call `jwt.verify` inside `try/catch`: answer 401 if it throws.
 
 ---lesson
 id: ex-9
@@ -1636,10 +1641,11 @@ app.use(errorHandler);
 - Limit body size, validate input, escape output, keep secrets in env vars, run `npm audit`.
 
 ### Exercises
-- Add `helmet()` and compare the response headers before and after in the DevTools Network tab. Add an inline `onclick` to a page, see the CSP error in the console, then fix it with `addEventListener` in a `.js` file.
-- Rate-limit your login route to 5 attempts per 15 minutes. Send six wrong logins from REST Client and check the sixth gets 429.
-- Configure `cors` with an allow-list. Serve a small test page from another port (for example with VS Code Live Server) and check that `fetch` works from an allowed origin and fails from one that isn't in the list.
-- Run `npm audit` in your projects and read the report. Then read the OWASP Top 10 headings and note which ones your app already handles, and how.
+- In `journal-app`, serve `public/` with `express.static` (as in lesson 2.7) and create `public/test.html` with a button that has `onclick="alert('hi')"`. Open `/test.html` and note the response headers in DevTools → Network. Then add `app.use(helmet())` near the top of `app.js` and reload: new headers like `Content-Security-Policy` appear, `X-Powered-By` is gone, and clicking the button shows a CSP error in the Console. Fix it by moving the code to `public/test.js` with `addEventListener`.
+- In `journal-app`, create `middleware/rateLimits.js` with `authLimiter` and add it to `POST /auth/login`. Send six logins with a wrong password from `requests.http`: the first five get 401, the sixth gets 429. (A `--watch` restart resets the counter.)
+- In `journal-app`, add `app.use(cors({ origin: ["http://127.0.0.1:5500"] }))`. In a separate folder, create `cors-test.html` whose script runs `fetch("http://localhost:3000/health")` and logs the result, and open it with VS Code Live Server: the data appears. Then change the allowed origin to `http://127.0.0.1:5501` and reload: the Console shows a CORS error.
+  Hint: Use exactly the origin shown in Live Server's address bar. `http://localhost:5500` and `http://127.0.0.1:5500` are different origins.
+- Run `npm audit` in `books-api` and `journal-app` and read the report. Then read the OWASP Top 10 headings and note which ones `journal-app` already handles, and how.
 
 ---project
 id: ex-p2
@@ -1661,7 +1667,7 @@ Build a private online diary: each person creates an account and writes journal 
 - Data access in `data/users.js` and `data/entries.js` (in memory or a JSON file), with async functions, like the Book Library
 
 ### Steps
-1. **Set up.** Reuse the structure from the Book Library (`app.js`, `server.js`, `AppError`, `validate`, `notFound`, `errorHandler`). Create `.env` with `SESSION_SECRET`, add it to `.gitignore`, use `--env-file=.env` in the `dev` script, and configure express-session.
+1. **Set up.** Continue in your `journal-app` folder from lessons 2.9–2.10: much of this project already exists there, so treat the steps below as a checklist and add only what's missing (you can delete the test routes and `test.html`). Check it reuses the structure from the Book Library (`app.js`, `server.js`, `AppError`, `validate`, `notFound`, `errorHandler`), has `.env` with `SESSION_SECRET` (and `.env` in `.gitignore`), uses `--env-file=.env` in the `dev` script, and configures express-session.
 2. **Register.** Create `data/users.js` and `POST /auth/register` with Zod and bcrypt. Unlike the lesson version, register must also log the user in: call `req.session.regenerate`, set `req.session.userId`, then send the 201. Test it in `requests.http` and log the stored user on the server to see the hash.
 3. **Login, logout, me.** Add the three routes, with `regenerate` on login and `destroy` on logout. Check that `/auth/me` works after login and returns 401 after logout.
 4. **Entries.** Write `requireAuth` and `data/entries.js` with functions that always take the user id, for example `findAllByUser(userId)` and `findOwned(id, userId)`. Build the CRUD routes behind `requireAuth`, taking `userId` from the session.
